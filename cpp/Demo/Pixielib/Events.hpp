@@ -66,19 +66,10 @@ public:
 
 private:
     CallbackType GetCallbackType() { return (CallbackType)(hInstance == 0); }
-
-public:
-
-  
-    EventCallback(void(*_callback)(void*, K*)) : hInstance(nullptr), s_ptf(_callback) { }
     
-
+public:
+    EventCallback(void(*_callback)(void*, K*)) : hInstance(nullptr), s_ptf(_callback) { }
     EventCallback(_T* _instance, void(_T::* _callback)(void*, K*)) : hInstance(_instance), m_ptmf(_callback) { }
-
-   
-   /* template<typename _T>
-    friend IEventCallback* Callback(_T* _inst, void(_T::* _callback)(void*, K*));*/
-
 
 public:
     void operator ()(void* _sender, EventArgs* _args) override {
@@ -111,33 +102,29 @@ public:
 
 };
 
-template< typename K>
-IEventCallback* Callback(void(*_callback)(void*, K*)){
-    return new EventCallback(_callback);
-}
-template<class T, typename K>
-IEventCallback* Callback(T* _inst, void(T::*_callback)(void*, K*)) {
-    return new EventCallback(_inst, _callback);
-}
-
-template<class T, void(T::* _callback)(void*, void*)>
-IEventCallback* Callback2(T* _inst) {
-    return new EventCallback(_inst, _callback);
-}
-
 
 // Used only if USE_STL is NOT defined
 constexpr int MAX_CALLBACK_COUNT = 256;
 
 
-class Event {
-private:
+template<class TEventArgs>
+class EventHandler {
    
 public:
-    Event() { }
+    EventHandler() { }
+    
+
+    EventHandler(void(*_callback)(void*, TEventArgs*)) {
+        this->Add(new EventCallback(_callback));
+    }
+
+    template<typename T>
+    EventHandler(T* _instance, void(T::* _callback)(void*, TEventArgs*)) {
+        this->Add(new EventCallback(_instance, _callback));
+    }
 
     // Ctor with default callback
-    Event(IEventCallback* _callback) { 
+    EventHandler(IEventCallback* _callback) { 
         if (_callback != 0) {
             Add(_callback);
         }
@@ -145,40 +132,49 @@ public:
 
 public:
     void Add(IEventCallback*);
+    void Add(const EventHandler& e) {
+        for (IEventCallback* _callback : e.m_callbacks) {
+            this->Add(_callback);
+        }
+    }
     void Remove(IEventCallback*);
-    void Invoke(void*, EventArgs*);
+    void Remove(const EventHandler& e) {
+        for (IEventCallback* _callback : e.m_callbacks) {
+            this->Remove(_callback);
+        }
+    }
+    void Invoke(void*, TEventArgs*);
 
 public:
     int GetSize() const;
     void Dump();
 
 public:
-    Event& operator +=(IEventCallback* _callback) {
-        Add(_callback);
+    const EventHandler& operator=(const EventHandler& other) {
+        Release();
+        for (IEventCallback* cb : other.m_callbacks) {
+            this->Add(cb);
+        }
         return *this;
     }
-    template<typename K>
-    Event& operator +=(void(*_callback)(void*, K*)) {
-        Add(new EventCallback(_callback));
+    const EventHandler& operator +=(const EventHandler& e) {
+        this->Add(e);
         return *this;
     }
 
-    Event& operator -=(IEventCallback* _callback) {
-        Remove(_callback);
-        return *this;
-    }
-    template<class T, typename K>
-    Event& operator -=(void(T::* _callback)(void*, K*)) {
-        Remove(new EventCallback(0, _callback));
-        return *this;
-    }
-    template<typename K>
-    Event& operator -=(void(*_callback)(void*, K*)) {
-        Remove(new EventCallback(_callback));
+    EventHandler& operator -=(const EventHandler& e) {
+        Remove(e);
         return *this;
     }
     
+    
 private:
+    void Release() {
+        for (IEventCallback* cb : m_callbacks) {
+            delete(cb);
+        }
+        m_callbacks.resize(0);
+    }
     void Trim(int startIndex);
 
 
@@ -193,8 +189,8 @@ private:
 
 };
 
-
-inline int Event::GetSize() const {
+template<class TEventArgs>
+inline int EventHandler<TEventArgs>::GetSize() const {
 #ifdef USING_STL
     return m_callbacks.size();
 #endif // USING_STL
@@ -203,8 +199,8 @@ inline int Event::GetSize() const {
 #endif // NOT_USING_STL
 }
 
-
-inline void Event::Add(IEventCallback* _newCallback) {
+template<class TEventArgs>
+inline void EventHandler<TEventArgs>::Add(IEventCallback* _newCallback) {
 #ifdef NOT_USING_STL
     if (m_count >= MAX_CALLBACK_COUNT)  // Max size reached.        
         return;
@@ -213,7 +209,7 @@ inline void Event::Add(IEventCallback* _newCallback) {
 
     for (int i = 0; i < this->GetSize(); i++) {
         if (m_callbacks[i] != 0 && (*m_callbacks[i]== _newCallback)) { // Callback already exists            
-            //printf("Unable to add %#X callback, it already exists (%#X)\n", _newCallback->Dump(), m_callbacks[i]->Dump());
+            printf("Unable to add %#X callback, it already exists (%#X)\n", _newCallback->Dump(), m_callbacks[i]->Dump());
             delete(_newCallback);
             return;
         }
@@ -229,8 +225,8 @@ inline void Event::Add(IEventCallback* _newCallback) {
  //   printf("Added %#X callback.\n", _newCallback->Dump());
 
 }
-
-inline void Event::Remove(IEventCallback* _callback) {
+template<class TEventArgs>
+inline void EventHandler<TEventArgs>::Remove(IEventCallback* _callback) {
     int removed_index = -1;
 
     // Removes the element ( if find )
@@ -247,8 +243,8 @@ inline void Event::Remove(IEventCallback* _callback) {
     delete(_callback);
 
 }
-
-inline void Event::Trim(int startIndex) {
+template<class TEventArgs>
+inline void EventHandler<TEventArgs>::Trim(int startIndex) {
     if (startIndex < 0) {
         return;
     }
@@ -273,8 +269,8 @@ inline void Event::Trim(int startIndex) {
 
 }
 
-
-inline void Event::Invoke(void* _sender = 0, EventArgs* _args = 0) {
+template<class TEventArgs>
+inline void EventHandler<TEventArgs>::Invoke(void* _sender, TEventArgs* _args){
     bool need_to_delete_args = false;
     if (_args == 0) {
         _args = new EventArgs();
@@ -290,9 +286,9 @@ inline void Event::Invoke(void* _sender = 0, EventArgs* _args = 0) {
     }
 }
 
-
-inline void Event::Dump() {
-    printf("Starting to dump contents of Event:\n");
+template<class TEventArgs>
+inline void EventHandler<TEventArgs>::Dump() {
+    printf("Starting to dump contents of EventHandler:\n");
     int actual_size = this->GetSize();
     for (int i = 0; i < actual_size; i++) {
         int callback_dump = 0;
@@ -320,7 +316,7 @@ public:
 
 class __Foo {
 public:
-    Event Foo_Changed = Event();
+    EventHandler Foo_Changed = EventHandler();
     __Foo(int _x, int _y) : x(_x), y(_y) {
         
 //        Foo_Changed.Add(new )
