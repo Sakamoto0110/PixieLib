@@ -72,8 +72,12 @@ public:
   
     EventCallback(void(*_callback)(void*, K*)) : hInstance(nullptr), s_ptf(_callback) { }
     
+
     EventCallback(_T* _instance, void(_T::* _callback)(void*, K*)) : hInstance(_instance), m_ptmf(_callback) { }
 
+   
+   /* template<typename _T>
+    friend IEventCallback* Callback(_T* _inst, void(_T::* _callback)(void*, K*));*/
 
 
 public:
@@ -107,6 +111,19 @@ public:
 
 };
 
+template< typename K>
+IEventCallback* Callback(void(*_callback)(void*, K*)){
+    return new EventCallback(_callback);
+}
+template<class T, typename K>
+IEventCallback* Callback(T* _inst, void(T::*_callback)(void*, K*)) {
+    return new EventCallback(_inst, _callback);
+}
+
+template<class T, void(T::* _callback)(void*, void*)>
+IEventCallback* Callback2(T* _inst) {
+    return new EventCallback(_inst, _callback);
+}
 
 
 // Used only if USE_STL is NOT defined
@@ -118,6 +135,13 @@ private:
    
 public:
     Event() { }
+
+    // Ctor with default callback
+    Event(IEventCallback* _callback) { 
+        if (_callback != 0) {
+            Add(_callback);
+        }
+    }
 
 public:
     void Add(IEventCallback*);
@@ -251,15 +275,19 @@ inline void Event::Trim(int startIndex) {
 
 
 inline void Event::Invoke(void* _sender = 0, EventArgs* _args = 0) {
+    bool need_to_delete_args = false;
     if (_args == 0) {
         _args = new EventArgs();
+        need_to_delete_args = true;
     }
     for (int i = 0; i < this->GetSize(); i++) {
         if (m_callbacks[i] != 0) {
             (*m_callbacks[i])(_sender, _args);
         }
     }
-    delete(_args);
+    if (need_to_delete_args) {
+        delete(_args);
+    }
 }
 
 
