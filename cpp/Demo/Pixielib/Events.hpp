@@ -5,7 +5,7 @@
 
 #ifndef USE_STL
 #ifndef NOT_USE_STL
-#define USE_STL            // DEFAULT 
+#define NOT_USE_STL // DEFAULT 
 #endif // !NOT_USING_STL
 #endif // !USING_STL
 
@@ -117,9 +117,10 @@ public:
 public:
     const EventHandler& operator  =(const EventHandler& e) {
         Release();
-        for (IEventCallback* cb : e.m_callbacks) {
-            this->Add(cb);
+        for (int i = 0; i < e.GetSize(); i++) {
+            this->Add(e.m_callbacks[i]);
         }
+        
         return *this;
     }
     const EventHandler& operator +=(const EventHandler& e) {
@@ -207,9 +208,11 @@ inline void EventHandler<TEventArgs>::Add(IEventCallback* _newCallback) {
 
 template<class TEventArgs>
 inline void EventHandler<TEventArgs>::Add(const EventHandler& e) {
-    for (IEventCallback* _callback : e.m_callbacks) {
-        this->Add(_callback);
+    for (int i = 0; i < e.GetSize(); i++) {
+        this->Add(e.m_callbacks[i]);
     }
+
+    
 }
 
 template<class TEventArgs>
@@ -233,8 +236,8 @@ inline void EventHandler<TEventArgs>::Remove(IEventCallback* _callback) {
 
 template<class TEventArgs>
 inline void EventHandler<TEventArgs>::Remove(const EventHandler& e) {
-    for (IEventCallback* _callback : e.m_callbacks) {
-        this->Remove(_callback);
+    for (int i = 0; i < e.GetSize(); i++) {
+        this->Remove(e.m_callbacks[i]);
     }
 }
 
@@ -266,10 +269,18 @@ inline void EventHandler<TEventArgs>::Trim(int startIndex) {
 
 template<class TEventArgs>
 inline void EventHandler<TEventArgs>::Release() {
-    for (IEventCallback* cb : m_callbacks) {
+    for (int i = 0; i < GetSize(); i++) {
+        IEventCallback* cb = m_callbacks[i];
         delete(cb);
+        m_callbacks[i] = 0;
     }
+#ifdef USING_STL
     m_callbacks.resize(0);
+#endif // USING_STL
+#ifdef NOT_USING_STL
+    m_count = 0;
+#endif // NOT_USING_STL
+    
 }
 
 template<class TEventArgs>
