@@ -23,126 +23,91 @@
 
 class DUMMY_TYPE { /*  EMPTY CLASS  */ };
 
-class EventArgs {
-public:
-    EventArgs() {}
 
+struct EventArgs {    
     virtual const char* GetTypename() { return "EventArgs"; }
-
 };
 
 
-typedef void(*f)(void*, EventArgs*);
+
+
+
+
+
+
+
 typedef class IEventCallback {
 public:
     virtual void operator ()(void*, EventArgs*) = 0;
     virtual bool operator ==(IEventCallback*) = 0;
-
-    virtual int Dump() = 0;
-
+    virtual operator int() = 0;
+ 
 };
 
-
-
-template< class _T = DUMMY_TYPE, typename K = EventArgs>
-class EventCallback : public IEventCallback {
-private:
-    enum CallbackType : int {
-        MemberCallback = 0,
-        StaticCallback = 1
-    };
-
-    using MemberCallback_t = void(_T::*)(void*, K*);
-    using StaticCallback_t = void(*)(void*, K*);
-
-public:
-    struct {
-        _T* hInstance;
-        union {
-            MemberCallback_t m_ptmf;
-            StaticCallback_t s_ptf;
-        };
-    };
-
-private:
-    CallbackType GetCallbackType() { return (CallbackType)(hInstance == 0); }
-    
-public:
-    EventCallback(void(*_callback)(void*, K*)) : hInstance(nullptr), s_ptf(_callback) { }
-    EventCallback(_T* _instance, void(_T::* _callback)(void*, K*)) : hInstance(_instance), m_ptmf(_callback) { }
-
-public:
-    void operator ()(void* _sender, EventArgs* _args) override {
-        switch (GetCallbackType()) {
-        case StaticCallback: return (*s_ptf)(_sender, (K*)_args);
-        case MemberCallback: return (hInstance->*m_ptmf)(_sender, (K*)_args);
-        }
-    }
-
-
-
-    bool operator ==(IEventCallback* other) override {
-        EventCallback* otherEventCallback = (EventCallback<_T,K>*)other;
-        if (otherEventCallback == nullptr) return false;
-
-        if (GetCallbackType() == StaticCallback && otherEventCallback->GetCallbackType() == StaticCallback)
-            return this->s_ptf == otherEventCallback->s_ptf;
-        else if (GetCallbackType() == MemberCallback && otherEventCallback->GetCallbackType() == MemberCallback)
-            return this->m_ptmf == otherEventCallback->m_ptmf && this->hInstance == otherEventCallback->hInstance;
-        else return false;
-
-    }
-
-    int Dump() override {
-        switch (GetCallbackType()) {
-        case StaticCallback: return (int)(&s_ptf);
-        case MemberCallback: return (int)(&m_ptmf);
-        }
-    }
-
-};
 
 
 // Used only if USE_STL is NOT defined
 constexpr int MAX_CALLBACK_COUNT = 256;
 
 
-template<class TEventArgs>
+template<typename TEventArgs = EventArgs>
 class EventHandler {
-   
 public:
-    EventHandler() { }
-    
+    template<class TInstance = DUMMY_TYPE>
+    struct EventCallback : public IEventCallback {
+        using CallbackType = int;
+        using StaticCallback_t = void(*)(void*, TEventArgs*);
+        using MemberCallback_t = void(TInstance::*)(void*, TEventArgs*);        
+        static constexpr CallbackType StaticCallback = 0;
+        static constexpr CallbackType MemberCallback = 1;
 
-    EventHandler(void(*_callback)(void*, TEventArgs*)) {
-        this->Add(new EventCallback(_callback));
-    }
+    public:
+        EventCallback(StaticCallback_t _callback) : hInstance(nullptr), s_ptf(_callback) { }
+        EventCallback(TInstance* _instance, MemberCallback_t _callback) : hInstance(_instance), m_ptmf(_callback) { }
 
-    template<typename T>
-    EventHandler(T* _instance, void(T::* _callback)(void*, TEventArgs*)) {
-        this->Add(new EventCallback(_instance, _callback));
-    }
-
-    // Ctor with default callback
-    EventHandler(IEventCallback* _callback) { 
-        if (_callback != 0) {
-            Add(_callback);
+    public:
+        void operator ()(void* _sender, EventArgs* _args) override {
+            return GetType() == StaticCallback ? (*s_ptf)(_sender, (TEventArgs*)_args) : (hInstance->*m_ptmf)(_sender, (TEventArgs*)_args);
         }
-    }
+
+        operator int() override {
+            return GetType() == StaticCallback ? (int)(&s_ptf) : (int)(&m_ptmf);
+        }
+
+        bool operator ==(IEventCallback* other) override {
+            EventCallback* otherCb = (EventCallback<TInstance>*)other;
+            if (otherCb == nullptr) return false;
+            CallbackType selfType = GetType(), otherType = otherCb->GetType();
+            if (selfType == otherType) {
+                if(GetType() == StaticCallback)
+                    return s_ptf == otherCb->s_ptf;
+                else
+                    return m_ptmf == otherCb->m_ptmf && hInstance == otherCb->hInstance;
+            }
+            return false;
+        }
+    
+    private:           
+        struct {
+            TInstance* hInstance;
+            union {
+                MemberCallback_t m_ptmf;
+                StaticCallback_t s_ptf;
+            };
+        };
+        CallbackType GetType() { return hInstance == 0 ? StaticCallback : MemberCallback; }
+    };
+
+public:
+    EventHandler();
+    EventHandler(typename EventCallback<TEventArgs>::StaticCallback_t);
+    template<class TInstance> EventHandler(TInstance*, typename EventHandler<TEventArgs>::EventCallback<TInstance>::MemberCallback_t);
 
 public:
     void Add(IEventCallback*);
-    void Add(const EventHandler& e) {
-        for (IEventCallback* _callback : e.m_callbacks) {
-            this->Add(_callback);
-        }
-    }
+    void Add(const EventHandler& e);
     void Remove(IEventCallback*);
-    void Remove(const EventHandler& e) {
-        for (IEventCallback* _callback : e.m_callbacks) {
-            this->Remove(_callback);
-        }
-    }
+    void Remove(const EventHandler& e);
     void Invoke(void*, TEventArgs*);
 
 public:
@@ -150,9 +115,9 @@ public:
     void Dump();
 
 public:
-    const EventHandler& operator=(const EventHandler& other) {
+    const EventHandler& operator  =(const EventHandler& e) {
         Release();
-        for (IEventCallback* cb : other.m_callbacks) {
+        for (IEventCallback* cb : e.m_callbacks) {
             this->Add(cb);
         }
         return *this;
@@ -161,20 +126,13 @@ public:
         this->Add(e);
         return *this;
     }
-
-    EventHandler& operator -=(const EventHandler& e) {
+    const EventHandler& operator -=(const EventHandler& e) {
         Remove(e);
         return *this;
-    }
-    
+    }    
     
 private:
-    void Release() {
-        for (IEventCallback* cb : m_callbacks) {
-            delete(cb);
-        }
-        m_callbacks.resize(0);
-    }
+    void Release();
     void Trim(int startIndex);
 
 
@@ -188,6 +146,27 @@ private:
 
 
 };
+// # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+template<class TEventArgs>
+inline EventHandler<TEventArgs>::EventHandler() {
+/*    NOTHING TO SHOW      */
+}
+
+template<class TEventArgs> 
+inline EventHandler<TEventArgs>::EventHandler(typename EventCallback<TEventArgs>::StaticCallback_t _callback) { 
+    this->Add(new EventCallback(_callback));
+}
+
+template<typename TEventArgs>
+template<class TInstance>
+inline EventHandler<TEventArgs>::EventHandler(TInstance* _instance, typename EventHandler<TEventArgs>::EventCallback< TInstance>::MemberCallback_t _callback) {
+    this->Add(new EventCallback(_instance, _callback));
+}
+
+// # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
 
 template<class TEventArgs>
 inline int EventHandler<TEventArgs>::GetSize() const {
@@ -209,7 +188,7 @@ inline void EventHandler<TEventArgs>::Add(IEventCallback* _newCallback) {
 
     for (int i = 0; i < this->GetSize(); i++) {
         if (m_callbacks[i] != 0 && (*m_callbacks[i]== _newCallback)) { // Callback already exists            
-            printf("Unable to add %#X callback, it already exists (%#X)\n", _newCallback->Dump(), m_callbacks[i]->Dump());
+            printf("Unable to add %#X callback, it already exists (%#X)\n", (int)_newCallback, (int)m_callbacks[i]);
             delete(_newCallback);
             return;
         }
@@ -225,6 +204,14 @@ inline void EventHandler<TEventArgs>::Add(IEventCallback* _newCallback) {
  //   printf("Added %#X callback.\n", _newCallback->Dump());
 
 }
+
+template<class TEventArgs>
+inline void EventHandler<TEventArgs>::Add(const EventHandler& e) {
+    for (IEventCallback* _callback : e.m_callbacks) {
+        this->Add(_callback);
+    }
+}
+
 template<class TEventArgs>
 inline void EventHandler<TEventArgs>::Remove(IEventCallback* _callback) {
     int removed_index = -1;
@@ -243,6 +230,14 @@ inline void EventHandler<TEventArgs>::Remove(IEventCallback* _callback) {
     delete(_callback);
 
 }
+
+template<class TEventArgs>
+inline void EventHandler<TEventArgs>::Remove(const EventHandler& e) {
+    for (IEventCallback* _callback : e.m_callbacks) {
+        this->Remove(_callback);
+    }
+}
+
 template<class TEventArgs>
 inline void EventHandler<TEventArgs>::Trim(int startIndex) {
     if (startIndex < 0) {
@@ -270,10 +265,18 @@ inline void EventHandler<TEventArgs>::Trim(int startIndex) {
 }
 
 template<class TEventArgs>
+inline void EventHandler<TEventArgs>::Release() {
+    for (IEventCallback* cb : m_callbacks) {
+        delete(cb);
+    }
+    m_callbacks.resize(0);
+}
+
+template<class TEventArgs>
 inline void EventHandler<TEventArgs>::Invoke(void* _sender, TEventArgs* _args){
     bool need_to_delete_args = false;
     if (_args == 0) {
-        _args = new EventArgs();
+        _args = new TEventArgs();
         need_to_delete_args = true;
     }
     for (int i = 0; i < this->GetSize(); i++) {
@@ -293,7 +296,7 @@ inline void EventHandler<TEventArgs>::Dump() {
     for (int i = 0; i < actual_size; i++) {
         int callback_dump = 0;
         if (m_callbacks[i] != 0) {
-            callback_dump = m_callbacks[i]->Dump();
+            callback_dump = (int)m_callbacks[i];
         }
         printf("0x%.8X", callback_dump);
         if (i < actual_size - 1)
@@ -303,6 +306,29 @@ inline void EventHandler<TEventArgs>::Dump() {
     }
     printf("Dump finished.\n");
 }
+
+
+
+#include "pxCorelib.h"
+struct MouseEventArgs : public EventArgs {
+    virtual const char* GetTypename() { return "MouseEventArgs"; }
+    //MOUSE_BUTTON_LEFT   0x0
+    //MOUSE_BUTTON_RIGHT  0x1
+    //MOUSE_BUTTON_MIDDLE 0x2
+    int m_button;
+    pxPointf m_location;
+    pxPointf m_delta;
+    // not implemented
+    int m_wDelta;
+
+};
+using MouseEventHandler = EventHandler<MouseEventArgs>;
+
+
+
+
+
+
 
 #ifdef COMPILE_EVENT_TESTS
 
@@ -382,3 +408,4 @@ inline void __RUN_EVENT_TEST() {
 
 
 #endif // COMPILE_EVENT_TESTS
+
