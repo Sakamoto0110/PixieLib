@@ -356,6 +356,14 @@ public:
     template<typename TCallable>
     EventHandler(TCallable _cb) :m_callbacks({new Callback<TArgs...>(_cb)}) {}*/
 
+	EventHandler(typename Callback < TArgs... >::_stCallback _cb) : m_callbacks({new Callback<TArgs...>(_cb)}){}
+
+    template<typename TInst>
+    EventHandler(TInst* _inst, typename Callback<TArgs...>::template _mbCallback<TInst> _cb ) : m_callbacks({ new Callback<TArgs...>(_inst,_cb) }) {}
+
+    template<typename TCallable>
+    EventHandler(TCallable _cb) :m_callbacks({new Callback<TArgs...>(_cb)}) {}
+
 public:
 	void Add(const EventHandler& e);
 	void Remove(const EventHandler& e);
