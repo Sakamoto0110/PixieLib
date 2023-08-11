@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /cpp/Demo/Pixielib/Pixielib.vcxproj
 /cpp/Demo/Pixielib/Pixielib.vcxproj.filters
+/cpp/Demo/Pixielib/main.cpp
