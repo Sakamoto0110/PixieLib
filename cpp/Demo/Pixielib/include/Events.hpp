@@ -24,6 +24,7 @@
 
 class DUMMY_TYPE { /*  EMPTY CLASS  */ };
 
+inline void aaa(){}
 
 struct EventArgs {    
     virtual const char* GetTypename() { return "EventArgs"; }
