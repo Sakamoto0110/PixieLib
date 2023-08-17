@@ -36,7 +36,7 @@ struct MouseEventArgs : public EventArgs {
 
 };
 
-using MouseEventHandler = EventHandler_t<MouseEventArgs>;
+using MouseEventHandler = pxEventHandler<MouseEventArgs>;
 
 
 
@@ -54,9 +54,9 @@ namespace EventTests {
 
 
     template<typename TEventArgs>
-    class EventHandlerTester :public MemberFunctionInvoker<EventHandler_t<void*, TEventArgs>> {
+    class EventHandlerTester :public MemberFunctionInvoker<pxEventHandler<void*, TEventArgs>> {
     public:
-        using EventHandler_t = EventHandler_t<TEventArgs>;
+        using EventHandler_t = pxEventHandler<TEventArgs>;
         // using MemberFunctionInvoker<EventHandler_t<void*, TEventArgs>>::sig_v_crT;
 
         template<typename...Tx >
@@ -107,7 +107,7 @@ namespace EventTests {
         printf("fn5 called, %s: [%i, %i]\n", e->GetTypename(), e->some_data2, e->some_data1);
     }
 
-    using TestEventHandler = EventHandler_t<void*, TestEventArgs*>;
+    using TestEventHandler = pxEventHandler<void*, TestEventArgs*>;
 
     class Foo {
     public:
