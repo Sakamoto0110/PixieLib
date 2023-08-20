@@ -36,7 +36,7 @@ struct MouseEventArgs : public EventArgs {
 
 };
 
-using MouseEventHandler = EventHandler_t<MouseEventArgs>;
+using MouseEventHandler = pxEventHandler<MouseEventArgs>;
 
 
 
@@ -54,9 +54,9 @@ namespace EventTests {
 
 
     template<typename TEventArgs>
-    class EventHandlerTester :public MemberFunctionInvoker<EventHandler_t<void*, TEventArgs>> {
+    class EventHandlerTester :public MemberFunctionInvoker<pxEventHandler<void*, TEventArgs>> {
     public:
-        using EventHandler_t = EventHandler_t<TEventArgs>;
+        using EventHandler_t = pxEventHandler<TEventArgs>;
         // using MemberFunctionInvoker<EventHandler_t<void*, TEventArgs>>::sig_v_crT;
 
         template<typename...Tx >
@@ -87,27 +87,27 @@ namespace EventTests {
     };
 
     inline void fn1(void* s, TestEventArgs* e) {
-        std::cout << '[' << (int)&fn1 << "] ";
+        std::cout << '[' << fn1 << "] ";
         printf("fn1 called\n");
     }
     inline void fn2(void* s, TestEventArgs* e) {
-        std::cout << '[' << (int)&fn2 << "] ";
+        std::cout << '[' << fn2 << "] ";
         printf("fn2 called\n");
     }
     inline void fn3(void* s, TestEventArgs* e) {
-        std::cout << '[' << (int)&fn3 << "] ";
+        std::cout << '[' << fn3 << "] ";
         printf("fn3 called\n");
     }
     inline void fn4(void* s, TestEventArgs* e) {
-        std::cout << '[' << (int)&fn4 << "] ";
+        std::cout << '[' << fn4 << "] ";
         printf("fn4 called, %s: [%i, %i]\n", e->GetTypename(), e->some_data2, e->some_data1);
     }
     inline void fn5(void* s, TestEventArgs* e) {
-        std::cout << '[' << (int)&fn5 << "] ";
+        std::cout << '[' << fn5 << "] ";
         printf("fn5 called, %s: [%i, %i]\n", e->GetTypename(), e->some_data2, e->some_data1);
     }
 
-    using TestEventHandler = EventHandler_t<void*, TestEventArgs*>;
+    using TestEventHandler = pxEventHandler<void*, TestEventArgs*>;
 
     class Foo {
     public:

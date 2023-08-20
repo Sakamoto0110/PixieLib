@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#define BACKTRACE
+#define BACKTRACE1
 
 #ifndef USE_STL
 #ifndef NOT_USE_STL
@@ -99,16 +99,18 @@ namespace pxLogger {
 #define pxTraceEnd --pxLogger::__depth
 
 using uint = unsigned int;
+using DWORD = unsigned long long;
+using LPDWORD = DWORD*;
+
 template<typename...Tx>
 class IEventCallback {
 public:
 	virtual ~IEventCallback() = default;
 
     virtual IEventCallback* copy() { return 0; }
-    virtual operator uint() = 0;
+    explicit virtual operator DWORD() = 0;
     virtual void operator ()(Tx...) = 0;
-    
-    bool operator ==(IEventCallback* e) { return (int)*this == (int)*e; }
+    bool operator ==(IEventCallback* e) { return static_cast<DWORD>(*this) == static_cast<DWORD>(*e); }
     
  
 };
@@ -124,12 +126,10 @@ template<typename...Tx>             class stCallback_t;
 template<typename T, typename...Tx> class mbCallback_t;
 template<typename T, typename...Tx> class lbCallback_t;
 template<typename...Tx>             class chCallback_t;
-template<typename...TArgs>          class Callback_t;
-template<typename...TArgs>          class EventHandler_t;
+template<typename...TArgs>          class pxCallback;
+template<typename...TArgs>          class pxEventHandler;
 
 
-template<typename...TArgs> using pxCallback     = Callback_t<TArgs...>;
-template<typename...TArgs> using pxEventHandler = EventHandler_t<TArgs...>;
 
 
 
@@ -140,7 +140,7 @@ public:
     stCallback_t(const pointer_to_function& fn);
 
     IEventCallback<Tx...>* copy() override;
-    operator uint() override;
+    operator DWORD() override;
     void operator()(Tx...e) override;
 private:
     pointer_to_function _fn;
@@ -154,7 +154,7 @@ private:
      mbCallback_t(pointer_to_instance inst, const pointer_to_member_function& f);
 
      IEventCallback<Tx...>* copy() override;
-     operator uint() override;
+     operator DWORD() override;
      void operator()(Tx...e) override;
  private:
      pointer_to_instance _inst;
@@ -164,7 +164,7 @@ private:
  template<typename T,typename...Tx>
  class lbCallback_t : public IEventCallback<Tx...> {
      static_assert(std::is_invocable_v<T, Tx...>, "Template argument TCallable must be a callable object with TArgs...");
-     static_assert(!std::is_same_v<EventHandler_t<Tx...>, T>,
+     static_assert(!std::is_same_v<pxEventHandler<Tx...>, T>,
          "EventHandler decayed into lbCallback_t, "
 		 "this may happens when trying to join two event handlers with += operator, "
 		 "if this is the case, use EventHandler::Join method instead");
@@ -174,7 +174,7 @@ private:
      lbCallback_t(T& f);
 
      IEventCallback<Tx...>* copy() override;
-     operator uint() override;
+     operator DWORD() override;
      void operator()(Tx...e) override;
  private:
      T* _fn;
@@ -182,13 +182,13 @@ private:
  template<typename...Tx>
  class chCallback_t : public IEventCallback<Tx...> {
  public:
- 	chCallback_t(EventHandler_t<Tx...>* _handler);
+ 	chCallback_t(pxEventHandler<Tx...>* _handler);
 
  	IEventCallback<Tx...>* copy() override;
-    operator uint() override;
+    operator DWORD() override;
     void operator()(Tx...e) override;
  private:
- 	EventHandler_t<Tx...>* _e;
+ 	pxEventHandler<Tx...>* _e;
  };
 
 
@@ -196,41 +196,29 @@ private:
 
 
 /**
- * \class Callback_t
+ * \class pxCallback
  * \brief Callback class
  * \tparam Tx Args
  */
 template<typename... Tx>
-class Callback_t : public IEventCallback<Tx...>{
-
+class pxCallback : public IEventCallback<Tx...>{
 public:
-	using CBINFO = int;
-    static constexpr CBINFO DISPOSEDCALLBACK = -1;
-    static constexpr CBINFO STCALLBACK = 0;
-    static constexpr CBINFO MBCALLBACK = 1;
-    static constexpr CBINFO LBCALLBACK = 2;
-    static constexpr CBINFO CHCALLBACK = 3;
-
 	using HCALLBACK = IEventCallback<Tx...>*;
-    using _stCallback = typename stCallback_t<Tx...>::pointer_to_function;
-    template<typename T> using _mbCallback = typename mbCallback_t <T,Tx...> ::pointer_to_member_function;
-    
+    using pointer_to_function = typename stCallback_t<Tx...>::pointer_to_function;
+    template<typename T> using pointer_to_member_function = typename mbCallback_t <T,Tx...> ::pointer_to_member_function;
 
+    pxCallback(const pxCallback& o);
+    pxCallback(pointer_to_function _call);
+    template<typename T> pxCallback(T* _inst, pointer_to_member_function<T> _call);
+    template<typename T> pxCallback(T _call);
+    pxCallback(pxEventHandler<Tx...>* _handler);
 
-    Callback_t(const Callback_t& o);
-    Callback_t(_stCallback _call);
-    template<typename T> Callback_t(T* _inst, _mbCallback<T> _call);
-    template<typename T> Callback_t(T _call);
-    Callback_t(EventHandler_t<Tx...>* _handler);
+	~pxCallback() override;
 
-    
-    ~Callback_t() override;
 
     void operator()(Tx...e) override;
-    operator uint() override;
-    
+    operator DWORD() override;
 private:
-    CBINFO _tag;
     IEventCallback<Tx...>* ptr;
     explicit operator HCALLBACK() {
         pxTraceStart;
@@ -244,24 +232,24 @@ public:
 
 
 template<typename... TArgs>
-class EventHandler_t {
+class pxEventHandler {
 protected:
    
 public:
-    using EventCallback = Callback_t<TArgs...>;
+    using EventCallback = pxCallback<TArgs...>;
     using hCallback = EventCallback*;
 
-	EventHandler_t() = default;
-    EventHandler_t(const EventHandler_t& e);
-    EventHandler_t(EventHandler_t* e);
-    EventHandler_t(const EventCallback& cb);
+	pxEventHandler() = default;
+    pxEventHandler(const pxEventHandler& e);
+    explicit pxEventHandler(pxEventHandler* e);
+    explicit pxEventHandler(const EventCallback& cb);
     /*template<typename T, typename...Tx>
      EventHandler(const T& c, Tx...args);*/
 
 public:
-    void Join(const EventHandler_t& e);
-	void Add(const EventHandler_t& e);
-	void Remove(const EventHandler_t& e);
+    void Join(const pxEventHandler& e);
+	void Add(const pxEventHandler& e);
+	void Remove(const pxEventHandler& e);
 	void Invoke(TArgs...);
 
 public:
@@ -270,12 +258,13 @@ public:
 
 public:
     void operator +=(const EventCallback& e);
-    void operator +=(EventHandler_t& e);
+    void operator +=(pxEventHandler& e);
     void operator -=(const EventCallback& e);
-    
+
+
 private:
     void Release() ;
-    void Trim(int startIndex);
+    void Trim(size_t startIndex);
     void Add(hCallback);
     void Remove(hCallback);
 
@@ -341,8 +330,8 @@ IEventCallback<TArgs...>* stCallback_t<TArgs...>::copy() {
 }
 
 template <typename ... TArgs>
-stCallback_t<TArgs...>::operator unsigned() {
-    return (uint)_fn;
+stCallback_t<TArgs...>::operator DWORD() {
+    return (DWORD)&_fn;
 }
 
 template <typename ... TArgs>
@@ -380,8 +369,8 @@ IEventCallback<TArgs...>* mbCallback_t<TInstance, TArgs...>::copy() {
 }
 
 template <typename TInstance, typename ... TArgs>
-mbCallback_t<TInstance, TArgs...>::operator unsigned() {
-    return (uint)&_fn;
+mbCallback_t<TInstance, TArgs...>::operator DWORD() {
+    return (DWORD)&_fn;
 }
 
 template <typename TInstance, typename ... TArgs>
@@ -425,8 +414,8 @@ IEventCallback<TArgs...>* lbCallback_t<TCallable, TArgs...>::copy() {
 }
 
 template <typename TCallable, typename ... TArgs>
-lbCallback_t<TCallable, TArgs...>::operator unsigned() {
-    return (uint)&_fn;
+lbCallback_t<TCallable, TArgs...>::operator DWORD() {
+    return (DWORD)&_fn;
 }
 
 template <typename TCallable, typename ... TArgs>
@@ -446,7 +435,7 @@ void lbCallback_t<TCallable, TArgs...>::operator()(TArgs... e) {
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 template <typename ... TArgs>
-chCallback_t<TArgs...>::chCallback_t(EventHandler_t<TArgs...>* _handler) : _e(_handler) {
+chCallback_t<TArgs...>::chCallback_t(pxEventHandler<TArgs...>* _handler) : _e(_handler) {
 
 }
 
@@ -463,8 +452,8 @@ IEventCallback<TArgs...>* chCallback_t<TArgs...>::copy() {
 }
 
 template <typename ... TArgs>
-chCallback_t<TArgs...>::operator unsigned() {
-    return (uint)_e;
+chCallback_t<TArgs...>::operator DWORD() {
+    return (DWORD)_e;
 }
 
 template <typename ... TArgs>
@@ -483,40 +472,39 @@ void chCallback_t<TArgs...>::operator()(TArgs... e) {
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 template<typename...TArgs>
-Callback_t<TArgs...>::Callback_t(const Callback_t& o) {
-    _tag = o._tag;
+pxCallback<TArgs...>::pxCallback(const pxCallback& o) {
     ptr = o.ptr->copy();
 }
 
 
 template<typename...TArgs>
-Callback_t<TArgs...>::Callback_t(_stCallback _call) : _tag(STCALLBACK), ptr(new stCallback_t(_call)) {
+pxCallback<TArgs...>::pxCallback(pointer_to_function _call) : ptr(new stCallback_t(_call)) {
     pxTraceStart;
     pxTraceEnd;
 }
 
 template<typename...TArgs>
 template<typename _TInstance>
-Callback_t<TArgs...>::Callback_t(_TInstance* _inst, _mbCallback< _TInstance> _call) : _tag(MBCALLBACK), ptr(new mbCallback_t(_inst, _call)) {
+pxCallback<TArgs...>::pxCallback(_TInstance* _inst, pointer_to_member_function< _TInstance> _call) : ptr(new mbCallback_t(_inst, _call)) {
     pxTraceStart;
     pxTraceEnd;
 }
 template<typename...TArgs>
 template<typename _TCallable>
-Callback_t<TArgs...>::Callback_t(_TCallable _call) : _tag(LBCALLBACK), ptr(new lbCallback_t<_TCallable, TArgs...>(_call)) {
+pxCallback<TArgs...>::pxCallback(_TCallable _call) : ptr(new lbCallback_t<_TCallable, TArgs...>(_call)) {
 
     pxTraceStart;
     pxTraceEnd;
 }
 
 template<typename...TArgs>
-Callback_t<TArgs...>::Callback_t(EventHandler_t<TArgs...>* _handler) : _tag(CHCALLBACK), ptr(new chCallback_t(_handler)) {
+pxCallback<TArgs...>::pxCallback(pxEventHandler<TArgs...>* _handler) : ptr(new chCallback_t(_handler)) {
     pxTraceStart;
     pxTraceEnd;
 }
 
 template<typename...TArgs>
-Callback_t<TArgs...>::~Callback_t() {
+pxCallback<TArgs...>::~pxCallback() {
     delete(ptr);
 }
 
@@ -527,13 +515,13 @@ Callback_t<TArgs...>::~Callback_t() {
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 template<typename...TArgs>
-void Callback_t<TArgs...>::operator()(TArgs...e) {
+void pxCallback<TArgs...>::operator()(TArgs...e) {
     (*ptr)(e...);
 }
 
 template<typename...TArgs>
-Callback_t<TArgs...>::operator uint() {
-    return (uint)*ptr;
+pxCallback<TArgs...>::operator DWORD() {
+    return (DWORD)*ptr;
 }
 
 
@@ -556,22 +544,22 @@ Callback_t<TArgs...>::operator uint() {
   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 template<typename...TArgs>
-EventHandler_t<TArgs...>::EventHandler_t(const EventHandler_t& e) {
+pxEventHandler<TArgs...>::pxEventHandler(const pxEventHandler& e) {
     pxTraceStart;
     Release();
-    for (int i = 0; i < e.GetSize(); i++) {
+    for (size_t i = 0; i < e.GetSize(); i++) {
         this->Add(e.m_callbacks[i]);
     }
     pxTraceEnd;
 }
 
 template<typename...TArgs>
-EventHandler_t<TArgs...>::EventHandler_t(const EventCallback& cb) : m_callbacks({ new Callback_t<TArgs...>(cb) }) {
+pxEventHandler<TArgs...>::pxEventHandler(const EventCallback& cb) : m_callbacks({ new pxCallback<TArgs...>(cb) }) {
     pxTraceStart; pxTraceEnd;
 }
 
 template<typename...TArgs>
-EventHandler_t<TArgs...>::EventHandler_t(EventHandler_t* e) : m_callbacks({ new Callback_t<TArgs...>(e) }) {
+pxEventHandler<TArgs...>::pxEventHandler(pxEventHandler* e) : m_callbacks({ new pxCallback<TArgs...>(e) }) {
     pxTraceStart; pxTraceEnd;
 }
 
@@ -589,7 +577,7 @@ EventHandler_t<TArgs...>::EventHandler_t(EventHandler_t* e) : m_callbacks({ new 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 template<typename...TArgs>
-void EventHandler_t<TArgs...>::Join(const EventHandler_t& e) {
+void pxEventHandler<TArgs...>::Join(const pxEventHandler& e) {
     pxTraceStart;
     for (size_t i = 0; i < e.GetSize(); i++) {
         this->Add(e.m_callbacks[i]);
@@ -598,7 +586,7 @@ void EventHandler_t<TArgs...>::Join(const EventHandler_t& e) {
 }
 
 template<typename...TArgs>
-void EventHandler_t<TArgs...>::Add(const EventHandler_t& e) {
+void pxEventHandler<TArgs...>::Add(const pxEventHandler& e) {
     pxTraceStart;
     for (size_t i = 0; i < e.GetSize(); i++) {
         this->Add(e.m_callbacks[i]);
@@ -608,7 +596,7 @@ void EventHandler_t<TArgs...>::Add(const EventHandler_t& e) {
 }
 
 template<typename...TArgs>
-void EventHandler_t< TArgs...>::Remove(const EventHandler_t& e) {
+void pxEventHandler< TArgs...>::Remove(const pxEventHandler& e) {
     pxTraceStart;
 
     for (size_t i = 0; i < e.GetSize(); i++) {
@@ -618,7 +606,7 @@ void EventHandler_t< TArgs...>::Remove(const EventHandler_t& e) {
 }
 
 template<typename...TArgs>
-void EventHandler_t<TArgs...>::Invoke(TArgs... _args) {
+void pxEventHandler<TArgs...>::Invoke(TArgs... _args) {
     pxTraceStart;
 
     for (size_t i = 0; i < this->GetSize(); i++) {
@@ -640,7 +628,7 @@ void EventHandler_t<TArgs...>::Invoke(TArgs... _args) {
 
 
 template<typename...TArgs>
-size_t EventHandler_t<TArgs...>::GetSize() const {
+size_t pxEventHandler<TArgs...>::GetSize() const {
 #ifdef USING_STL
     return m_callbacks.size();
 #endif // USING_STL
@@ -651,7 +639,7 @@ size_t EventHandler_t<TArgs...>::GetSize() const {
 
 
 template<typename...TArgs>
-void EventHandler_t<TArgs...>::Dump() {
+void pxEventHandler<TArgs...>::Dump() {
     printf("Starting to dump contents of EventHandler:\n");
     size_t actual_size = this->GetSize();
     for (size_t i = 0; i < actual_size; i++) {
@@ -683,9 +671,9 @@ void EventHandler_t<TArgs...>::Dump() {
  * \see Callback class and constructors for more info
  */
 template< typename...TArgs>
-void EventHandler_t<TArgs...>::operator +=(const EventCallback& e) {
+void pxEventHandler<TArgs...>::operator +=(const EventCallback& e) {
     pxTraceStart;
-    this->Add(e);
+    this->Add(pxEventHandler(e));
 
     pxTraceEnd;
 }
@@ -695,7 +683,7 @@ void EventHandler_t<TArgs...>::operator +=(const EventCallback& e) {
  * \param e A different EventHandler
  */
 template< typename...TArgs>
-void EventHandler_t<TArgs...>::operator +=(EventHandler_t& e) {
+void pxEventHandler<TArgs...>::operator +=(pxEventHandler& e) {
     if (&e == this) {
         printf("Error: Joining an EventHandler with it self is not allowed\n");
         return;
@@ -706,9 +694,9 @@ void EventHandler_t<TArgs...>::operator +=(EventHandler_t& e) {
     pxTraceEnd;
 }
 template< typename...TArgs>
-void EventHandler_t<TArgs...>::operator -=(const EventCallback& e) {
+void pxEventHandler<TArgs...>::operator -=(const EventCallback& e) {
     pxTraceStart;
-    this->Remove(e);
+    this->Remove(pxEventHandler(e));
     pxTraceEnd;
 }
 
@@ -722,7 +710,7 @@ void EventHandler_t<TArgs...>::operator -=(const EventCallback& e) {
 
 
 template< typename...TArgs>
-void EventHandler_t<TArgs...>::Add(hCallback _newCallback) {
+void pxEventHandler<TArgs...>::Add(hCallback _newCallback) {
 #ifdef NOT_USING_STL
     if (m_count >= MAX_CALLBACK_COUNT)  // Max size reached.        
         return;
@@ -753,7 +741,7 @@ void EventHandler_t<TArgs...>::Add(hCallback _newCallback) {
 }
 
 template<typename...TArgs>
-void EventHandler_t<TArgs...>::Remove(hCallback _callback) {
+void pxEventHandler<TArgs...>::Remove(hCallback _callback) {
     pxTraceStart;
     // Removes the element ( if find )
     for (size_t i = 0; i < this->GetSize(); i++) {
@@ -770,7 +758,7 @@ void EventHandler_t<TArgs...>::Remove(hCallback _callback) {
 }
 
 template<typename...TArgs>
-void EventHandler_t<TArgs...>::Trim(int startIndex) {
+void pxEventHandler<TArgs...>::Trim(size_t startIndex) {
 #ifdef BACKTRACE
     printf("%s(int) called\n ", __FUNCTION__);
 #endif // BACKTRACE
@@ -799,7 +787,7 @@ void EventHandler_t<TArgs...>::Trim(int startIndex) {
 }
 
 template<typename...TArgs>
-void EventHandler_t<TArgs...>::Release() {
+void pxEventHandler<TArgs...>::Release() {
     pxTraceStart;
     for (int i = 0; i < GetSize(); i++) {
         hCallback cb = m_callbacks[i];

@@ -61,29 +61,29 @@ namespace pxTests {
 
    
 
-
-
-
-
-    template<int TotalLoops = 1, int PauseAfter = 1, typename TxCallable>
+    
+    template<int TotalLoops = 1, int NumberOfPauses = 1, bool PauseBeforeStart = true, typename TxCallable>
     int Run(TxCallable fn) {
         static_assert(TotalLoops > 0, "TotalLoops MUST be a non-zero positive integer");
-        static_assert(PauseAfter > 0, "PauseAfter MUST be a non-zero positive integer.");
-        static_assert(PauseAfter <= TotalLoops, "PauseAfter Must be less then or equal TotalLoops.");
+        static_assert(NumberOfPauses > 0, "NumberOfPauses MUST be a positive integer, including zero.");
+        static_assert(NumberOfPauses <= TotalLoops, "NumberOfPauses Must be less then or equal TotalLoops.");
 
-        constexpr int Slice = TotalLoops / PauseAfter;
+        constexpr int Slice = TotalLoops / NumberOfPauses;
         std::cout << "Test initializing.\n";
         std::cout << "Press C to clear the screen and start. Press any other key to start\n";
         char key = 0;
-        // key = _getch();
-        if (key == 'c') { system("cls"); }
+        if(PauseBeforeStart) {
+            key = _getch();
+            if (key == 'c') { system("cls"); }
+        }
 
-        for (int i = 0; i < Slice; i++) {
-            for (int j = 0; j < PauseAfter; j++) {
+        for (int i = 0; i < NumberOfPauses; i++) {
+            for (int j = 0; j < Slice; j++) {
                 fn();
             }
             std::cout << "Section terminated. Press C to clear screen and continue. Press T to terminate. Press any other key to continue.\n";
-            char key = _getch();
+            int ___ = 0;
+        	key = _getch();
             if (key == 'c') { system("cls"); }
             if (key == 't') { std::cout << "Test aborted.\n"; return 1; }
 

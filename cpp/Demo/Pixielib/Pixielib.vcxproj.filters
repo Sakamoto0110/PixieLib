@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{1303892f-c311-46de-b2fb-fe29b581dc35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{4224985e-58df-4c56-a56e-c7a0e77ce56c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\pxEvents.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pxContainers.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pxCorelib.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pxTests.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\VectorMath.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\_pxDebug.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pxEventsEx.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pxStrings.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
