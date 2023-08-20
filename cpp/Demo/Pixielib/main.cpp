@@ -9,25 +9,14 @@ void EventTests::UserTest() {
 
 	TestEventArgs args{ 51,89346 };
 
-
-	TestEventHandler e3 = {&fn1};
-
-	Foo _f = Foo(0,0);
-	auto l = [](void*, TestEventArgs*) {};
-	TestEventHandler e1 = { &fn1 };
+	TestEventHandler e1 = TestEventHandler();
 	
+	pxTests::Run<10000, 3>([&] {
+		e1 = TestEventHandler(&fn1);
+		e1 += fn2;
+		e1 -= fn2;
+		});
 
-	// e1 += [](void*, TestEventArgs*) {std::cout << "lambdac all\n"; };
-	e1 += {&_f, & Foo::func1};
-	/*Run<10, 2>([&] {
-		e1 += {&fn1};
-		e1 -= {&fn1};
-		});*/
-	int x = 0;
-
-	 // e2 += &l;
-	// TestEventHandler e3 = TestEventHandler([&](void*, TestEventArgs*) {});
-	//e1.Invoke(0, &args);
 	
 
 	
@@ -56,8 +45,9 @@ int main() {
 	// pxStringFormater::Parse("%i", 642);
 	//std::cout << pxStringFormater::Parse("teste %i batata", 41) << "\n"; 
 	
-
+	int __ = 0;
 	EventTests::UserTest();
+	int _ = 0;
 	system("pause");
 	return 0;
 }

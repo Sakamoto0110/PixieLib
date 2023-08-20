@@ -82,7 +82,7 @@ namespace pxTests {
                 fn();
             }
             std::cout << "Section terminated. Press C to clear screen and continue. Press T to terminate. Press any other key to continue.\n";
-
+            int ___ = 0;
         	key = _getch();
             if (key == 'c') { system("cls"); }
             if (key == 't') { std::cout << "Test aborted.\n"; return 1; }
