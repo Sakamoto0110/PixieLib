@@ -1,0 +1,37 @@
+# Perguntas em aberto
+
+Estado de 03/10/2026. As respondidas saem daqui e vão para `notas.md`, citadas pelo número. Os
+números não são reaproveitados. A sugestão, quando há, vem no fim de cada pergunta, e dá para
+responder pelo número: "1.7: sim".
+
+## 1. Definição e primeira rodada
+
+Respondidas em 03/10: da 1.1 à 1.6, a 1.9 e a 1.14 (`notas.md`, seções 1, 2 e 4).
+
+- **1.7. Onde e o gerador** (passagem, 6.2 e 6.7). O C# numa pasta `dotnet/` ao lado da `cpp/`,
+  com uma solução própria; o source generator num projeto `PixieLib.Generators`, referenciado como
+  analisador, que roda na compilação e não vai junto para quem usa. Sugestão: sim.
+- **1.8. Eventos: como corrigir** (adiada em 03/10, para outra hora). Sugestão: corrigir à mão
+  primeiro (a regra dos cinco no `pxCallback`, a lambda guardada por valor, o handler guardando os
+  callbacks por valor), e depois trocar o ponteiro cru pelo `unique_ptr`, para usar a ferramenta
+  entendendo o que ela faz. O `-=` não se resolve com ponteiro nenhum: é decisão de desenho
+  (`diagnostico-2023.md`, seção 1).
+- **1.10. Eventos como módulo.** Os eventos são modelos (`pxEventHandler<TArgs...>`), então não
+  dá para pô-los numa DLL: só existem em headers, instanciados por quem usa. Sugestão: um módulo
+  próprio, com pasta e alvo de build próprios (uma biblioteca só de headers), de que a engine
+  depende e que quem só quer os primitivos não puxa. Nenhum binário a mais.
+- **1.11. `Vec2` e `Vector<n>`** (para a rodada dos vetores). Sugestão: no C++, `pxVec2` é o
+  `pxVector<2>` com os membros `x` e `y` nomeados, uma implementação só, como no GLM; no C#, tipos
+  concretos do gerador, porque o C# não tem parâmetro genérico inteiro (e `Vector<T>` lá já é o
+  vetor SIMD do .NET).
+- **1.12. A convenção das matrizes** (para a rodada das matrizes). Sugestão: vetor coluna
+  (`M * v`) e armazenamento column-major, o que o GLSL e o `glUniformMatrix4fv` esperam sem
+  transpor, e o mesmo da Unity e do GLM. A memória fica igual à do `System.Numerics` (row-major com
+  `v * M`), então o repasse em `float` continua de graça, só com a ordem dos operandos trocada por
+  dentro. Custo: quem usar o `System.Numerics` direto, ao lado da PixieLib, multiplica na ordem
+  contrária.
+- **1.13. Projeção e eixo Y** (para a rodada das transformações). No OpenGL, o espaço normalizado
+  tem o Y para cima e a profundidade em [-1, 1]; o editor (WinForms e WPF) usa o Y para baixo.
+  Sugestão: os primitivos 2D seguem a interface (origem no canto superior esquerdo, Y para baixo), e
+  as funções de projeção (`Ortho`, `Perspective`) geram matrizes para o [-1, 1] do OpenGL, com a
+  ortográfica 2D já invertendo o Y.
