@@ -110,9 +110,12 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
 
 - A PixieLib recomeça limpa, no mesmo repositório. O código de 2023 fica guardado em tags: a
   antiga `master` na `legado-2023` (`328b62d`) e a `indev` na `legado-2023-indev` (`b961405`).
+  Quem cria as tags é o void: a sessão que fez o recomeço sobe branches, mas o GitHub recusa o
+  push de tags dela (403).
 - A história nova está na `main`, uma branch órfã, sem commit anterior, cujo primeiro commit é
-  esta definição. A branch padrão do GitHub passa a ser a `main` (o void troca, em Settings →
-  Branches); apagar as branches antigas fica a critério dele.
+  esta definição (`7a43f42`). A branch padrão do GitHub passa a ser a `main` (o void troca, em
+  Settings → General → Default branch). Apagar as branches antigas fica a critério dele, e só
+  depois que as tags existirem.
 - O código de 2023 não entra na história nova: o que for reaproveitado é portado, citando a tag.
 
 ### 4.8 O escopo desta rodada (03/10)
