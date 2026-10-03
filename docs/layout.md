@@ -47,5 +47,7 @@ O layout garante que os dados atravessam; estas regras garantem que eles querem 
   quando perde, truncando como um cast.
 - HSL para RGBA: a meia unidade arredonda para o par (o padrão do `Math.Round` do C#; no C++,
   `std::nearbyint`), e o valor é preso entre 0 e 255 antes.
+- String da HSL: `(h, s, l, a)`, na ordem dos campos, com ponto decimal em qualquer cultura; a HSL
+  não tem hex (`notas.md`, 4.2).
 - Hex da cor: `0xRRGGBBAA`, a ordem em que o número é escrito, feita com deslocamento de bits. No
   C#, o `ToArgb()` em `0xAARRGGBB` existe só para o `System.Drawing`.

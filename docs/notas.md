@@ -73,6 +73,11 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   um inteiro é explícita e feita com deslocamento de bits. Para o `System.Drawing`, `ToArgb()` e
   `FromArgb(int)` continuam em `0xAARRGGBB`.
 - `PxColorHsl` continua com o nome (P8.3) e sem conversão implícita para a outra cor (P8.4).
+- **A HSL não tem hex nem sintaxe de CSS** (03/10). No editor, ela é um seletor de cor ou um
+  conjunto de sliders, nunca texto digitado, então não precisa de parser. Quando precisar de uma
+  string, para mostrar o valor, ela é `(h, s, l, a)`, na ordem dos campos: `(360, 1, 1, 0)`. Hex só
+  existe na RGBA, e a HSL que precisar dele passa por `ToRgba`, explicitamente.
+- **[proposta]** A string da RGBA no mesmo estilo, `(r, g, b, a)`, além do hex.
 
 ### 4.3 Retângulos (1.4, 03/10)
 
