@@ -3,7 +3,7 @@
 O que já foi decidido, com a data e o número da pergunta: `1.3` é a pergunta 1.3 de
 `perguntas-em-aberto.md`, e `P8.3` é a pergunta 8.3 do rework do InteractiveEditor
 (`Sakamoto0110/InteractiveEditor_Rework`, branch `rework-claude`, `docs/notas-modernizacao.md`). O
-que ainda é proposta está marcado como **[proposta]**. Nada destas notas mudou código ainda.
+que ainda é proposta está marcado como **[proposta]**. O que já está no código cita o commit.
 
 A história do projeto está em `historia.md`, o estado do código de 2023 em `diagnostico-2023.md`,
 e a passagem que trouxe a parte em C# em `passagem-pixielib.md`.
@@ -126,13 +126,26 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   cores. Os vetores e as matrizes, com a matemática deles, vão para a próxima, junto com as
   perguntas 1.11 a 1.13.
 
+### 4.9 Os primitivos em C++ (commit `0424940`)
+
+- Aplicado: `pxPoint_t`, `pxSize_t`, `pxRect_t`, `pxRegion_t` e `pxPadding_t` nas três precisões,
+  `pxColorRgba` e `pxColorHsl`, cada um no seu header em `cpp/include/pixie/`, com a mesma
+  semântica dos primitivos do InteractiveEditor. O layout de cada um está em `layout.md`, conferido
+  por `static_assert` no próprio header.
+- Os testes (`cpp/tests`, pelo CTest) passam no g++ 13 e no clang++ 18, com `-Wall -Wextra
+  -Wpedantic -Wconversion -Werror`, e falham quando se quebra de propósito uma cópia: as bordas do
+  `Contains`, o arredondamento e o clamp da HSL, a ordem do hex, o layout e as regras de precisão.
+  O MSVC ainda não foi testado.
+- **[proposta]** As escolhas que não vinham decididas estão nas perguntas 2.1 a 2.8.
+
 ## 5. Consequências, ainda não aplicadas
 
-- **No C++**: os apelidos sem sufixo passam a `double` (4.1); a cor vira `pxColorRgba` (4.2); os
-  campos passam a tamanho fixo (4.1).
 - **No InteractiveEditor**, numa sessão do rework depois desta (passagem, 6.8): `PxColorArgb` vira
   `PxColorRgba`, com os campos na ordem `r, g, b, a`; as conversões do WinForms e do WPF viram
   métodos de extensão; o `PxDock` fica; os primitivos saem para a PixieLib, e o namespace muda.
+- **No C# da PixieLib**, quando ele vier: as structs com `[StructLayout(LayoutKind.Sequential)]`,
+  nos campos de `layout.md`; a `PxColorHsl` com o alfa por último (2.3); o `FromHex` e o `ToHex`
+  (2.4); o clamp antes de arredondar na HSL (2.8).
 
 ## 6. Como commitar
 

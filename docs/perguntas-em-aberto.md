@@ -35,3 +35,30 @@ Respondidas em 03/10: da 1.1 à 1.6, a 1.9 e a 1.14 (`notas.md`, seções 1, 2 e
   Sugestão: os primitivos 2D seguem a interface (origem no canto superior esquerdo, Y para baixo), e
   as funções de projeção (`Ortho`, `Perspective`) geram matrizes para o [-1, 1] do OpenGL, com a
   ortográfica 2D já invertendo o Y.
+
+## 2. Os primitivos em C++
+
+O que eu escolhi ao escrever os primitivos em C++ (commit `0424940`) sem decisão anterior. O código
+já está assim; a sugestão de cada uma é manter.
+
+- **2.1. A estrutura.** Só headers, em `cpp/include/pixie/` (incluídos como
+  `<pixie/pxPoint.hpp>`), construídos com CMake, em C++20; os testes num executável do CTest, sem
+  framework, com um `check.hpp` de 14 linhas.
+- **2.2. Os nomes.** Os métodos em PascalCase, iguais aos do C# e aos da PixieLib de 2023
+  (`IsEmpty`, `Contains`, `Right`); os campos em minúsculas (`x`, `width`); o modelo com `_t`
+  (`pxPoint_t<T>`), como no `pxCorelib.h`, com os apelidos `pxPoint`, `pxPointf` e `pxPointi`.
+- **2.3. A HSL com o alfa por último** (`h, s, l, a`), como na RGBA. O C# de hoje tem o alfa
+  primeiro e muda junto quando os primitivos forem para a PixieLib.
+- **2.4. O hex da cor.** `FromHex` e `ToHex` em `0xRRGGBBAA`, a ordem em que o número é escrito
+  (a do `#RRGGBBAA` do CSS e a do `GetColor` do raylib), nas duas pontas; o `ToArgb` do C# fica só
+  para o `System.Drawing`.
+- **2.5. As precisões fechadas.** O modelo só aceita `double`, `float` e `int32_t`
+  (`static_assert`), porque o layout das três é o contrato.
+- **2.6. A conversão que perde** é explícita e trunca, como um cast: `pxPointi(pxPoint{2.9, -2.9})`
+  dá `(2, -2)`. O C# arredonda na conversão para o `System.Drawing`, mas isso é coisa da ponte com
+  ele.
+- **2.7. O escalar** do `*` e do `/` é do mesmo tipo do primitivo, então um `pxPointi` divide como
+  inteiro (`7 / 2` dá `3`).
+- **2.8. O clamp.** A conversão de HSL para RGBA prende o valor entre 0 e 255 antes de arredondar;
+  no C# de hoje, uma saturação ou uma luminosidade fora de 0 a 1 estoura o byte. O C# ganha o mesmo
+  clamp quando vier.
