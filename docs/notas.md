@@ -75,8 +75,10 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
 - `PxColorHsl` continua com o nome (P8.3) e sem conversão implícita para a outra cor (P8.4).
 - **A HSL não tem hex nem sintaxe de CSS** (03/10). No editor, ela é um seletor de cor ou um
   conjunto de sliders, nunca texto digitado, então não precisa de parser. Quando precisar de uma
-  string, para mostrar o valor, ela é `(h, s, l, a)`, na ordem dos campos: `(360, 1, 1, 0)`. Hex só
-  existe na RGBA, e a HSL que precisar dele passa por `ToRgba`, explicitamente.
+  string, para mostrar o valor, ela é `(h, s, l, a)`, na ordem dos campos: `(120, 1, 0.5, 255)` é
+  o verde puro e opaco. A matiz vai de 0 até antes de 360 (360 é o mesmo que 0), e o alfa é um
+  byte, de 0 (transparente) a 255 (opaco). Hex só existe na RGBA, e a HSL que precisar dele passa
+  por `ToRgba`, explicitamente.
 - **[proposta]** A string da RGBA no mesmo estilo, `(r, g, b, a)`, além do hex.
 
 ### 4.3 Retângulos (1.4, 03/10)
