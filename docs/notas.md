@@ -115,10 +115,10 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
 
 ### 4.7 O recomeço (1.14 e 1.9, 03/10)
 
-- A PixieLib recomeça limpa, no mesmo repositório. O código de 2023 continua nas branches `master`
-  (`328b62d`) e `indev` (`b961405`). O plano era guardá-lo nas tags `legado-2023` e
-  `legado-2023-indev` e apagar as duas branches, mas o GitHub recusa o push de tags das sessões
-  (403) e nenhuma ferramenta delas cria tag; o que fazer com isso é a pergunta 1.15.
+- A PixieLib recomeça limpa, no mesmo repositório. O código de 2023 fica nas branches `master`
+  (`328b62d`) e `indev` (`b961405`), como estão (1.15, 08/10). O plano das tags `legado-2023` e
+  `legado-2023-indev` foi abandonado: o GitHub recusa o push de tags das sessões (403), nenhuma
+  ferramenta delas cria tag, e as duas branches já guardam tudo.
 - A história nova está na `main`, uma branch órfã, sem commit anterior, cujo primeiro commit é
   esta definição (`7a43f42`). A `main` é a branch padrão do GitHub desde 08/10.
 - O código de 2023 não entra na história nova: o que for reaproveitado é portado, citando o
@@ -213,5 +213,7 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   (passagem, seção 1).
 - **Nenhuma marca de assistente** (03/10): sem trailers de coautoria nem de sessão, e sem menção
   a quem ajudou. Substitui o trecho da passagem (seção 1) que pedia os trailers.
+- **A branch é a `main`** (08/10). Nenhuma branch com `claude/` no nome; se um trabalho pedir uma
+  branch própria, o nome é do void.
 - Mensagens em inglês, com prefixo: `(refactor)`, `(docs)`, `(fix)`, `(feat)`. Mudança de código e
   atualização das notas em commits separados, o de `(docs)` citando o hash do outro (passagem).

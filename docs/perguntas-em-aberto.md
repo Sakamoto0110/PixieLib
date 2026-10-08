@@ -6,8 +6,8 @@ responder pelo número: "1.7: sim".
 
 ## 1. Definição e primeira rodada
 
-Respondidas: da 1.1 à 1.6, a 1.9 e a 1.14 em 03/10, e a 1.7 em 08/10 (`notas.md`, seções 1,
-2 e 4).
+Respondidas: da 1.1 à 1.6, a 1.9 e a 1.14 em 03/10, e a 1.7 e a 1.15 em 08/10 (`notas.md`,
+seções 1, 2 e 4).
 
 - **1.8. Eventos: como corrigir** (adiada em 03/10, para outra hora). Sugestão: corrigir à mão
   primeiro (a regra dos cinco no `pxCallback`, a lambda guardada por valor, o handler guardando os
@@ -33,11 +33,6 @@ Respondidas: da 1.1 à 1.6, a 1.9 e a 1.14 em 03/10, e a 1.7 em 08/10 (`notas.md
   Sugestão: os primitivos 2D seguem a interface (origem no canto superior esquerdo, Y para baixo), e
   as funções de projeção (`Ortho`, `Perspective`) geram matrizes para o [-1, 1] do OpenGL, com a
   ortográfica 2D já invertendo o Y.
-- **1.15. Onde fica o legado de 2023** (`notas.md`, 4.7). As tags não saem das sessões (o GitHub
-  recusa o push, e nenhuma ferramenta delas cria tag), então guardar o legado em tags depende de o
-  void criá-las à mão. Sugestão: desistir das tags e manter a `master` e a `indev` como estão, como
-  o registro de 2023: nada se perde e não sobra trabalho manual. Custo: a lista de branches mostra
-  as duas ao lado da `main`.
 
 ## 2. Os primitivos em C++
 
