@@ -4,7 +4,8 @@ O contrato entre o C++ e o C# (`notas.md`, seção 1): cada primitivo tem os mes
 ordem e com os mesmos tipos nas duas linguagens, e atravessa P/Invoke sem conversão. No C++, cada
 header confere o próprio layout com `static_assert` (tamanho e posição de cada campo), aplicado no
 commit `0424940`; no C#, as structs são sequenciais (`[StructLayout(LayoutKind.Sequential)]`), com
-os campos nesta ordem.
+os campos nesta ordem, e os testes conferem tamanho e posição pelo `Marshal` e pelo `Unsafe`,
+aplicado no commit `c841ae5`.
 
 ---
 
@@ -48,10 +49,11 @@ O layout garante que os dados atravessam; estas regras garantem que eles querem 
 - HSL para RGBA: a meia unidade arredonda para o par (o padrão do `Math.Round` do C#; no C++,
   `std::nearbyint`), e o valor é preso entre 0 e 255 antes.
 - Texto (`ToString`): os campos na ordem, entre parênteses, separados por `, `, como em
-  `(1.5, -2)` e `(120, 1, 0.5, 255)`. O ponto decimal é ponto em qualquer cultura, e o número sai na
-  forma mais curta que volta ao mesmo valor, sem notação científica (`100000`, não `1e+05`). Bytes e
-  inteiros saem como números. A HSL não tem hex (`notas.md`, 4.2). No C#, o `ToString` padrão do
-  `double` passa para notação científica a partir de `1E+15`, então o lado C# vai precisar formatar
-  à parte para bater.
+  `(1.5, -2)` e `(120, 1, 0.5, 255)`. O ponto decimal é ponto em qualquer cultura. O número sai com
+  os menos dígitos significativos que voltam ao mesmo valor, completados com zeros e sem notação
+  científica: `100000`, não `1e+05`; o `float` 1e20 sai `100000000000000000000`. NaN sai `nan`,
+  qualquer que seja o sinal, e os infinitos, `inf` e `-inf`. Bytes e inteiros saem como números. A
+  HSL não tem hex (`notas.md`, 4.2). Conferido: o texto de 44.905 `double` e `float` aleatórios é o
+  mesmo nas duas linguagens (`notas.md`, 4.11).
 - Hex da cor: `0xRRGGBBAA`, a ordem em que o número é escrito, feita com deslocamento de bits. No
   C#, o `ToArgb()` em `0xAARRGGBB` existe só para o `System.Drawing`.

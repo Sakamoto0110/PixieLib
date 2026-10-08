@@ -172,21 +172,41 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
 - O mesmo formato vale para todos os primitivos, só com o `ToString()`, sem `operator<<` nem
   `std::formatter` (2.9, 08/10); o `std::formatter` entra se a engine pedir.
 
-### 4.11 O lado C# (1.7, 08/10)
+- O texto mudou no commit `d28ddd9`, para bater com o C#: a notação fixa do `std::to_chars` escolhe,
+  entre as formas mais curtas, os dígitos mais próximos do valor exato, e o `float` 1e20 saía
+  `100000002004087734272`, onde o C# escreve `100000000000000000000`. Agora o número sai da forma
+  científica mais curta, com a vírgula decimal movida à mão, o mesmo algoritmo dos dois lados.
 
-- O C# fica numa pasta `dotnet/`, ao lado da `cpp/`, com uma solução própria.
+### 4.11 O lado C# (1.7, 08/10; commit `c841ae5`)
+
+- O C# fica numa pasta `dotnet/`, ao lado da `cpp/`, com uma solução própria (`PixieLib.slnx`).
 - As três precisões saem de um source generator, o projeto `PixieLib.Generators`, referenciado como
-  analisador: roda na compilação e não vai junto para quem usa a `PixieLib.dll`.
+  analisador: roda na compilação e não vai junto para quem usa a `PixieLib.dll`. Cada
+  `Templates/*.template.cs` vira três tipos; no modelo, `__S__` é o sufixo e `__T__` o tipo, e as
+  diferenças ficam em blocos `#if PX_DOUBLE`, `PX_FLOAT`, `PX_INT` e `PX_FLOATING`.
+- Aplicado: `PxPoint`, `PxSize`, `PxRect`, `PxRegion` e `PxPadding` nas três precisões, saídos dos
+  modelos, e `PxColorRgba` e `PxColorHsl` escritos à mão, para `net481` e `net10.0`. Os campos são
+  os de `layout.md`, e a semântica é a do C++: as conversões entre precisões, o `Contains`
+  meio-aberto, a HSL com o alfa por último, o arredondamento para o par e o clamp, o hex em
+  `0xRRGGBBAA` e o texto.
+- Os testes (`dotnet/PixieLib.Tests`) usam os mesmos valores dos testes do C++, mais o layout
+  (`Marshal` e `Unsafe`) e a ponte com o `System.Drawing`, e o texto roda numa cultura com vírgula
+  decimal (pt-BR). Passam no `net10.0`; o `net481` é conferido pela compilação, porque não roda no
+  Linux. Falham quando se quebra de propósito uma cópia: as bordas do `Contains`, o arredondamento,
+  o clamp, o layout, a ordem do hex, as regras de precisão, o texto, a cultura e o gerador.
+- O texto de 44.905 `double` e `float` aleatórios, comparado linha a linha, é o mesmo no C++ e no
+  C#.
+- **[proposta]** As escolhas que não vinham decididas estão nas perguntas 3.1 a 3.5.
 
 ## 5. Consequências, ainda não aplicadas
 
-- **No InteractiveEditor**, numa sessão do rework depois desta (passagem, 6.8): `PxColorArgb` vira
-  `PxColorRgba`, com os campos na ordem `r, g, b, a`; as conversões do WinForms e do WPF viram
-  métodos de extensão; o `PxDock` fica; os primitivos saem para a PixieLib, e o namespace muda.
-- **No C# da PixieLib**, quando ele vier: as structs com `[StructLayout(LayoutKind.Sequential)]`,
-  nos campos de `layout.md`; a `PxColorHsl` com o alfa por último (2.3); o `FromHex` e o `ToHex`
-  (2.4); o clamp antes de arredondar na HSL (2.8); o `ToString` no formato da 4.10, no lugar do
-  de hoje (`1,2` para o ponto, `(A,R,G,B)` para a cor).
+- **No InteractiveEditor**, numa sessão do rework depois desta (passagem, 6.8): ele passa a usar a
+  PixieLib e apaga os próprios primitivos, menos o `PxDock`; o namespace muda de
+  `InteractiveEditor.Primitives` para `PixieLib`. O que muda para quem os usa: `PxColorArgb` vira
+  `PxColorRgba`, e a `PxColorHsl` passa o alfa para o fim, nos construtores também; as conversões
+  entre as cores ficam só na `PxColorHsl` (`FromRgba` e `ToRgba`); saem o `ToHexString` e as
+  conversões explícitas da cor com `int` (o `ToArgb` e o `FromArgb` ficam); o `ToString` passa ao
+  formato da 4.10; e as conversões do WinForms e do WPF viram métodos de extensão no editor (4.4).
 
 ## 6. Como commitar
 
