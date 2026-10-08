@@ -8,8 +8,12 @@ add_executable(pixie_tests
     pxColorRgba.test.cpp
     pxColorHsl.test.cpp
     pxToString.test.cpp
+    pxCallback.test.cpp
+    pxEventHandler.test.cpp
+    pxSubscription.test.cpp
+    pxEvent.test.cpp
 )
-target_link_libraries(pixie_tests PRIVATE pixie::pixie)
+target_link_libraries(pixie_tests PRIVATE pixie::pixie pixie::events)
 
 if(MSVC)
     target_compile_options(pixie_tests PRIVATE /W4 /WX /permissive-)

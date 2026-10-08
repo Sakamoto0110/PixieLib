@@ -7,6 +7,13 @@ add_library(pixie::pixie ALIAS pixie)
 target_include_directories(pixie INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_features(pixie INTERFACE cxx_std_20)
 
+# The events, a module of their own (1.10): the engine links pixie::events, and whoever only wants
+# the primitives does not pull them. Also only headers, since everything in them is a template.
+add_library(pixie_events INTERFACE)
+add_library(pixie::events ALIAS pixie_events)
+target_include_directories(pixie_events INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/events/include)
+target_compile_features(pixie_events INTERFACE cxx_std_20)
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     option(PIXIE_BUILD_TESTS "Build the tests of PixieLib" ON)
 else()

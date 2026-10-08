@@ -10,6 +10,10 @@ void TestPadding();
 void TestColorRgba();
 void TestColorHsl();
 void TestToString();
+void TestCallback();
+void TestEventHandler();
+void TestSubscription();
+void TestEvent();
 
 int main() {
     TestSize();
@@ -20,6 +24,10 @@ int main() {
     TestColorRgba();
     TestColorHsl();
     TestToString();
+    TestCallback();
+    TestEventHandler();
+    TestSubscription();
+    TestEvent();
 
     if (pxCheckFailures == 0)
         std::printf("all checks passed\n");
