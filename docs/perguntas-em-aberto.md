@@ -62,3 +62,8 @@ já está assim; a sugestão de cada uma é manter.
 - **2.8. O clamp.** A conversão de HSL para RGBA prende o valor entre 0 e 255 antes de arredondar;
   no C# de hoje, uma saturação ou uma luminosidade fora de 0 a 1 estoura o byte. O C# ganha o mesmo
   clamp quando vier.
+- **2.9. O texto de todos os primitivos** (commit `c798977`). O formato decidido para a HSL,
+  `(h, s, l, a)`, vale para todos: `(x, y)`, `(width, height)`, `(x, y, width, height)`,
+  `(x1, y1, x2, y2)`, `(left, top, right, bottom)` e `(r, g, b, a)`. Só o `ToString()`, sem
+  `operator<<` nem `std::formatter`: quem usa o `std::format` passa o `ToString()` como argumento.
+  Sugestão: manter, e acrescentar o `std::formatter` só se a engine pedir.

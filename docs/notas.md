@@ -79,7 +79,7 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   o verde puro e opaco. A matiz vai de 0 até antes de 360 (360 é o mesmo que 0), e o alfa é um
   byte, de 0 (transparente) a 255 (opaco). Hex só existe na RGBA, e a HSL que precisar dele passa
   por `ToRgba`, explicitamente.
-- **[proposta]** A string da RGBA no mesmo estilo, `(r, g, b, a)`, além do hex.
+- A RGBA tem texto no mesmo estilo, `(r, g, b, a)`, além do hex (4.10).
 
 ### 4.3 Retângulos (1.4, 03/10)
 
@@ -145,6 +145,19 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   O MSVC ainda não foi testado.
 - **[proposta]** As escolhas que não vinham decididas estão nas perguntas 2.1 a 2.8.
 
+### 4.10 O texto dos primitivos (08/10, commit `c798977`)
+
+- A engine vai consumir os primitivos, então o texto entra no C++ agora, e não quando alguém
+  precisar (08/10).
+- Aplicado: um `ToString()` em cada primitivo, todos no formato da HSL (4.2): os campos na ordem,
+  entre parênteses, separados por `, `. Os números saem pelo `std::to_chars`, que ignora a cultura,
+  na forma mais curta que volta ao mesmo valor e sem notação científica (`layout.md`, seção 3).
+- Os testes passam no g++ e no clang++ e falham quando se quebra de propósito a notação, o
+  separador, quem escreve o número, o tamanho do buffer, os bytes saindo como caractere ou a ordem
+  da HSL. Este container só tem a cultura C, então a independência de cultura vem da garantia do
+  `std::to_chars`, não de um teste com vírgula decimal.
+- **[proposta]** O mesmo formato para todos os primitivos, e não só para a HSL (2.9).
+
 ## 5. Consequências, ainda não aplicadas
 
 - **No InteractiveEditor**, numa sessão do rework depois desta (passagem, 6.8): `PxColorArgb` vira
@@ -152,7 +165,8 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   métodos de extensão; o `PxDock` fica; os primitivos saem para a PixieLib, e o namespace muda.
 - **No C# da PixieLib**, quando ele vier: as structs com `[StructLayout(LayoutKind.Sequential)]`,
   nos campos de `layout.md`; a `PxColorHsl` com o alfa por último (2.3); o `FromHex` e o `ToHex`
-  (2.4); o clamp antes de arredondar na HSL (2.8).
+  (2.4); o clamp antes de arredondar na HSL (2.8); o `ToString` no formato da 4.10, no lugar do
+  de hoje (`1,2` para o ponto, `(A,R,G,B)` para a cor).
 
 ## 6. Como commitar
 
