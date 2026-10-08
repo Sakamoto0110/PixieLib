@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <pixie/events/pxEventHandler.hpp>
 
@@ -233,9 +234,111 @@ static void TestArguments() {
     PX_CHECK(value == 20);
 }
 
+static void TestForward() {
+    // Live: the target's callbacks as they are at each Invoke, at the point of the link.
+    {
+        pxEventHandler<> a, b;
+        a += &A;
+        PX_CHECK(a.Forward(b));
+        a += &C;
+        PX_CHECK(Run(a) == "ac");
+        b += &B;
+        PX_CHECK(Run(a) == "abc" && a.Count() == 3);
+        pxEventHandler<> other;
+        other.Forward(b);
+        PX_CHECK(a.Unforward(b) && !a.Unforward(b));
+        PX_CHECK(Run(a) == "ac" && Run(b) == "b" && Run(other) == "b");
+    }
+
+    // A loop is refused, also through other handlers.
+    {
+        pxEventHandler<> a, b, c;
+        PX_CHECK(!a.Forward(a));
+        PX_CHECK(a.Forward(b) && b.Forward(c));
+        PX_CHECK(!b.Forward(a) && !c.Forward(a) && !c.Forward(b));
+        PX_CHECK(a.Forward(c)); // two ways to c, no loop
+        c += &C;
+        PX_CHECK(Run(a) == "cc");
+    }
+
+    // The link ends with either handler.
+    {
+        pxEventHandler<> a;
+        a += &A;
+        {
+            pxEventHandler<> target;
+            a.Forward(target);
+            target += &B;
+            PX_CHECK(Run(a) == "ab");
+        }
+        PX_CHECK(a.Count() == 1 && Run(a) == "a");
+
+        pxEventHandler<> target;
+        target += &B;
+        {
+            pxEventHandler<> source;
+            source.Forward(target);
+            PX_CHECK(Run(source) == "b");
+        }
+        PX_CHECK(Run(target) == "b");
+    }
+
+    // The link follows both handlers when they move, also inside a vector that grows.
+    {
+        pxEventHandler<> a;
+        std::vector<pxEventHandler<>> targets(1);
+        a.Forward(targets[0]);
+        targets[0] += &B;
+        targets.resize(64);
+        PX_CHECK(Run(a) == "b");
+        pxEventHandler<> moved = std::move(a);
+        PX_CHECK(Run(moved) == "b" && Run(a).empty());
+        targets.clear();
+        PX_CHECK(moved.IsEmpty());
+    }
+
+    // Moved over: the links into the moved handler follow it; the ones into the old one end.
+    {
+        pxEventHandler<> toOld, toNew, oldOne, newOne;
+        toOld.Forward(oldOne);
+        toNew.Forward(newOne);
+        newOne += &C;
+        oldOne = std::move(newOne);
+        PX_CHECK(toOld.IsEmpty() && Run(toNew) == "c");
+        PX_CHECK(toNew.Unforward(oldOne) && toNew.IsEmpty());
+    }
+
+    // A copy of the source does not carry the link; the target can die after it.
+    {
+        pxEventHandler<> copy;
+        {
+            pxEventHandler<> a, b;
+            a += &A;
+            a.Forward(b);
+            b += &B;
+            copy = a;
+            pxEventHandler<> joined;
+            joined += a;
+            PX_CHECK(Run(a) == "ab" && Run(copy) == "a" && Run(joined) == "a");
+        }
+        PX_CHECK(Run(copy) == "a");
+    }
+
+    // The target destroyed by its own callback, in the middle of the source's Invoke.
+    {
+        pxEventHandler<> a;
+        auto* target = new pxEventHandler<>();
+        a.Forward(*target);
+        *target += [target] { log += 'd'; delete target; };
+        a += &C;
+        PX_CHECK(Run(a) == "dc" && a.Count() == 1);
+    }
+}
+
 void TestEventHandler() {
     TestOrderAndIdentity();
     TestJoinAndCopy();
     TestReentrancy();
     TestArguments();
+    TestForward();
 }

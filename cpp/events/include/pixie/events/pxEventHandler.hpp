@@ -26,6 +26,10 @@
 // own captures afterwards. Not thread-safe: using one handler from more than one thread needs a
 // lock around it.
 //
+// Forward links two handlers live: invoking this one invokes the target too, with whatever
+// callbacks the target has by then. The link ends with either handler and follows both when they
+// move.
+//
 // Ported from pxEvents.hpp of 2023 (indev, b961405).
 template<typename... TArgs>
 class pxEventHandler : private pxEventsDetail::SubscriptionList {
@@ -34,7 +38,7 @@ public:
 
     pxEventHandler() noexcept : SubscriptionList(&RemoveById) {}
 
-    // The copy gets the callbacks; the subscriptions stay with the original.
+    // The copy gets the callbacks; the subscriptions and the forwards stay with the original.
     pxEventHandler(const pxEventHandler& o) : pxEventHandler() { Join(o); }
 
     pxEventHandler(pxEventHandler&& o) noexcept : pxEventHandler() { TakeFrom(o); }
@@ -76,6 +80,13 @@ public:
         return subscription;
     }
 
+    // Invokes target at this point of the list, as if target.Invoke were a callback here. A link
+    // that would close a loop (target already reaches this handler) is refused with false.
+    bool Forward(pxEventHandler& target);
+
+    // Ends the last link from this handler to target.
+    bool Unforward(pxEventHandler& target);
+
     void Clear() noexcept {
         for (std::size_t i = 0; i < Size(); ++i)
             if (At(i).alive)
@@ -96,6 +107,13 @@ private:
         bool alive;
 
         Slot(std::uint64_t i, Callback&& c) noexcept : id(i), callback(std::move(c)), alive(true) {}
+    };
+
+    // The callback that Forward adds. The target keeps the subscription of it, so the link ends
+    // with the target, and fixes the pointer here when it moves (Retarget).
+    struct ForwardBinding {
+        pxEventHandler* target;
+        void operator()(pxEventArg<TArgs>... args) const { target->Dispatch(args...); }
     };
 
     // One per running Invoke, on its stack, so the handler can tell each of them that it died.
@@ -137,6 +155,35 @@ private:
         return id;
     }
 
+    static bool IsForward(const Slot& slot) noexcept {
+        return slot.callback.template Target<ForwardBinding>() != nullptr;
+    }
+
+    // Ids grow along m_slots and then m_pending.
+    Slot* FindById(std::uint64_t id) noexcept {
+        for (std::vector<Slot>* slots : { &m_slots, &m_pending }) {
+            auto it = std::lower_bound(slots->begin(), slots->end(), id,
+                [](const Slot& slot, std::uint64_t value) { return slot.id < value; });
+            if (it != slots->end() && it->id == id)
+                return &*it;
+        }
+        return nullptr;
+    }
+
+    static pxEventHandler& SourceOf(const pxSubscription& link) noexcept {
+        return static_cast<pxEventHandler&>(*link.m_list);
+    }
+
+    // The slot behind one of the links in m_incoming, while both ends are alive.
+    static Slot* SlotOf(const pxSubscription& link) noexcept {
+        if (!link.IsActive())
+            return nullptr;
+        Slot* slot = SourceOf(link).FindById(link.m_id);
+        return slot != nullptr && slot->alive ? slot : nullptr;
+    }
+
+    bool Reaches(const pxEventHandler& to) const noexcept;
+
     // A dead slot stays where it is until Compact, so no Invoke sees the vector move.
     void Kill(Slot& slot) noexcept {
         slot.alive = false;
@@ -159,6 +206,9 @@ private:
     int m_depth = 0;
     bool m_dirty = false;
     DispatchFrame* m_frames = nullptr;
+    // The links that invoke this handler, one subscription in each source. Last, so they end
+    // before the rest of the handler.
+    std::vector<pxSubscription> m_incoming;
 };
 
 template<typename... TArgs>
@@ -172,7 +222,7 @@ pxEventHandler<TArgs...>& pxEventHandler<TArgs...>::operator=(const pxEventHandl
     std::uint64_t id = m_nextId;
     for (std::size_t i = 0; i < o.Size(); ++i) {
         const Slot& slot = o.At(i);
-        if (slot.alive)
+        if (slot.alive && !IsForward(slot))
             slots.emplace_back(id++, Callback(slot.callback));
     }
 
@@ -193,9 +243,11 @@ pxEventHandler<TArgs...>& pxEventHandler<TArgs...>::operator=(pxEventHandler&& o
         return *this;
     PX_EVENTS_ASSERT(m_depth == 0, "pxEventHandler: assigned to from inside one of its own callbacks");
 
-    // The old callbacks die last, with the handler consistent.
+    // The old callbacks, and the links into the old ones, die last, with the handler consistent.
     std::vector<Slot> slots = std::move(m_slots);
     std::vector<Slot> pending = std::move(m_pending);
+    std::vector<pxSubscription> incoming = std::move(m_incoming);
+    m_incoming.clear();
     DetachAll();
     TakeFrom(o);
     return *this;
@@ -207,9 +259,53 @@ void pxEventHandler<TArgs...>::Join(const pxEventHandler& o) {
     const std::size_t size = o.Size();
     for (std::size_t i = 0; i < size; ++i) {
         const Slot& slot = o.At(i);
-        if (slot.alive)
+        if (slot.alive && !IsForward(slot))
             Append(Callback(slot.callback));
     }
+}
+
+template<typename... TArgs>
+bool pxEventHandler<TArgs...>::Forward(pxEventHandler& target) {
+    if (&target == this || target.Reaches(*this))
+        return false;
+    // Links whose source died or dropped them go first, so m_incoming does not grow forever.
+    std::erase_if(target.m_incoming, [](const pxSubscription& link) { return SlotOf(link) == nullptr; });
+    // Linked where it lives, in the vector, instead of moved in from a temporary.
+    pxSubscription& link = target.m_incoming.emplace_back();
+    try {
+        Link(link, Append(Callback(ForwardBinding{ &target })));
+    } catch (...) {
+        target.m_incoming.pop_back();
+        throw;
+    }
+    return true;
+}
+
+template<typename... TArgs>
+bool pxEventHandler<TArgs...>::Unforward(pxEventHandler& target) {
+    for (std::size_t i = target.m_incoming.size(); i-- > 0;) {
+        pxSubscription& link = target.m_incoming[i];
+        if (SlotOf(link) == nullptr || &SourceOf(link) != this)
+            continue;
+        link.Unsubscribe();
+        target.m_incoming.erase(target.m_incoming.begin() + static_cast<std::ptrdiff_t>(i));
+        return true;
+    }
+    return false;
+}
+
+template<typename... TArgs>
+bool pxEventHandler<TArgs...>::Reaches(const pxEventHandler& to) const noexcept {
+    // Forward refuses loops, so this walk always ends.
+    for (std::size_t i = 0; i < Size(); ++i) {
+        const Slot& slot = At(i);
+        if (!slot.alive)
+            continue;
+        const ForwardBinding* link = slot.callback.template Target<ForwardBinding>();
+        if (link != nullptr && (link->target == &to || link->target->Reaches(to)))
+            return true;
+    }
+    return false;
 }
 
 template<typename... TArgs>
@@ -326,20 +422,21 @@ void pxEventHandler<TArgs...>::TakeFrom(pxEventHandler& o) noexcept {
     m_nextId = o.m_nextId; // o keeps counting from there: an id is never reused
     m_dirty = std::exchange(o.m_dirty, false);
     AdoptFrom(o);
+
+    // The links into o now invoke this handler.
+    m_incoming = std::move(o.m_incoming);
+    o.m_incoming.clear();
+    for (const pxSubscription& link : m_incoming)
+        if (Slot* slot = SlotOf(link))
+            slot->callback.template Target<ForwardBinding>()->target = this;
 }
 
 template<typename... TArgs>
 void pxEventHandler<TArgs...>::RemoveById(SubscriptionList& list, std::uint64_t id) noexcept {
     pxEventHandler& self = static_cast<pxEventHandler&>(list);
-    for (std::vector<Slot>* slots : { &self.m_slots, &self.m_pending }) {
-        auto it = std::lower_bound(slots->begin(), slots->end(), id,
-            [](const Slot& slot, std::uint64_t value) { return slot.id < value; });
-        if (it == slots->end() || it->id != id)
-            continue;
-        if (it->alive) {
-            self.Kill(*it);
-            self.Compact();
-        }
-        return;
+    Slot* slot = self.FindById(id);
+    if (slot != nullptr && slot->alive) {
+        self.Kill(*slot);
+        self.Compact();
     }
 }

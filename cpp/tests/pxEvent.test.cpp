@@ -11,6 +11,8 @@ namespace {
         pxEvent<Button, Button&, int> Click;
 
         void Press(int times) { Click(*this, times); }
+        // Only the owner can make its event the target of a Forward.
+        bool Relay(pxEventHandler<Button&, int>& source) { return source.Forward(Click); }
         bool HasListeners() const { return !Click.IsEmpty(); }
         void Reset() { Click.Clear(); }
     };
@@ -25,6 +27,7 @@ namespace {
 static_assert(!std::is_invocable_v<ClickEvent&, Button&, int>);
 static_assert(!std::is_copy_constructible_v<ClickEvent> && !std::is_copy_assignable_v<ClickEvent>);
 static_assert(!std::is_move_constructible_v<ClickEvent> && !std::is_move_assignable_v<ClickEvent>);
+static_assert(!std::is_convertible_v<ClickEvent&, pxEventHandler<Button&, int>&>);
 // The owner is still copyable and movable, with its event.
 static_assert(std::is_copy_constructible_v<Button> && std::is_move_assignable_v<Button>);
 
@@ -56,4 +59,17 @@ void TestEvent() {
     other.Click += &Count;
     other.Reset();
     PX_CHECK(!other.HasListeners());
+
+    // Forwarded out to a handler, and in from one by the owner.
+    pxEventHandler<Button&, int> outside;
+    outside += &Count;
+    PX_CHECK(other.Click.Forward(outside));
+    other.Press(5);
+    PX_CHECK(total == 9);
+    PX_CHECK(other.Click.Unforward(outside));
+    pxEventHandler<Button&, int> source;
+    other.Click += &Count;
+    PX_CHECK(other.Relay(source));
+    source(other, 10);
+    PX_CHECK(total == 19);
 }

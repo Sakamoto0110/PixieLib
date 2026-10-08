@@ -65,6 +65,7 @@ public:
 
 private:
     friend class pxEventsDetail::SubscriptionList;
+    template<typename...> friend class pxEventHandler;
 
     void TakeFrom(pxSubscription& o) noexcept;
 

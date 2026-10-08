@@ -241,6 +241,20 @@ private:
     // What the handler calls: the arguments go through as references, with no copy per callback.
     void Call(pxEventArg<TArgs>... args) { m_vt->invoke(m_storage, args...); }
 
+    // The callable, when it is an F: how the handler finds the ones it stored itself.
+    template<typename F>
+    F* Target() noexcept {
+        if (m_vt == nullptr || m_vt->type != &pxEventsDetail::TypeTag<F>)
+            return nullptr;
+        if constexpr (pxEventsDetail::StoredInline<F>)
+            return &Ops<F>::Get(m_storage);
+        else
+            return Ops<F>::Ptr(m_storage);
+    }
+
+    template<typename F>
+    const F* Target() const noexcept { return const_cast<pxCallback*>(this)->template Target<F>(); }
+
     const VTable* m_vt = nullptr;
     std::uint64_t m_origin = 0;
     Storage m_storage;
