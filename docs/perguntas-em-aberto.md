@@ -6,14 +6,9 @@ responder pelo número: "1.7: sim".
 
 ## 1. Definição e primeira rodada
 
-Respondidas: da 1.1 à 1.6, a 1.9 e a 1.14 em 03/10, e a 1.7, a 1.8 e a 1.15 em 08/10
+Respondidas: da 1.1 à 1.6, a 1.9 e a 1.14 em 03/10, e a 1.7, a 1.8, a 1.10 e a 1.15 em 08/10
 (`notas.md`, seções 1, 2 e 4).
 
-- **1.10. Eventos como módulo.** Os eventos são modelos (`pxEventHandler<TArgs...>`), então não
-  dá para pô-los numa DLL: só existem em headers, instanciados por quem usa. Sugestão: um módulo
-  próprio, com pasta e alvo de build próprios (uma biblioteca só de headers), de que a engine
-  depende e que quem só quer os primitivos não puxa. Nenhum binário a mais. Aplicada assim no
-  commit `d94ba00` (`cpp/events`, o alvo `pixie::events`); a sugestão é manter.
 - **1.11. `Vec2` e `Vector<n>`** (para a rodada dos vetores). Sugestão: no C++, `pxVec2` é o
   `pxVector<2>` com os membros `x` e `y` nomeados, uma implementação só, como no GLM; no C#, tipos
   concretos do gerador, porque o C# não tem parâmetro genérico inteiro (e `Vector<T>` lá já é o
@@ -55,25 +50,17 @@ assim; a sugestão de cada uma é manter.
 
 ## 4. Os eventos em C++
 
-O que eu escolhi ao escrever os eventos (commit `d94ba00`) sem decisão anterior. O código já está
-assim; a sugestão de cada uma é manter.
+Respondidas em 08/10, da 4.1 à 4.7 (`notas.md`, seção 4.6); a 4.6 trouxe o `Forward` de volta.
 
-- **4.1. Duplicatas como no C#.** O mesmo callback adicionado duas vezes roda duas vezes, e o `-=`
-  tira a última ocorrência. O código de 2023 recusava a segunda.
-- **4.2. O que sai durante um `Invoke` não roda mais nele.** No C#, o disparo usa a lista de antes,
-  e um callback removido no meio ainda roda. Aqui ele não roda, porque o caso comum de remover
-  durante o disparo é o alvo que deixou de existir. O que entra durante um `Invoke` roda a partir do
-  próximo, como no C#.
-- **4.3. O argumento por valor chega como `const&`** a cada callback, sem uma cópia por callback; um
-  callback que pede `T&` num evento de `T` não compila, porque mudaria o valor para o próximo. Quem
-  quer que os callbacks mudem o argumento declara o evento com referência (`pxEventHandler<T&>`).
-- **4.4. Não é thread-safe.** A engine dispara os eventos no thread dela; usar um handler de mais
-  de um thread pede um lock por fora.
-- **4.5. O `+=` não devolve nada**, como no C#; quem quer o handle RAII usa o `Subscribe`.
-  Devolver o handle do `+=` faria um `e += f;` sozinho desinscrever o `f` na mesma linha.
-- **4.6. O que de 2023 ficou de fora:** o `EventArgs`, o encadeamento ao vivo (`chCallback`, que
-  guardava um ponteiro para outro handler; agora `a += b` copia os callbacks do `b`, como no C#), o
-  modo `NOT_USE_STL`, o `Dump` e o logger. Os nomes seguem os primitivos (2.2): `Count()` e
-  `IsEmpty()` no lugar do `GetSize()`.
-- **4.7. O buffer de quatro ponteiros** (32 bytes no 64 bits) cabe uma função membro com a instância
-  e lambdas com até quatro capturas por referência; o que passa disso vai para o heap.
+- **4.8. As escolhas do `Forward`** (commit `1f61f6b`), feitas sem decisão anterior. O código já está
+  assim; a sugestão é manter.
+  - Uma cópia do handler não leva as ligações dele, como não leva as inscrições; o `+=` com um
+    handler também não. Uma ligação copiada não seria conhecida pelo alvo, que não teria como
+    desfazê-la quando morresse.
+  - Um laço é recusado com `false`, sem assert, como o `Remove` que não acha nada.
+  - No move, as ligações para o handler movido o seguem. Numa atribuição por move (`b = move(c)`),
+    as que iam para o `b` acabam, porque o conteúdo do `b` foi trocado, e as que iam para o `c`
+    passam para o `b`; é o que um `std::vector` precisa quando apaga um elemento do meio. Numa
+    atribuição por cópia, as que iam para o `b` continuam.
+  - O `pxEvent` pode ser ligado a um handler por qualquer um, mas só o dono pode fazê-lo alvo de
+    uma ligação, porque ser alvo é ser invocado.

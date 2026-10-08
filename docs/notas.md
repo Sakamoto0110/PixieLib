@@ -107,7 +107,7 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   `Vector2`, `Vector3`, `Matrix3x2` e `Matrix4x4`, de graça (testado no assembly do JIT); `double`
   e `int` são implementação própria, porque o `System.Numerics` só tem `float`.
 
-### 4.6 Eventos (03/10; 1.8, 08/10; commit `d94ba00`)
+### 4.6 Eventos (03/10; 1.8, 1.10 e 4.1 a 4.7, 08/10; commits `d94ba00` e `1f61f6b`)
 
 - Ficam só no C++, para a engine. O C# já tem `event`.
 - **O jeito difícil** (1.8, 08/10): sem ponteiro inteligente. Cada handler é dono, por valor, das
@@ -128,10 +128,28 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
     como num `delete this`.
   - `pxSubscription`: o handle RAII, que tira o callback quando morre. O handler e as inscrições
     formam uma lista intrusiva: quando o handler morre ou se move, ele avisa cada uma.
-  - `pxEvent<TOwner, TArgs...>`: o `event` do C#. De fora, só `+=`, `-=` e `Subscribe`; invocar,
-    limpar, contar, copiar e atribuir, só o dono.
-- Um módulo próprio, sem DLL (1.10, aplicada como sugerido): o alvo `pixie::events`, só headers;
-  quem só quer os primitivos linka o `pixie::pixie` e não o puxa.
+  - `pxEvent<TOwner, TArgs...>`: o `event` do C#. De fora, só `+=`, `-=`, `Subscribe` e
+    `Forward`; invocar, limpar, contar, copiar, atribuir e ser alvo de um `Forward`, só o dono.
+- Um módulo próprio, sem DLL (1.10, 08/10): o alvo `pixie::events`, só headers; quem só quer os
+  primitivos linka o `pixie::pixie` e não o puxa.
+- **As escolhas do commit `d94ba00`, confirmadas em 08/10** (4.1 a 4.7):
+  - Duplicatas como no C# (4.1): o mesmo callback duas vezes roda duas vezes, e o `-=` tira a
+    última ocorrência.
+  - O que sai durante um `Invoke` não roda mais nele (4.2), ao contrário do C#, porque o caso
+    comum é o alvo que deixou de existir. O que entra roda a partir do próximo, como no C#.
+  - O argumento por valor chega como `const&` (4.3): um callback que pede `T&` num evento de `T`
+    não compila; quem quer mudar o argumento declara o evento com referência.
+  - Não é thread-safe (4.4): a engine dispara no thread dela, e o lock, se precisar, fica por fora.
+  - O `+=` não devolve nada (4.5), como no C#; o handle RAII sai do `Subscribe`.
+  - De 2023 ficaram de fora o `EventArgs`, o `NOT_USE_STL`, o `Dump` e o logger (4.6); o
+    `GetSize()` virou `Count()` e `IsEmpty()`. O encadeamento ao vivo voltou como `Forward`.
+  - O buffer interno tem quatro ponteiros (4.7).
+- **O `Forward`** (4.6, 08/10; commit `1f61f6b`): o encadeamento ao vivo do `chCallback` de 2023,
+  agora seguro. `a.Forward(b)` faz o `a` invocar o `b`, com os callbacks que o `b` tiver a cada
+  vez, na posição da ligação; `a.Unforward(b)` desfaz a última. O `b` guarda a inscrição da
+  ligação, então ela acaba quando qualquer um dos dois morre, e quando o `b` se move ele corrige o
+  ponteiro guardado no `a`. Uma ligação que fecharia um laço (`a` para `b` para `a`) é recusada,
+  com `false`, e por isso nenhum `Invoke` entra em recursão infinita.
 - Os testes (`cpp/tests`, os `px*.test.cpp` dos eventos) passam no g++ 13, também com o
   AddressSanitizer e o UBSan, e no clang++ 18, com `-Werror`. Pegam os três bugs de 2023
   (`diagnostico-2023.md`, seção 1) e falham nas 18 cópias quebradas de propósito: a remoção da
@@ -139,8 +157,10 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   durante o `Invoke`, o handler destruído sem avisar o `Invoke`, o `Invoke` que não se desfaz numa
   exceção, a identidade sem a origem ou sem a instância, o move que não destrói a origem, o leak e
   o double free do heap, as inscrições que não seguem o handler, o `pxEvent` invocável de fora e o
-  argumento que um callback poderia mudar para o próximo. O MSVC ainda não foi testado.
-- **[proposta]** As escolhas que não vinham decididas estão nas perguntas 4.1 a 4.7.
+  argumento que um callback poderia mudar para o próximo. Os do `Forward` (commit `1f61f6b`) falham em
+  mais 5: sem a checagem de laço, sem corrigir o ponteiro no move, a cópia levando a ligação, o
+  alvo sem a inscrição e o `Unforward` que tira a ligação de outro. O MSVC ainda não foi testado.
+- **[proposta]** As escolhas do `Forward` que não vinham decididas estão na pergunta 4.8.
 
 ### 4.7 O recomeço (1.14 e 1.9, 03/10)
 
