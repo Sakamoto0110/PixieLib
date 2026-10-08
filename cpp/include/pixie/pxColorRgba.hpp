@@ -2,7 +2,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <type_traits>
+
+#include "pxToString.hpp"
 
 // A color in bytes, in memory as R, G, B, A: the order of GL_RGBA with GL_UNSIGNED_BYTE, so a color,
 // an array of vertex colors or the pixels of a texture go to OpenGL as they are (docs/notas.md, 4.2).
@@ -29,6 +32,8 @@ struct pxColorRgba {
     }
 
     constexpr bool IsEmpty() const noexcept { return r == 0 && g == 0 && b == 0 && a == 0; }
+
+    std::string ToString() const { return pxTupleString(r, g, b, a); }
 
     friend constexpr bool operator==(const pxColorRgba&, const pxColorRgba&) noexcept = default;
 };

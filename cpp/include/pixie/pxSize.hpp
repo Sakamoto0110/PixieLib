@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 #include <type_traits>
 
 #include "pxPrecision.hpp"
+#include "pxToString.hpp"
 
 // A width and a height.
 template<typename T>
@@ -21,6 +23,8 @@ struct pxSize_t {
         : width(static_cast<T>(o.width)), height(static_cast<T>(o.height)) {}
 
     constexpr bool IsEmpty() const noexcept { return width == 0 && height == 0; }
+
+    std::string ToString() const { return pxTupleString(width, height); }
 
     friend constexpr bool operator==(const pxSize_t&, const pxSize_t&) noexcept = default;
 

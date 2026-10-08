@@ -1,10 +1,12 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 #include <type_traits>
 
 #include "pxPrecision.hpp"
 #include "pxSize.hpp"
+#include "pxToString.hpp"
 
 // A position. A point and a size hold the same data, so each converts to the other, explicitly; a
 // point moves by a size.
@@ -26,6 +28,8 @@ struct pxPoint_t {
     constexpr explicit operator pxSize_t<T>() const noexcept { return { x, y }; }
 
     constexpr bool IsEmpty() const noexcept { return x == 0 && y == 0; }
+
+    std::string ToString() const { return pxTupleString(x, y); }
 
     friend constexpr bool operator==(const pxPoint_t&, const pxPoint_t&) noexcept = default;
 

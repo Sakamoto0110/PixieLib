@@ -1,11 +1,13 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 #include <type_traits>
 
 #include "pxPoint.hpp"
 #include "pxPrecision.hpp"
 #include "pxRect.hpp"
+#include "pxToString.hpp"
 
 // A rectangle as two corners: (x1, y1) is inside, (x2, y2) is just outside, as in pxRect_t, where
 // x2 is x + width. It converts to and from pxRect_t explicitly, because the sums and differences can
@@ -34,6 +36,8 @@ struct pxRegion_t {
     constexpr T Height() const noexcept { return y2 - y1; }
 
     constexpr bool IsEmpty() const noexcept { return x1 == 0 && y1 == 0 && x2 == 0 && y2 == 0; }
+
+    std::string ToString() const { return pxTupleString(x1, y1, x2, y2); }
 
     // The same edges as pxRect_t::Contains: x1 and y1 are inside, x2 and y2 are not.
     constexpr bool Contains(pxPoint_t<T> pt) const noexcept {

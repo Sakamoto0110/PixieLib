@@ -9,6 +9,7 @@ void TestRegion();
 void TestPadding();
 void TestColorRgba();
 void TestColorHsl();
+void TestToString();
 
 int main() {
     TestSize();
@@ -18,6 +19,7 @@ int main() {
     TestPadding();
     TestColorRgba();
     TestColorHsl();
+    TestToString();
 
     if (pxCheckFailures == 0)
         std::printf("all checks passed\n");

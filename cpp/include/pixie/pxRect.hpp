@@ -1,11 +1,13 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 #include <type_traits>
 
 #include "pxPoint.hpp"
 #include "pxPrecision.hpp"
 #include "pxSize.hpp"
+#include "pxToString.hpp"
 
 // A rectangle as a corner and a size. pxRegion_t holds the same thing as two corners.
 template<typename T>
@@ -31,6 +33,8 @@ struct pxRect_t {
     constexpr T Bottom() const noexcept { return y + height; }
 
     constexpr bool IsEmpty() const noexcept { return x == 0 && y == 0 && width == 0 && height == 0; }
+
+    std::string ToString() const { return pxTupleString(x, y, width, height); }
 
     // The left and top edges are inside, the right and bottom ones are not.
     constexpr bool Contains(pxPoint_t<T> pt) const noexcept {

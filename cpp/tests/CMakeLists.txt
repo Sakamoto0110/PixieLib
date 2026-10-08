@@ -7,6 +7,7 @@ add_executable(pixie_tests
     pxPadding.test.cpp
     pxColorRgba.test.cpp
     pxColorHsl.test.cpp
+    pxToString.test.cpp
 )
 target_link_libraries(pixie_tests PRIVATE pixie::pixie)
 

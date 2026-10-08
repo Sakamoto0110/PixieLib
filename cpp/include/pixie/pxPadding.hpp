@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 #include <type_traits>
 
 #include "pxPrecision.hpp"
+#include "pxToString.hpp"
 
 // Space around something, one value per side, in the same order as pxRegion_t: left, top, right,
 // bottom.
@@ -30,6 +32,8 @@ struct pxPadding_t {
     constexpr T Vertical() const noexcept { return top + bottom; }
 
     constexpr bool IsEmpty() const noexcept { return left == 0 && top == 0 && right == 0 && bottom == 0; }
+
+    std::string ToString() const { return pxTupleString(left, top, right, bottom); }
 
     friend constexpr bool operator==(const pxPadding_t&, const pxPadding_t&) noexcept = default;
 };

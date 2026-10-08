@@ -4,9 +4,11 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <type_traits>
 
 #include "pxColorRgba.hpp"
+#include "pxToString.hpp"
 
 // A color in hue (0 to 360), saturation and lightness (0 to 1), in double, with the alpha in a byte,
 // last, as in pxColorRgba. There is no implicit conversion to or from pxColorRgba, only the static
@@ -64,6 +66,9 @@ struct pxColorHsl {
     }
 
     constexpr bool IsEmpty() const noexcept { return h == 0 && s == 0 && l == 0 && a == 0; }
+
+    // No hex: the text of an HSL is its fields (docs/notas.md, 4.2).
+    std::string ToString() const { return pxTupleString(h, s, l, a); }
 
     friend constexpr bool operator==(const pxColorHsl&, const pxColorHsl&) noexcept = default;
 
