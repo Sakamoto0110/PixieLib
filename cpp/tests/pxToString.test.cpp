@@ -1,4 +1,5 @@
 #include <limits>
+#include <string>
 
 #include <pixie/pxColorHsl.hpp>
 #include <pixie/pxColorRgba.hpp>
@@ -30,8 +31,15 @@ void TestToString() {
     PX_CHECK(pxPoint(0.1, 1.0 / 3).ToString() == "(0.1, 0.3333333333333333)");
     PX_CHECK(pxPoint(100000, 0.0000001).ToString() == "(100000, 0.0000001)");
     PX_CHECK(pxPoint(-0.0, 1e15).ToString() == "(-0, 1000000000000000)");
+    PX_CHECK(pxPoint(0.1 + 0.2, 1.0 / 3).ToString() == "(0.30000000000000004, 0.3333333333333333)");
+    PX_CHECK(pxPointf(1e20f, -1.5e-10f).ToString() == "(100000000000000000000, -0.00000000015)");
+    PX_CHECK(pxPoint(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity()).ToString() == "(nan, inf)");
+    PX_CHECK(pxPoint(-std::numeric_limits<double>::quiet_NaN(), -std::numeric_limits<double>::infinity()).ToString() == "(nan, -inf)");
+    PX_CHECK(pxPoint(1e23, -1.5e300).ToString().starts_with("(100000000000000000000000, -15"));
 
     // The longest double there is still fits.
     double tiny = std::numeric_limits<double>::denorm_min();
-    PX_CHECK(pxPoint(tiny, -std::numeric_limits<double>::max()).ToString().size() == 1 + 326 + 2 + 310 + 1);
+    std::string longest = pxPoint(tiny, -std::numeric_limits<double>::max()).ToString();
+    PX_CHECK(longest.size() == 1 + 326 + 2 + 310 + 1);
+    PX_CHECK(longest.starts_with("(0.000") && longest.find("5, -17976931348623157000") != std::string::npos);
 }
