@@ -143,7 +143,20 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   -Wpedantic -Wconversion -Werror`, e falham quando se quebra de propósito uma cópia: as bordas do
   `Contains`, o arredondamento e o clamp da HSL, a ordem do hex, o layout e as regras de precisão.
   O MSVC ainda não foi testado.
-- **[proposta]** As escolhas que não vinham decididas estão nas perguntas 2.1 a 2.8.
+- As escolhas feitas ao escrever, sem decisão anterior, foram confirmadas em 08/10 (2.1 a 2.8):
+  - **Estrutura** (2.1): só headers, em `cpp/include/pixie/` (`<pixie/pxPoint.hpp>`), com CMake e
+    C++20; os testes num executável do CTest, sem framework, com o `check.hpp`.
+  - **Nomes** (2.2): os métodos em PascalCase, iguais aos do C# e aos da PixieLib de 2023
+    (`IsEmpty`, `Contains`, `Right`); os campos em minúsculas (`x`, `width`); o modelo com `_t`
+    (`pxPoint_t<T>`), com os apelidos `pxPoint`, `pxPointf` e `pxPointi`.
+  - **A HSL com o alfa por último** (2.3): `h, s, l, a`, como na RGBA.
+  - **O hex da cor** (2.4): `FromHex` e `ToHex` em `0xRRGGBBAA`, nas duas pontas; o `ToArgb` do C#
+    fica só para o `System.Drawing`.
+  - **As precisões fechadas** (2.5): o modelo só aceita `double`, `float` e `int32_t`.
+  - **A conversão que perde** (2.6) é explícita e trunca, como um cast.
+  - **O escalar** (2.7) do `*` e do `/` é do tipo do primitivo: um `pxPointi` divide como inteiro.
+  - **O clamp** (2.8): a conversão de HSL para RGBA prende o valor entre 0 e 255 antes de
+    arredondar.
 
 ### 4.10 O texto dos primitivos (08/10, commit `c798977`)
 
@@ -156,7 +169,14 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   separador, quem escreve o número, o tamanho do buffer, os bytes saindo como caractere ou a ordem
   da HSL. Este container só tem a cultura C, então a independência de cultura vem da garantia do
   `std::to_chars`, não de um teste com vírgula decimal.
-- **[proposta]** O mesmo formato para todos os primitivos, e não só para a HSL (2.9).
+- O mesmo formato vale para todos os primitivos, só com o `ToString()`, sem `operator<<` nem
+  `std::formatter` (2.9, 08/10); o `std::formatter` entra se a engine pedir.
+
+### 4.11 O lado C# (1.7, 08/10)
+
+- O C# fica numa pasta `dotnet/`, ao lado da `cpp/`, com uma solução própria.
+- As três precisões saem de um source generator, o projeto `PixieLib.Generators`, referenciado como
+  analisador: roda na compilação e não vai junto para quem usa a `PixieLib.dll`.
 
 ## 5. Consequências, ainda não aplicadas
 
