@@ -1,5 +1,7 @@
-# Build output (CMake, Visual Studio)
+# Build output (CMake, Visual Studio, .NET)
 build/
 out/
 .vs/
+bin/
+obj/
 CMakeUserPresets.json
