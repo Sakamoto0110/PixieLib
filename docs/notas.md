@@ -107,11 +107,40 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   `Vector2`, `Vector3`, `Matrix3x2` e `Matrix4x4`, de graça (testado no assembly do JIT); `double`
   e `int` são implementação própria, porque o `System.Numerics` só tem `float`.
 
-### 4.6 Eventos (03/10)
+### 4.6 Eventos (03/10; 1.8, 08/10; commit `d94ba00`)
 
 - Ficam só no C++, para a engine. O C# já tem `event`.
-- A correção (os bugs estão em `diagnostico-2023.md`, seção 1) fica para outra hora (1.8).
-- **[proposta]** Um módulo próprio, sem DLL (1.10).
+- **O jeito difícil** (1.8, 08/10): sem ponteiro inteligente. Cada handler é dono, por valor, das
+  cópias dos seus callbacks. O `shared_ptr` resolveria a posse, mas não o tempo de vida do objeto
+  alvo (um ciclo com o dono do evento nunca é liberado), aloca e conta referência atômica a cada
+  disparo, e a destruição do callback deixa de ter hora certa.
+- Aplicado em `cpp/events/include/pixie/events/`, portado do `pxEvents.hpp` de 2023 (`indev`,
+  `b961405`), um conceito por arquivo:
+  - `pxCallback<TArgs...>`: o callable por valor, num buffer de quatro ponteiros dentro dele (32
+    bytes no 64 bits), sem alocação; maior que isso, no heap, dono dele. A identidade é a do
+    delegate do C#: a mesma função, a mesma instância com o mesmo membro, a mesma lambda sem
+    captura, ou uma cópia do mesmo `pxCallback`. A lambda com captura nova não é igual a nenhuma,
+    como no C#.
+  - `pxEventHandler<TArgs...>`: a lista, com `+=`, `-=`, `Invoke` e `operator()`. Durante um
+    `Invoke`, o `-=` só marca o callback como morto e o `+=` espera numa lista à parte; a limpeza
+    vem quando nenhum `Invoke` roda. Assim a lista nunca se move debaixo do callback que está
+    rodando, e quem se remove não faz o próximo ser pulado. Um callback pode destruir o handler,
+    como num `delete this`.
+  - `pxSubscription`: o handle RAII, que tira o callback quando morre. O handler e as inscrições
+    formam uma lista intrusiva: quando o handler morre ou se move, ele avisa cada uma.
+  - `pxEvent<TOwner, TArgs...>`: o `event` do C#. De fora, só `+=`, `-=` e `Subscribe`; invocar,
+    limpar, contar, copiar e atribuir, só o dono.
+- Um módulo próprio, sem DLL (1.10, aplicada como sugerido): o alvo `pixie::events`, só headers;
+  quem só quer os primitivos linka o `pixie::pixie` e não o puxa.
+- Os testes (`cpp/tests`, os `px*.test.cpp` dos eventos) passam no g++ 13, também com o
+  AddressSanitizer e o UBSan, e no clang++ 18, com `-Werror`. Pegam os três bugs de 2023
+  (`diagnostico-2023.md`, seção 1) e falham nas 18 cópias quebradas de propósito: a remoção da
+  primeira ocorrência em vez da última, o `+=` mexendo na lista durante o `Invoke`, a limpeza
+  durante o `Invoke`, o handler destruído sem avisar o `Invoke`, o `Invoke` que não se desfaz numa
+  exceção, a identidade sem a origem ou sem a instância, o move que não destrói a origem, o leak e
+  o double free do heap, as inscrições que não seguem o handler, o `pxEvent` invocável de fora e o
+  argumento que um callback poderia mudar para o próximo. O MSVC ainda não foi testado.
+- **[proposta]** As escolhas que não vinham decididas estão nas perguntas 4.1 a 4.7.
 
 ### 4.7 O recomeço (1.14 e 1.9, 03/10)
 
