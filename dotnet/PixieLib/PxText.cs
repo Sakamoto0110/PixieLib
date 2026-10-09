@@ -26,12 +26,15 @@ internal static class PxText
             return IsNegative(value) ? "-0" : "0";
 
         // The fewest digits that read back as the same value. "R" does it on .NET, but on net481 it
-        // can give 17 digits where 16 are enough, so both targets search the same way.
+        // can give 17 digits where 16 are enough, so both targets search the same way. A candidate
+        // can round past the largest double (-double.MaxValue in one digit is -2E+308), which .NET
+        // reads as an infinity and net481 refuses with an OverflowException, so it is read with
+        // TryParse: on both, that candidate is not the value, and the search goes on.
         string text = value.ToString("R", Invariant);
         for (int digits = 1; digits <= 17; digits++)
         {
             string candidate = value.ToString("G" + digits, Invariant);
-            if (double.Parse(candidate, Invariant) == value)
+            if (double.TryParse(candidate, NumberStyles.Float, Invariant, out double read) && read == value)
             {
                 text = candidate;
                 break;
@@ -53,7 +56,7 @@ internal static class PxText
         for (int digits = 1; digits <= 9; digits++)
         {
             string candidate = value.ToString("G" + digits, Invariant);
-            if (float.Parse(candidate, Invariant) == value)
+            if (float.TryParse(candidate, NumberStyles.Float, Invariant, out float read) && read == value)
             {
                 text = candidate;
                 break;

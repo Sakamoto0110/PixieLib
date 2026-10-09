@@ -51,13 +51,18 @@ void InverseSimd(const float* in, float* out) noexcept;
 template<glm::length_t L, typename T, glm::qualifier Q>
 glm::mat<L, L, T, Q> pxInverse(const glm::mat<L, L, T, Q>& m) {
 #if defined(__x86_64__) || defined(_M_X64)
+    // With an else, so the glm::inverse of a float mat4 is not left behind as unreachable code, which
+    // MSVC warns about at /W4 (C4702) in whoever compiles this.
     if constexpr (L == 4 && std::is_same_v<T, float>) {
         glm::mat<4, 4, float, Q> result;
         pxMathDetail::InverseSimd(&m[0][0], &result[0][0]);
         return result;
+    } else {
+        return glm::inverse(m);
     }
-#endif
+#else
     return glm::inverse(m);
+#endif
 }
 
 // The orthographic projection of the 2D (1.13): the primitives have the origin at the top left and

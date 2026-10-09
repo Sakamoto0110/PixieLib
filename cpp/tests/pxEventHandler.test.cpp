@@ -7,20 +7,20 @@
 #include "check.hpp"
 
 namespace {
-    std::string log;
-    void A() { log += 'a'; }
-    void B() { log += 'b'; }
-    void C() { log += 'c'; }
+    std::string trace;
+    void A() { trace += 'a'; }
+    void B() { trace += 'b'; }
+    void C() { trace += 'c'; }
 
     std::string Run(pxEventHandler<>& e) {
-        log.clear();
+        trace.clear();
         e.Invoke();
-        return log;
+        return trace;
     }
 
     struct Logger {
         char name;
-        void Write() { log += name; }
+        void Write() { trace += name; }
     };
 
     // Counts the copies alive, to see that every callback the handler held is destroyed.
@@ -31,7 +31,7 @@ namespace {
         Tracked(const Tracked& o) : name(o.name) { ++alive; }
         Tracked(Tracked&& o) noexcept : name(o.name) { ++alive; }
         ~Tracked() { --alive; }
-        void operator()() const { log += name; }
+        void operator()() const { trace += name; }
     };
 
     // Runs `action` from its destructor, once armed: a callable whose destruction uses the handler.
@@ -119,7 +119,7 @@ static void TestJoinAndCopy() {
     {
         auto* original = new pxEventHandler<>();
         *original += Tracked('t');
-        *original += [] { log += 'l'; };
+        *original += [] { trace += 'l'; };
         pxEventHandler<> copy = *original;
         pxEventHandler<> assigned;
         assigned += &A;
@@ -141,7 +141,7 @@ static void TestReentrancy() {
     {
         pxEventHandler<> e;
         pxEventHandler<>::Callback self;
-        self = [&e, &self] { log += 's'; e -= self; };
+        self = [&e, &self] { trace += 's'; e -= self; };
         e += self;
         e += &A;
         PX_CHECK(Run(e) == "sa" && e.Count() == 1);
@@ -151,7 +151,7 @@ static void TestReentrancy() {
     // One added during an Invoke runs from the next one on, as C# does.
     {
         pxEventHandler<> e;
-        e += [&e] { log += 'x'; e += &B; };
+        e += [&e] { trace += 'x'; e += &B; };
         PX_CHECK(Run(e) == "x" && e.Count() == 2);
         PX_CHECK(Run(e) == "xb" && e.Count() == 3);
     }
@@ -159,11 +159,11 @@ static void TestReentrancy() {
     // One removed before its turn does not run; Clear stops the rest.
     {
         pxEventHandler<> e;
-        e += [&e] { log += 'x'; e -= &B; };
+        e += [&e] { trace += 'x'; e -= &B; };
         e += &B;
         e += &C;
         PX_CHECK(Run(e) == "xc" && e.Count() == 2);
-        e += [&e] { log += 'k'; e.Clear(); };
+        e += [&e] { trace += 'k'; e.Clear(); };
         e += &A;
         PX_CHECK(Run(e) == "xck" && e.IsEmpty());
     }
@@ -172,7 +172,7 @@ static void TestReentrancy() {
     {
         pxEventHandler<> e;
         int depth = 0;
-        e += [&] { log += 'i'; if (depth++ == 0) e.Invoke(); };
+        e += [&] { trace += 'i'; if (depth++ == 0) e.Invoke(); };
         e += &A;
         PX_CHECK(Run(e) == "iiaa");
     }
@@ -181,7 +181,7 @@ static void TestReentrancy() {
     {
         auto* e = new pxEventHandler<>();
         *e += &A;
-        *e += [e] { log += 'd'; delete e; };
+        *e += [e] { trace += 'd'; delete e; };
         *e += &B;
         PX_CHECK(Run(*e) == "ad");
     }
@@ -189,7 +189,7 @@ static void TestReentrancy() {
     // A callback that throws: the handler stays usable, and a removal made before it still lands.
     {
         pxEventHandler<> e;
-        e += [&e] { log += 'r'; e -= &A; };
+        e += [&e] { trace += 'r'; e -= &A; };
         e += [] { throw std::runtime_error("callback"); };
         e += &A;
         bool thrown = false;
@@ -198,7 +198,7 @@ static void TestReentrancy() {
         } catch (const std::runtime_error&) {
             thrown = true;
         }
-        PX_CHECK(thrown && log == "r" && e.Count() == 2);
+        PX_CHECK(thrown && trace == "r" && e.Count() == 2);
         e.Clear();
         e += &B;
         PX_CHECK(Run(e) == "b");
@@ -329,7 +329,7 @@ static void TestForward() {
         pxEventHandler<> a;
         auto* target = new pxEventHandler<>();
         a.Forward(*target);
-        *target += [target] { log += 'd'; delete target; };
+        *target += [target] { trace += 'd'; delete target; };
         a += &C;
         PX_CHECK(Run(a) == "dc" && a.Count() == 1);
     }
