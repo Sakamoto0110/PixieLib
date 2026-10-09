@@ -10,6 +10,14 @@ internal static class PxMatTests
                                                   new PxVec4(-0.8, 1.1, 0.3, -2.7), new PxVec4(0.25, -1.6, 2.4, 0.9));
     private static readonly PxMat3 N = new PxMat3(new PxVec3(0.1, 0.7, -1.3), new PxVec3(1.9, -0.4, 0.6), new PxVec3(-0.8, 1.1, 0.3));
 
+    // The cosine of pi / 2 comes from the runtime, as in C++ it comes from the C library (docs/layout.md,
+    // 3). The .NET Framework gives another one than .NET, glibc and the C runtime of MSVC, which agree.
+#if NETFRAMEWORK
+    private const string CosineOfHalfPi = "0.00000000000000006123031769111886";
+#else
+    private const string CosineOfHalfPi = "0.00000000000000006123233995736766";
+#endif
+
     public static void Run()
     {
         var mf = (PxMat4f)M;
@@ -97,7 +105,7 @@ internal static class PxMatTests
         // The transforms. With Y down, as the 2D of PixieLib (1.13), a positive angle turns clockwise on
         // the screen: the x axis goes to (0, 1), which points down.
         Check.Text((PxMat4.Rotate(PxMat4.Identity, Math.PI / 2, new PxVec3(0, 0, 1)) * new PxVec4(1, 0, 0, 0)),
-                   "(0.00000000000000006123233995736766, 1, 0, 0)");
+                   $"({CosineOfHalfPi}, 1, 0, 0)");
         Check.Text(PxMat4.Rotate(M, Math.PI / 2, new PxVec3(1, 2, 3)),
                    "((2.058149923103555, -0.6801167939308144, 0.3778563474377664, 1.0690141783282412), " +
                    "(-0.07970165181795241, 0.1898816152304328, 1.2367829303178968, -3.3141009783569753), " +
@@ -139,7 +147,7 @@ internal static class PxMatTests
         Check.That(PxMat3.Translate(PxMat3.Identity, new PxVec2(3, 4)) * new PxVec3(1, 1, 1) == new PxVec3(4, 5, 1));
         Check.That(PxMat3.Scale(PxMat3.Identity, new PxVec2(2, 3)) * new PxVec3(1, 1, 1) == new PxVec3(2, 3, 1));
         Check.Text((PxMat3.Rotate(PxMat3.Identity, Math.PI / 2) * new PxVec3(1, 0, 1)),
-                   "(0.00000000000000006123233995736766, 1, 1)");
+                   $"({CosineOfHalfPi}, 1, 1)");
         PxMat3 trs = PxMat3.Scale(PxMat3.Rotate(PxMat3.Translate(PxMat3.Identity, new PxVec2(10, 20)), Math.PI / 2), new PxVec2(2, 3));
         Check.That(trs * new PxVec3(1, 1, 1) == new PxVec3(7, 22, 1));
         Check.That(trs * new PxVec3((PxVec2)new PxPoint(1, 1), 1) == new PxVec3(7, 22, 1));
