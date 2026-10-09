@@ -6,20 +6,8 @@ responder pelo número: "1.7: sim".
 
 ## 1. Definição e primeira rodada
 
-Respondidas: da 1.1 à 1.6, a 1.9 e a 1.14 em 03/10, a 1.7, a 1.8, a 1.10 e a 1.15 em 08/10, e a
-1.11 em 09/10, com os vetores do GLM (`notas.md`, seções 1, 2 e 4).
-
-- **1.12. A convenção das matrizes** (para a rodada das matrizes). Sugestão: vetor coluna
-  (`M * v`) e armazenamento column-major, o que o GLSL e o `glUniformMatrix4fv` esperam sem
-  transpor, e o mesmo da Unity e do GLM. A memória fica igual à do `System.Numerics` (row-major com
-  `v * M`), então o repasse em `float` continua de graça, só com a ordem dos operandos trocada por
-  dentro. Custo: quem usar o `System.Numerics` direto, ao lado da PixieLib, multiplica na ordem
-  contrária. Com os apelidos do GLM (`notas.md`, 4.13), o C++ já vem nessa convenção.
-- **1.13. Projeção e eixo Y** (para a rodada das transformações). No OpenGL, o espaço normalizado
-  tem o Y para cima e a profundidade em [-1, 1]; o editor (WinForms e WPF) usa o Y para baixo.
-  Sugestão: os primitivos 2D seguem a interface (origem no canto superior esquerdo, Y para baixo), e
-  as funções de projeção (`Ortho`, `Perspective`) geram matrizes para o [-1, 1] do OpenGL, com a
-  ortográfica 2D já invertendo o Y.
+Todas respondidas: da 1.1 à 1.6, a 1.9 e a 1.14 em 03/10, a 1.7, a 1.8, a 1.10 e a 1.15 em 08/10,
+e da 1.11 à 1.13 em 09/10, com os vetores e as matrizes do GLM (`notas.md`, seções 1, 2 e 4).
 
 ## 2. Os primitivos em C++
 
@@ -67,25 +55,26 @@ Respondidas: da 5.1 à 5.7 em 08/10, e a 5.8 em 09/10 (`notas.md`, seção 4.12)
 
 ## 6. Vetores e matrizes
 
-Respondida: a 6.1 em 09/10, o GLM no C++ (`notas.md`, seção 4.13).
+Respondidas em 09/10: da 6.1 à 6.3 (`notas.md`, seções 4.13 e 4.14).
 
-- **6.2. O SIMD nas contas pesadas da `mat4`** (para a rodada das matrizes). O GLM só usa os caminhos
-  SIMD dele com os tipos alinhados, que mudam o layout. Sugestão: os tipos da PixieLib ficam sem
-  alinhamento extra, e a inversa e o produto de `mat4` ganham funções da PixieLib que copiam para o
-  tipo alinhado do GLM, fazem a conta e copiam de volta (a inversa cai de 155 instruções para 68).
-- **6.3. As escolhas dos vetores** (commit `947eac7`), feitas sem decisão anterior. O código já está
-  assim; a sugestão é manter.
-  - O `pixie::math` define `GLM_FORCE_EXPLICIT_CTOR` e `GLM_FORCE_CTOR_INIT` para quem o linka. Com o
-    primeiro, toda conversão entre precisões é explícita no C++, até a que não perde nada, que no C#
-    é implícita; sem ele, até a que perde seria implícita, contra a regra de 4.4. Com o segundo, um
-    vetor começa em zero, como no C#. Na rodada das matrizes, ele faz a `mat4` começar como
-    identidade, enquanto o `default` do C# é zero.
-  - No C++, o escalar tem de ser do tipo do vetor: `pxVec3 * 2` não compila, é `pxVec3 * 2.0`. É a
-    regra do GLM, mais estrita que a do C# e que a da 5.1.
-  - No vetor inteiro do C++, o overflow e a conversão fora do intervalo são do GLM: indefinidos,
-    uma pré-condição, enquanto o C# volta ao contrário e satura (5.2 e 5.3).
-  - No C#, os nomes são os do `System.Numerics`, e o `float` converte implicitamente de e para o
-    `Vector2`, o `Vector3` e o `Vector4`. O `Normalize` e o `Lerp` em `float` usam a fórmula do GLM
-    sobre o `System.Numerics`, para dar os mesmos bits do C++; o `Min`, o `Max`, o `Clamp` e o `Abs`
-    repassam direto, e com NaN ou -0 podem diferir do GLM.
-  - Ainda não há conversão entre `pxPoint` ou `pxSize` e `pxVec2`.
+- **6.4. O `pixie::math` compilado** (commit `41dbe85`). Para a inversa SIMD da 6.2, o `pixie::math`
+  deixou de ser só headers: tem um `.cpp`, que o CMake compila como biblioteca estática. Para quem
+  usa pelo CMake, nada muda. A alternativa é voltar a só headers, com a `glm::inverse` comum, e a
+  inversa da `pxMat4f` levando o dobro do tempo. Sugestão: manter.
+- **6.5. As escolhas das matrizes** (commit `41dbe85`), feitas sem decisão anterior. O código já
+  está assim; a sugestão é manter.
+  - Só `mat3` e `mat4`, em `double` e `float`: sem matriz de `int` (o GLM não inverte inteiro), sem
+    `mat2` e sem as retangulares, como a `mat3x2`, que seria a `Matrix3x2` do `System.Numerics`.
+  - No C#, os nomes são os do GLM em PascalCase, e não os do `System.Numerics` (`CreateTranslation`,
+    `CreatePerspectiveFieldOfView`...), cujas projeções são para a profundidade em [0, 1]. O
+    `Translate(m, v)` multiplica `m` pela translação, como o `glm::translate`; para criar só a
+    translação, `Translate(Identity, v)`.
+  - O indexador do C# é `m[coluna, linha]`, como o `m[c][r]` do GLM; o do `Matrix4x4` é
+    `[linha, coluna]`.
+  - O texto da matriz vai coluna por coluna, na ordem da memória.
+  - Em `float`, as contas da `PxMat4f` são as fórmulas do GLM escritas no C#, e não as do
+    `System.Numerics`, que dão outros bits; só a conversão com o `Matrix4x4` repassa.
+- **6.6. As transformações 2D** (para a próxima rodada). Na `mat3`, com o ponto como `(x, y, 1)`:
+  translate, rotate e scale 2D. O GLM as tem no `gtx/matrix_transform_2d.hpp`, que é experimental e
+  pede o `GLM_ENABLE_EXPERIMENTAL` em quem linka o `pixie::math`. Sugestão: entram na próxima
+  rodada, nas duas pontas, junto com a conversão entre `pxPoint` e `pxVec2`, que ainda não existe.

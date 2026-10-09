@@ -26,8 +26,9 @@ e a passagem que trouxe a parte em C# em `passagem-pixielib.md`.
 
 ## 2. O que a PixieLib não é (1.1)
 
-- Não implementa SIMD nem a matemática de vetores e matrizes. Repassa: no C# em `float`, para o
-  `System.Numerics` (seção 4.5); no C++, para o GLM (6.1, 09/10; seção 4.13). "Reinventar a roda,
+- Não implementa SIMD nem inventa a matemática de vetores e matrizes. Repassa: no C++, para o GLM
+  (6.1, 09/10; seções 4.13 e 4.14); no C# em `float`, para o `System.Numerics` quando ele dá os
+  mesmos bits que o GLM (seção 4.5), e no resto o C# copia as fórmulas do GLM. "Reinventar a roda,
   mas não a madeira" (09/10).
 - Não chama código nativo. A parte em C# é 100% gerenciada, um pacote NuGet comum; quem faz
   P/Invoke é a PixieEngine, e a PixieLib só garante que os tipos atravessam.
@@ -106,7 +107,9 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   vetores e matrizes. Os nomes citados até aqui são exemplos, não a lista final.
 - **Repasse ao `System.Numerics`** (rework 3.9): no C#, a versão `float` repassa as operações ao
   `Vector2`, `Vector3`, `Matrix3x2` e `Matrix4x4`, de graça (testado no assembly do JIT); `double`
-  e `int` são implementação própria, porque o `System.Numerics` só tem `float`.
+  e `int` são implementação própria, porque o `System.Numerics` só tem `float`. Nos vetores, repassa
+  quando dá os mesmos bits que o GLM (4.13); nas matrizes, só a conversão com o `Matrix4x4` (4.14),
+  porque as contas dele dão outros bits.
 
 ### 4.6 Eventos (03/10; 1.8, 1.10 e 4.1 a 4.7, 08/10; commits `d94ba00` e `1f61f6b`)
 
@@ -318,13 +321,74 @@ operações. As respostas, todas aplicadas nas duas pontas:
   aleatórios. Para isso, o `Normalize` e o `Lerp` em `float` usam a fórmula do GLM sobre o
   `System.Numerics` (multiplicar por 1 / comprimento; `a * (1 - t) + b * t`): os do `System.Numerics`
   dariam um bit de diferença em metade dos casos.
+- **Corrigido em 09/10** (commit `031d701`): a conferência acima foi feita no `vec3`. No `vec4`, o
+  GLM soma o produto escalar em pares, `(x + y) + (z + w)`, como o `Vector4.Dot` do `float`, e o
+  `PxVec4` em `double` somava em sequência: o `Dot`, o `Length`, o `Distance` e o `Normalize` saíam
+  com um bit de diferença em 29% de 20.000 vetores. Agora nenhum difere. O GLM compilado pelo MSVC
+  soma em sequência (`func_geometric.inl`), então lá esses quatro podem diferir do C# no último bit;
+  o teste do C++ espera isso no MSVC, que ainda não foi testado.
 - Os testes passam no g++ 13 (também com o AddressSanitizer e o UBSan) e no clang++ 18, com
   `-Werror`, e no .NET 10; o `net481` é conferido pela compilação, e o `PIXIE_SYSTEM_GLM` não foi
   testado. Falham quando se quebra de propósito uma cópia: sem o `GLM_FORCE_EXPLICIT_CTOR` ou o
   `GLM_FORCE_CTOR_INIT`, o apelido com a precisão errada, a ordem do texto, a fórmula do `Normalize`
   e do `Lerp` em `double` e em `float`, o `Cross`, o `Equals`, a ordem dos campos e o `Min`. A
   saturação na conversão para `int` só muda algo no `net481`.
-- **[proposta]** As escolhas que não vinham decididas estão na pergunta 6.3.
+- As escolhas que não vinham decididas (6.3) foram aceitas em 09/10: as conversões explícitas e o
+  começo em zero (`GLM_FORCE_EXPLICIT_CTOR` e `GLM_FORCE_CTOR_INIT`), o escalar do tipo do vetor no
+  C++, o overflow do vetor inteiro como pré-condição no C++, os nomes do `System.Numerics` no C# e a
+  falta de conversão entre `pxPoint` ou `pxSize` e `pxVec2`.
+
+### 4.14 As matrizes (1.12, 1.13, 6.2 e 6.3, 09/10; commit `41dbe85`)
+
+- **A convenção** (1.12, 09/10): o vetor é coluna e multiplica à direita (`M * v`), e a memória é
+  column-major, o que o GLSL e o `glUniformMatrix4fv` esperam sem transpor. Em `A * B * v`, o `B`
+  vem primeiro. A memória é a mesma do `Matrix4x4` do `System.Numerics`, que multiplica o vetor à
+  esquerda: a `PxMat4f` converte de e para ele implicitamente, os mesmos bytes são a mesma
+  transformação (`Vector4.Transform(v, m)` é `m * v`), e o produto de dois `Matrix4x4` fica na ordem
+  contrária.
+- **O eixo Y e as projeções** (1.13, 09/10): o 2D segue a interface, com a origem no canto superior
+  esquerdo e o Y para baixo; as projeções são as do OpenGL, com a mão direita e a profundidade em
+  [-1, 1]. A `pxOrtho2D(largura, altura)` (`PxMat4.Ortho2D` no C#) é o `glm::ortho(0, largura,
+  altura, 0)`: leva o (0, 0) ao canto superior esquerdo da tela, o (-1, 1). Com o Y para baixo, um
+  ângulo positivo em torno do Z gira no sentido horário na tela.
+- **No C++**, `pxMat3` e `pxMat4` são apelidos de `glm::dmat3` e `glm::dmat4`, com `f` para `float`,
+  no `pixie/math/pxMat.hpp`; não há matriz de `int`. A matemática é a do GLM (`glm::transpose`,
+  `glm::determinant`, `glm::translate`, `glm::rotate`, `glm::scale`, `glm::lookAt`, `glm::ortho`,
+  `glm::perspective`), e o texto sai do `pxToString(m)`, coluna por coluna. Com o
+  `GLM_FORCE_CTOR_INIT` (6.3), uma matriz começa como a identidade.
+- **O SIMD da inversa** (6.2, 09/10): a ideia de copiar para o tipo alinhado do GLM não basta. A
+  inversa SIMD do GLM (`glm_mat4_inverse`) só existe com o `GLM_FORCE_INTRINSICS`, e esse define
+  tira o `constexpr` de todos os tipos do GLM no programa inteiro (um `constexpr pxVec3` deixa de
+  compilar no g++ e no clang). Por isso ela fica sozinha num arquivo compilado,
+  `cpp/math/src/pxMat.cpp`, que só inclui as funções SIMD do GLM e recebe `float*`, sem nenhum tipo
+  do GLM; o `pixie::math` passou a ser uma biblioteca estática com esse arquivo. A `pxInverse` é a
+  `glm::inverse` e, no x86-64, leva a `pxMat4f` por esse caminho: os mesmos bits (20.000 matrizes),
+  cerca de 11 ns contra 25 ns. O produto de `mat4` não precisa disso: o compilador já o vetoriza. A
+  `dmat4` e a `mat3` não têm versão SIMD no GLM.
+- **No C#**, `PxMat3` e `PxMat4` em `double` e `float` saem do gerador, que agora aceita uma linha
+  `// PX_PRECISIONS: double float` para pular o `int`. As colunas são `PxVec3` ou `PxVec4`; os
+  nomes são os do GLM em PascalCase (`Transpose`, `Inverse`, `Determinant`, `Translate`, `Rotate`,
+  `Scale`, `LookAt`, `Ortho`, `Perspective`, mais o `Ortho2D`), porque as funções de criação do
+  `System.Numerics` são para o vetor à esquerda e a profundidade em [0, 1]. O indexador é
+  `m[coluna]` e `m[coluna, linha]`, como o `m[c][r]` do GLM. O `default` é zero, e a identidade é
+  `Identity`.
+- **Os mesmos bits nas duas pontas**: as fórmulas do C# são as do GLM, na mesma ordem (o `M * v` da
+  `mat4` soma as colunas em pares, o produto e a `mat3` somam em sequência, a inversa multiplica por
+  1 / determinante). Em `float`, elas não repassam ao `System.Numerics`: o produto, o `Invert` e o
+  `Transform` dele diferem do GLM em quase todos os casos (4.997, 5.000 e 4.653 de 5.000 matrizes).
+  Conferido: 18 operações em 5.000 matrizes aleatórias, em `double` e `float`, dão os mesmos bits no
+  g++, no clang e no .NET 10. O seno, o cosseno e a tangente vêm da biblioteca C da plataforma nas
+  duas pontas (`MathF` no .NET); no `net481`, o `float` passa pelo `double` e pode mudar no último
+  bit.
+- Os testes passam no g++ 13 (também com o AddressSanitizer e o UBSan, e com `-O2`) e no clang++ 18,
+  com `-Werror`, e no .NET 10; o `net481` é conferido pela compilação, e o MSVC não foi testado.
+  Falham quando se quebra de propósito uma cópia: a ordem das somas do `M * v`, do produto, do
+  determinante, da inversa e da `mat3`, a divisão no lugar da multiplicação na inversa, um sinal do
+  `Rotate`, do `LookAt`, do `Ortho` e do `Perspective`, os argumentos do `Ortho2D` nas duas pontas,
+  o indexador, a ponte com o `Matrix4x4`, o `Equals`, a ordem das colunas e do texto, o apelido com
+  a precisão errada e a inversa SIMD.
+- **[proposta]** As escolhas que não vinham decididas estão nas perguntas 6.4 e 6.5, e as
+  transformações 2D, para a próxima rodada, na 6.6.
 
 ## 5. Consequências, ainda não aplicadas
 
