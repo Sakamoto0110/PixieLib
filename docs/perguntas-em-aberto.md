@@ -55,13 +55,4 @@ Respondidas: da 5.1 à 5.7 em 08/10, e a 5.8 em 09/10 (`notas.md`, seção 4.12)
 
 ## 6. Vetores e matrizes
 
-Respondidas em 09/10: da 6.1 à 6.6 (`notas.md`, seções 4.13 a 4.15).
-
-- **6.7. As escolhas das transformações 2D** (commit `215bdb2`), feitas sem decisão anterior. O
-  código já está assim; a sugestão é manter.
-  - O `GLM_ENABLE_EXPERIMENTAL` é definido só em volta do include das transformações 2D, e não para
-    quem linka o `pixie::math`, como a 6.6 dizia.
-  - O `ShearX` e o `ShearY` entram também, com o sentido do GLM: o `ShearX(m, k)` soma `k * x` ao
-    `y`.
-  - A conversão entre ponto e `vec2` é explícita, como a entre ponto e tamanho. O tamanho não
-    converte no `vec2`, e não há função para transformar um ponto: escreve-se `m * pxVec3(p, 1)`.
+Todas respondidas em 09/10, da 6.1 à 6.7 (`notas.md`, seções 4.13 a 4.15).

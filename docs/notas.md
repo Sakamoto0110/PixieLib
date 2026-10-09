@@ -413,7 +413,9 @@ operações. As respostas, todas aplicadas nas duas pontas:
   `-Werror`, e no .NET 10. Falham quando se quebra de propósito uma cópia: a ordem da soma do
   `Translate`, o sinal do `Rotate`, os eixos do `Scale` e dos dois `Shear`, a ordem do produto no
   `Shear`, e a ordem dos campos nas duas conversões, nas duas linguagens.
-- **[proposta]** As escolhas que não vinham decididas estão na pergunta 6.7.
+- As escolhas que não vinham decididas (6.7) foram aceitas em 09/10: o `GLM_ENABLE_EXPERIMENTAL` só
+  em volta do include, os dois `Shear` com o sentido do GLM, a conversão explícita entre ponto e
+  `vec2`, sem conversão do tamanho e sem função para transformar um ponto.
 
 ## 5. Consequências, ainda não aplicadas
 
