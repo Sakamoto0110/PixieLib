@@ -19,20 +19,8 @@ Todas respondidas em 09/10, da 3.1 à 3.5 (`notas.md`, seção 4.11).
 
 ## 4. Os eventos em C++
 
-Respondidas em 08/10, da 4.1 à 4.7 (`notas.md`, seção 4.6); a 4.6 trouxe o `Forward` de volta.
-
-- **4.8. As escolhas do `Forward`** (commit `1f61f6b`), feitas sem decisão anterior. O código já está
-  assim; a sugestão é manter.
-  - Uma cópia do handler não leva as ligações dele, como não leva as inscrições; o `+=` com um
-    handler também não. Uma ligação copiada não seria conhecida pelo alvo, que não teria como
-    desfazê-la quando morresse.
-  - Um laço é recusado com `false`, sem assert, como o `Remove` que não acha nada.
-  - No move, as ligações para o handler movido o seguem. Numa atribuição por move (`b = move(c)`),
-    as que iam para o `b` acabam, porque o conteúdo do `b` foi trocado, e as que iam para o `c`
-    passam para o `b`; é o que um `std::vector` precisa quando apaga um elemento do meio. Numa
-    atribuição por cópia, as que iam para o `b` continuam.
-  - O `pxEvent` pode ser ligado a um handler por qualquer um, mas só o dono pode fazê-lo alvo de
-    uma ligação, porque ser alvo é ser invocado.
+Todas respondidas: da 4.1 à 4.7 em 08/10, e a 4.8, as escolhas do `Forward`, em 09/10 (`notas.md`,
+seção 4.6); a 4.6 trouxe o `Forward` de volta.
 
 ## 5. O 2D
 
@@ -41,3 +29,9 @@ Respondidas: da 5.1 à 5.7 em 08/10, e a 5.8 em 09/10 (`notas.md`, seção 4.12)
 ## 6. Vetores e matrizes
 
 Todas respondidas em 09/10, da 6.1 à 6.7 (`notas.md`, seções 4.13 a 4.15).
+
+## 7. O deploy
+
+Todas respondidas em 09/10, da 7.1 à 7.4, feitas na conversa: a versão 0.1.0, a licença MIT, a
+publicação por um workflow que o void dispara, e o CI com o Windows antes do deploy (`notas.md`,
+seção 4.16).

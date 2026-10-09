@@ -67,30 +67,34 @@ O layout garante que os dados atravessam; estas regras garantem que eles querem 
   `Union`. O `Contains` de um retângulo olha só as bordas.
 - HSL para RGBA: a meia unidade arredonda para o par (o padrão do `Math.Round` do C#; no C++,
   `std::nearbyint`), e o valor é preso entre 0 e 255 antes.
-- Texto (`ToString`): os campos na ordem, entre parênteses, separados por `, `, como em
-  `(1.5, -2)` e `(120, 1, 0.5, 255)`. O ponto decimal é ponto em qualquer cultura. O número sai com
-  os menos dígitos significativos que voltam ao mesmo valor, completados com zeros e sem notação
-  científica: `100000`, não `1e+05`; o `float` 1e20 sai `100000000000000000000`. NaN sai `nan`,
-  qualquer que seja o sinal, e os infinitos, `inf` e `-inf`. Bytes e inteiros saem como números. A
-  HSL não tem hex (`notas.md`, 4.2). Conferido: o texto de 44.905 `double` e `float` aleatórios é o
-  mesmo nas duas linguagens (`notas.md`, 4.11).
+- Texto (`ToString`): os campos na ordem, entre parênteses, separados por `, `, como em `(1.5, -2)`
+  e `(120, 1, 0.5, 255)`. O ponto decimal é ponto em qualquer cultura. O número sai com os menos
+  dígitos significativos que voltam ao mesmo valor, completados com zeros e sem notação científica:
+  `100000`, não `1e+05`; o `float` 1e20 sai `100000000000000000000`. NaN sai `nan`, qualquer que
+  seja o sinal, e os infinitos, `inf` e `-inf`. Bytes e inteiros saem como números. A HSL não tem
+  hex (`notas.md`, 4.2). Conferido: o texto de 44.905 `double` e `float` aleatórios é o mesmo nas
+  duas linguagens (`notas.md`, 4.11). No C#, os dígitos saem do valor exato, e não do runtime,
+  porque o .NET Framework não arredonda sempre o último (`notas.md`, 4.16).
 - Vetores: a matemática do C++ é a do GLM, e o C# usa as mesmas fórmulas, na mesma ordem; o `Dot`, o
   `Length`, o `Distance`, o `Cross`, o `Normalize` e o `Lerp` dão os mesmos bits em `double` e em
   `float` (`notas.md`, 4.13). Isso vale com o C++ compilado sem juntar multiplicação e soma numa
-  instrução só (FMA): com `-march` de um processador com FMA e `-ffp-contract=fast`, o último bit
-  pode mudar. O produto escalar do `vec4` soma em pares, `(x + y) + (z + w)`, nas duas pontas, menos
-  no GLM compilado pelo MSVC, que soma em sequência: lá, o `Dot`, o `Length` e o `Normalize` do
-  `vec4`, e o `v * M` da `mat4`, podem mudar no último bit. O `Min`, o `Max`, o `Clamp` e o `Abs`
-  com NaN ou -0 seguem cada biblioteca. No vetor inteiro, o overflow e a conversão fora do intervalo
-  são indefinidos no C++, porque a conta é do GLM, e voltam ao contrário e saturam no C#.
+  instrução só (FMA): no GCC e no clang, com `-ffp-contract=off`, porque o clang junta por padrão, e
+  com otimização até num processador sem FMA, nas contas que faz ao compilar; o MSVC não junta com o
+  `/fp:precise` padrão (`notas.md`, 4.16). O produto escalar do `vec4` soma em pares, `(x + y) + (z
+  + w)`, nas duas pontas, menos no GLM compilado pelo MSVC, que soma em sequência: lá, o `Dot`, o
+  `Length` e o `Normalize` do `vec4`, e o `v * M` da `mat4`, podem mudar no último bit. O `Min`, o
+  `Max`, o `Clamp` e o `Abs` com NaN ou -0 seguem cada biblioteca. No vetor inteiro, o overflow e a
+  conversão fora do intervalo são indefinidos no C++, porque a conta é do GLM, e voltam ao contrário
+  e saturam no C#.
 - Matrizes: o vetor é coluna e multiplica à direita, `M * v`; em `A * B * v`, o `B` vem primeiro. O
   C# usa as fórmulas do GLM, na mesma ordem, e dá os mesmos bits em `double` e em `float`
   (`notas.md`, 4.14): o `M * v` da `mat4` soma as colunas em pares, o produto de matrizes e a `mat3`
   somam em sequência, e a inversa multiplica por 1 / determinante. O seno, o cosseno e a tangente do
   `Rotate` e do `Perspective` vêm da biblioteca C da plataforma nas duas pontas; no `net481`, o
-  `float` passa pelo `double`. A `Matrix4x4` do `System.Numerics` tem os mesmos bytes, mas
-  multiplica com o vetor à esquerda (`v * M`), então o produto de duas fica na ordem contrária, e as
-  contas dela não dão os mesmos bits que as do GLM.
+  `float` passa pelo `double`, e o cosseno do .NET Framework pode ser outro (o de pi / 2 não é o da
+  glibc nem o do MSVC; `notas.md`, 4.16). A `Matrix4x4` do `System.Numerics` tem os mesmos bytes,
+  mas multiplica com o vetor à esquerda (`v * M`), então o produto de duas fica na ordem contrária,
+  e as contas dela não dão os mesmos bits que as do GLM.
 - Projeções e eixos: as do OpenGL, com a mão direita e a profundidade em [-1, 1]. O 2D tem a origem
   no canto superior esquerdo e o Y para baixo, e a `Ortho2D(largura, altura)` leva o (0, 0) ao canto
   superior esquerdo da tela, o (-1, 1). Com o Y para baixo, um ângulo positivo em torno do Z gira no

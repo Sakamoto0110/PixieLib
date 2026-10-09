@@ -159,12 +159,15 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   (`diagnostico-2023.md`, seção 1) e falham nas 18 cópias quebradas de propósito: a remoção da
   primeira ocorrência em vez da última, o `+=` mexendo na lista durante o `Invoke`, a limpeza
   durante o `Invoke`, o handler destruído sem avisar o `Invoke`, o `Invoke` que não se desfaz numa
-  exceção, a identidade sem a origem ou sem a instância, o move que não destrói a origem, o leak e
-  o double free do heap, as inscrições que não seguem o handler, o `pxEvent` invocável de fora e o
-  argumento que um callback poderia mudar para o próximo. Os do `Forward` (commit `1f61f6b`) falham em
-  mais 5: sem a checagem de laço, sem corrigir o ponteiro no move, a cópia levando a ligação, o
-  alvo sem a inscrição e o `Unforward` que tira a ligação de outro. O MSVC ainda não foi testado.
-- **[proposta]** As escolhas do `Forward` que não vinham decididas estão na pergunta 4.8.
+  exceção, a identidade sem a origem ou sem a instância, o move que não destrói a origem, o leak e o
+  double free do heap, as inscrições que não seguem o handler, o `pxEvent` invocável de fora e o
+  argumento que um callback poderia mudar para o próximo. Os do `Forward` (commit `1f61f6b`) falham
+  em mais 5: sem a checagem de laço, sem corrigir o ponteiro no move, a cópia levando a ligação, o
+  alvo sem a inscrição e o `Unforward` que tira a ligação de outro. No MSVC, passam desde 09/10,
+  pelo CI (4.16).
+- As escolhas do `Forward` que não vinham decididas (4.8) foram aceitas em 09/10: a cópia de um
+  handler e o `+=` não levam as ligações dele, o laço é recusado com `false`, no move as ligações
+  seguem o handler, e só o dono pode fazer do `pxEvent` o alvo de uma ligação.
 
 ### 4.7 O recomeço (1.14 e 1.9, 03/10)
 
@@ -194,7 +197,7 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
 - Os testes (`cpp/tests`, pelo CTest) passam no g++ 13 e no clang++ 18, com `-Wall -Wextra
   -Wpedantic -Wconversion -Werror`, e falham quando se quebra de propósito uma cópia: as bordas do
   `Contains`, o arredondamento e o clamp da HSL, a ordem do hex, o layout e as regras de precisão.
-  O MSVC ainda não foi testado.
+  No MSVC, passam desde 09/10, pelo CI (4.16).
 - As escolhas feitas ao escrever, sem decisão anterior, foram confirmadas em 08/10 (2.1 a 2.8):
   - **Estrutura** (2.1): só headers, em `cpp/include/pixie/` (`<pixie/pxPoint.hpp>`), com CMake e
     C++20; os testes num executável do CTest, sem framework, com o `check.hpp`.
@@ -248,7 +251,7 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   Linux. Falham quando se quebra de propósito uma cópia: as bordas do `Contains`, o arredondamento,
   o clamp, o layout, a ordem do hex, as regras de precisão, o texto, a cultura e o gerador.
 - O texto de 44.905 `double` e `float` aleatórios, comparado linha a linha, é o mesmo no C++ e no
-  C#.
+  C#. No `net481` também, desde 09/10: os dígitos saem do valor exato, e não do runtime (4.16).
 - As escolhas que não vinham decididas (3.1 a 3.5) foram aceitas em 09/10: o namespace `PixieLib`,
   os testes em `dotnet/PixieLib.Tests`, a ponte com o `System.Drawing` só no `double` e na cor, as
   conversões entre as cores só na `PxColorHsl`, sem o `ToHexString` nem as conversões com `int`, e
@@ -329,13 +332,13 @@ operações. As respostas, todas aplicadas nas duas pontas:
   `PxVec4` em `double` somava em sequência: o `Dot`, o `Length`, o `Distance` e o `Normalize` saíam
   com um bit de diferença em 29% de 20.000 vetores. Agora nenhum difere. O GLM compilado pelo MSVC
   soma em sequência (`func_geometric.inl`), então lá esses quatro podem diferir do C# no último bit;
-  o teste do C++ espera isso no MSVC, que ainda não foi testado.
+  o teste do C++ espera isso no MSVC, e passa lá desde 09/10 (4.16).
 - Os testes passam no g++ 13 (também com o AddressSanitizer e o UBSan) e no clang++ 18, com
-  `-Werror`, e no .NET 10; o `net481` é conferido pela compilação, e o `PIXIE_SYSTEM_GLM` não foi
-  testado. Falham quando se quebra de propósito uma cópia: sem o `GLM_FORCE_EXPLICIT_CTOR` ou o
-  `GLM_FORCE_CTOR_INIT`, o apelido com a precisão errada, a ordem do texto, a fórmula do `Normalize`
-  e do `Lerp` em `double` e em `float`, o `Cross`, o `Equals`, a ordem dos campos e o `Min`. A
-  saturação na conversão para `int` só muda algo no `net481`.
+  `-Werror`, e no .NET 10, e desde 09/10 no MSVC e no `net481`, pelo CI (4.16); o `PIXIE_SYSTEM_GLM`
+  não foi testado. Falham quando se quebra de propósito uma cópia: sem o `GLM_FORCE_EXPLICIT_CTOR`
+  ou o `GLM_FORCE_CTOR_INIT`, o apelido com a precisão errada, a ordem do texto, a fórmula do
+  `Normalize` e do `Lerp` em `double` e em `float`, o `Cross`, o `Equals`, a ordem dos campos e o
+  `Min`. A saturação na conversão para `int` só muda algo no `net481`.
 - As escolhas que não vinham decididas (6.3) foram aceitas em 09/10: as conversões explícitas e o
   começo em zero (`GLM_FORCE_EXPLICIT_CTOR` e `GLM_FORCE_CTOR_INIT`), o escalar do tipo do vetor no
   C++, o overflow do vetor inteiro como pré-condição no C++, os nomes do `System.Numerics` no C# e a
@@ -382,14 +385,14 @@ operações. As respostas, todas aplicadas nas duas pontas:
   Conferido: 18 operações em 5.000 matrizes aleatórias, em `double` e `float`, dão os mesmos bits no
   g++, no clang e no .NET 10. O seno, o cosseno e a tangente vêm da biblioteca C da plataforma nas
   duas pontas (`MathF` no .NET); no `net481`, o `float` passa pelo `double` e pode mudar no último
-  bit.
+  bit, e o cosseno do .NET Framework é outro (4.16).
 - Os testes passam no g++ 13 (também com o AddressSanitizer e o UBSan, e com `-O2`) e no clang++ 18,
-  com `-Werror`, e no .NET 10; o `net481` é conferido pela compilação, e o MSVC não foi testado.
-  Falham quando se quebra de propósito uma cópia: a ordem das somas do `M * v`, do produto, do
-  determinante, da inversa e da `mat3`, a divisão no lugar da multiplicação na inversa, um sinal do
-  `Rotate`, do `LookAt`, do `Ortho` e do `Perspective`, os argumentos do `Ortho2D` nas duas pontas,
-  o indexador, a ponte com o `Matrix4x4`, o `Equals`, a ordem das colunas e do texto, o apelido com
-  a precisão errada e a inversa SIMD.
+  com `-Werror`, e no .NET 10, e desde 09/10 no MSVC e no `net481`, pelo CI (4.16). Falham quando se
+  quebra de propósito uma cópia: a ordem das somas do `M * v`, do produto, do determinante, da
+  inversa e da `mat3`, a divisão no lugar da multiplicação na inversa, um sinal do `Rotate`, do
+  `LookAt`, do `Ortho` e do `Perspective`, os argumentos do `Ortho2D` nas duas pontas, o indexador,
+  a ponte com o `Matrix4x4`, o `Equals`, a ordem das colunas e do texto, o apelido com a precisão
+  errada e a inversa SIMD.
 - As escolhas que não vinham decididas foram aceitas em 09/10: o `pixie::math` compilado, por causa
   da inversa SIMD (6.4), e as escolhas das matrizes (6.5): só `mat3` e `mat4`, sem `int`; os nomes
   do GLM no C#; o indexador `m[coluna, linha]`; o texto coluna por coluna; e as contas da `PxMat4f`
@@ -420,20 +423,70 @@ operações. As respostas, todas aplicadas nas duas pontas:
   em volta do include, os dois `Shear` com o sentido do GLM, a conversão explícita entre ponto e
   `vec2`, sem conversão do tamanho e sem função para transformar um ponto.
 
-## 5. Consequências, ainda não aplicadas
+### 4.16 O primeiro deploy (7.1 a 7.4, 09/10; commits `5693b4c` a `5777471`)
 
-- **No InteractiveEditor**, numa sessão do rework depois desta (passagem, 6.8): ele passa a usar a
-  PixieLib e apaga os próprios primitivos, menos o `PxDock`; o namespace muda de
-  `InteractiveEditor.Primitives` para `PixieLib`. O que muda para quem os usa: `PxColorArgb` vira
-  `PxColorRgba`, e a `PxColorHsl` passa o alfa para o fim, nos construtores também; as conversões
-  entre as cores ficam só na `PxColorHsl` (`FromRgba` e `ToRgba`); saem o `ToHexString` e as
-  conversões explícitas da cor com `int` (o `ToArgb` e o `FromArgb` ficam); o `ToString` passa ao
-  formato da 4.10; e as conversões do WinForms e do WPF viram métodos de extensão no editor (4.4).
-  Um ponto que o compilador não pega: o construtor de quatro `byte` da `PxColorArgb` recebe o alfa
-  primeiro, e o da `PxColorRgba` por último, então um `new(255, 0, 128, 255)` continua compilando
-  com a cor trocada; o da `PxColorHsl` também, quando o último argumento é um inteiro que cabe num
-  `byte` (conferido em 09/10 numa cópia do editor, onde o único caso é o `Gadget.Fill` do
-  DemoObjects).
+As perguntas 7.1 a 7.4 foram feitas na conversa, e não em `perguntas-em-aberto.md`; o void aceitou
+as sugestões em 09/10 ("ok"), com a 4.8.
+
+- **A versão 0.1.0** (7.1): abaixo da 1.0, a API ainda pode mudar. O número fica no `Version` do
+  `dotnet/PixieLib/PixieLib.csproj`, e uma versão nova começa subindo ele.
+- **MIT** (7.2), no `LICENSE`, com o copyright no nome do git (seção 6). O `README.md`, em inglês,
+  diz o que a PixieLib é, como pegar o pacote e o C++, e quando os bits batem; os exemplos dele
+  foram compilados e rodados, o do C++ pelo `FetchContent` deste repositório.
+- **A publicação** (7.3): o pacote `PixieLib` do nuget.org, da conta Nekovih, sai do
+  `.github/workflows/publish.yml`, que o void dispara na `main` (Actions, Publish, Run workflow).
+  Ele roda o CI, empacota, publica e cria o release com a tag `v` mais a versão; as sessões não
+  criam tag (4.7), e o workflow cria. O nuget.org deixa o workflow entrar por trusted publishing: a
+  política da conta nomeia o `publish.yml`, e não há chave no repositório. Uma tag que já existe
+  para tudo antes de publicar, e uma versão no nuget.org não se apaga, só se esconde. O pacote leva
+  as DLLs de `net10.0` e `net481`, o README e os símbolos (`snupkg`), sem dependência.
+- **O C++ não tem pacote**: quem usa pega pelo `FetchContent`, com a tag e `SOURCE_SUBDIR cpp`
+  (README), e como subprojeto os testes não entram.
+- **O CI** (7.4): o `.github/workflows/ci.yml` roda a cada push na `main` e em PR. O C++, em
+  Release, no g++ com o AddressSanitizer e o UBSan, no clang++ e no MSVC; o C#, no .NET 10 no Linux
+  e no Windows, onde roda também no .NET Framework (`net481`), e empacota. Para isso os testes do C#
+  ganharam o alvo `net481`: o atributo `CallerArgumentExpression` declarado para o .NET Framework, o
+  `System.Memory` só nos testes (o `Unsafe` e o `MemoryMarshal` do layout), e o `Layout<T>` pedindo
+  `unmanaged`. As checagens de texto das matrizes mostram, quando falham, o texto e os bits de cada
+  número (`Check.Text`, commit `02554ad`), porque o .NET Framework só roda no CI.
+- **O que o CI achou**, nas primeiras vezes que o MSVC e o `net481` rodaram:
+  - O clang junta multiplicação e soma (FMA) por padrão (`-ffp-contract=on`), e com otimização faz
+    isso até num processador sem FMA, nas expressões constantes que calcula ao compilar: em Release,
+    cinco checagens das matrizes falhavam. Os testes compilam com `-ffp-contract=off` no GCC e no
+    clang (commit `5693b4c`), e o `layout.md` diz isso a quem usa.
+  - O `pxInverse` deixava inalcançável o `glm::inverse` de uma `mat4` em `float`, e o MSVC avisa
+    (C4702) em quem compila o header com `/W4`; foi para um `else` (commit `46de4ce`). No mesmo
+    commit, o `log` dos testes dos eventos, que no MSVC conflitava com o da biblioteca C, virou
+    `trace`.
+  - No `net481`, o texto de um número: o `ToString` de um `double` perto do maior lançava
+    `OverflowException`, porque o parser do .NET Framework lança onde o .NET dá infinito, e o texto
+    de alguns números saía com outro último dígito, porque a formatação dele não arredonda sempre
+    para o mais próximo o 16º e o 17º dígito de um `double`, nem o 9º de um `float`
+    (-0.5400000000000002 no lugar de -0.5400000000000001, que voltam ao mesmo `double`). O `PxText`
+    agora gera os dígitos sozinho, com `BigInteger`, do valor exato: para cada número de dígitos, o
+    valor arredondado (metade para o par), até um que volte ao mesmo valor, decidido sem parser
+    (commits `46de4ce`, `829983b` e `63a49e1`). No .NET 10, o texto é o mesmo de antes em 1,2 milhão
+    de `double` e `float`, com as potências de dois, os subnormais e os extremos.
+  - O `Math.Cos(Math.PI / 2)` do .NET Framework é 6.123031769111886e-17, e não o
+    6.123233995736766e-17 do .NET, da glibc e do MSVC. A trigonometria vem de cada plataforma
+    (`layout.md`, 3), e a PixieLib não escreve a sua: no `net481`, os testes esperam o valor do .NET
+    Framework (commit `5777471`).
+
+## 5. Consequências
+
+- **No InteractiveEditor** (aplicado em 09/10, no commit `424f6d0` da `rework-claude` dele, que
+  entrou na `main` dele pelo PR 3; passagem, 6.8): ele passa a usar a PixieLib e apaga os próprios
+  primitivos, menos o `PxDock`; o namespace muda de `InteractiveEditor.Primitives` para `PixieLib`.
+  O que muda para quem os usa: `PxColorArgb` vira `PxColorRgba`, e a `PxColorHsl` passa o alfa para
+  o fim, nos construtores também; as conversões entre as cores ficam só na `PxColorHsl` (`FromRgba`
+  e `ToRgba`); saem o `ToHexString` e as conversões explícitas da cor com `int` (o `ToArgb` e o
+  `FromArgb` ficam); o `ToString` passa ao formato da 4.10; e as conversões do WinForms e do WPF
+  viram métodos de extensão no editor (4.4). Um ponto que o compilador não pega: o construtor de
+  quatro `byte` da `PxColorArgb` recebe o alfa primeiro, e o da `PxColorRgba` por último, então um
+  `new(255, 0, 128, 255)` continua compilando com a cor trocada; o da `PxColorHsl` também, quando o
+  último argumento é um inteiro que cabe num `byte` (conferido em 09/10 numa cópia do editor, onde o
+  único caso é o `Gadget.Fill` do DemoObjects). O editor usa a cópia em `external/PixieLib` até
+  trocar pelo pacote (4.16).
 
 ## 6. Como commitar
 
@@ -445,3 +498,5 @@ operações. As respostas, todas aplicadas nas duas pontas:
   branch própria, o nome é do void.
 - Mensagens em inglês, com prefixo: `(refactor)`, `(docs)`, `(fix)`, `(feat)`. Mudança de código e
   atualização das notas em commits separados, o de `(docs)` citando o hash do outro (passagem).
+- Depois do push, conferir o CI no GitHub (4.16): a `main` vermelha vem antes de qualquer outra
+  coisa, e o que só o MSVC ou o `net481` mostram só aparece lá.
