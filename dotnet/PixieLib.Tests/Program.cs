@@ -10,6 +10,7 @@ PxColorRgbaTests.Run();
 PxColorHslTests.Run();
 ToStringTests.Run();
 PxVecTests.Run();
+PxMatTests.Run();
 SystemDrawingTests.Run();
 
 Console.WriteLine(Check.Failures == 0 ? "all checks passed" : $"{Check.Failures} check(s) failed");

@@ -16,7 +16,7 @@ add_executable(pixie_tests
 target_link_libraries(pixie_tests PRIVATE pixie::pixie pixie::events)
 
 if(PIXIE_MATH)
-    target_sources(pixie_tests PRIVATE pxVec.test.cpp)
+    target_sources(pixie_tests PRIVATE pxVec.test.cpp pxMat.test.cpp)
     target_link_libraries(pixie_tests PRIVATE pixie::math)
     target_compile_definitions(pixie_tests PRIVATE PIXIE_TEST_MATH)
 endif()

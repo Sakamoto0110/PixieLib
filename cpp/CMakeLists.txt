@@ -14,9 +14,10 @@ add_library(pixie::events ALIAS pixie_events)
 target_include_directories(pixie_events INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/events/include)
 target_compile_features(pixie_events INTERFACE cxx_std_20)
 
-# The math, a module of its own (6.1): the vectors are GLM's, under the names of PixieLib, and the
-# engine links pixie::math. GLM is only headers. It comes pinned to 1.0.3, or from find_package with
-# PIXIE_SYSTEM_GLM; whoever only wants the primitives turns PIXIE_MATH off and does not download it.
+# The math, a module of its own (6.1): the vectors and matrices are GLM's, under the names of
+# PixieLib, and the engine links pixie::math. GLM is only headers. It comes pinned to 1.0.3, or from
+# find_package with PIXIE_SYSTEM_GLM; whoever only wants the primitives turns PIXIE_MATH off and does
+# not download it.
 option(PIXIE_MATH "Build pixie::math, which brings GLM" ON)
 option(PIXIE_SYSTEM_GLM "Take GLM from find_package instead of downloading 1.0.3" OFF)
 
@@ -38,14 +39,16 @@ if(PIXIE_MATH)
         set(PIXIE_GLM_TARGET pixie_glm_headers)
     endif()
 
-    add_library(pixie_math INTERFACE)
+    # The one compiled file of PixieLib: GLM's SIMD inverse of a float mat4 (6.2), which needs a define
+    # of its own (math/src/pxMat.cpp). Everything else in pixie::math is headers.
+    add_library(pixie_math STATIC ${CMAKE_CURRENT_SOURCE_DIR}/math/src/pxMat.cpp)
     add_library(pixie::math ALIAS pixie_math)
-    target_include_directories(pixie_math INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/math/include)
-    target_link_libraries(pixie_math INTERFACE pixie::pixie ${PIXIE_GLM_TARGET})
-    target_compile_features(pixie_math INTERFACE cxx_std_20)
+    target_include_directories(pixie_math PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/math/include)
+    target_link_libraries(pixie_math PUBLIC pixie::pixie ${PIXIE_GLM_TARGET})
+    target_compile_features(pixie_math PUBLIC cxx_std_20)
     # Every file that links pixie::math sees GLM the same way (6.3): a conversion between precisions
     # is explicit, as P8.5 asks of the one that loses, and a vector starts at zero, as in C#.
-    target_compile_definitions(pixie_math INTERFACE GLM_FORCE_EXPLICIT_CTOR GLM_FORCE_CTOR_INIT)
+    target_compile_definitions(pixie_math PUBLIC GLM_FORCE_EXPLICIT_CTOR GLM_FORCE_CTOR_INIT)
 endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)

@@ -45,6 +45,14 @@ internal static class LayoutTests
         var v = new System.Numerics.Vector3(1, 2, 3);
         Check.That(Unsafe.As<System.Numerics.Vector3, PxVec3f>(ref v) == new PxVec3f(1, 2, 3));
 
+        // The matrices: the columns one after the other, as GLM's packed mat3 and mat4 (pxMat.hpp).
+        Layout<PxMat3>(72, ("c0", 0), ("c1", 24), ("c2", 48));
+        Layout<PxMat3f>(36, ("c0", 0), ("c1", 12), ("c2", 24));
+        Layout<PxMat4>(128, ("c0", 0), ("c1", 32), ("c2", 64), ("c3", 96));
+        Layout<PxMat4f>(64, ("c0", 0), ("c1", 16), ("c2", 32), ("c3", 48));
+        var matrix = new System.Numerics.Matrix4x4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        Check.That(Unsafe.As<System.Numerics.Matrix4x4, PxMat4f>(ref matrix)[1] == new PxVec4f(5, 6, 7, 8));
+
         Layout<PxColorRgba>(4, ("r", 0), ("g", 1), ("b", 2), ("a", 3));
         Layout<PxColorHsl>(32, ("h", 0), ("s", 8), ("l", 16), ("a", 24));
 

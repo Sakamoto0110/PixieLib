@@ -17,6 +17,24 @@ internal static class Check
         Console.WriteLine($"{Path.GetFileName(file)}:{line}: check failed: {expression}");
     }
 
+    public static void Throws<TException>(Action action, [CallerArgumentExpression(nameof(action))] string expression = "",
+        [CallerFilePath] string file = "", [CallerLineNumber] int line = 0) where TException : Exception
+    {
+        try
+        {
+            action();
+        }
+        catch (TException)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+        }
+        Failures++;
+        Console.WriteLine($"{Path.GetFileName(file)}:{line}: did not throw {typeof(TException).Name}: {expression}");
+    }
+
     // Whether TFrom converts to TTo implicitly or explicitly, through an operator of either type.
     public static bool Implicit<TFrom, TTo>() => HasOperator<TFrom, TTo>("op_Implicit");
 

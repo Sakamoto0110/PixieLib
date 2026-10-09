@@ -12,6 +12,7 @@ void TestColorHsl();
 void TestToString();
 #ifdef PIXIE_TEST_MATH
 void TestVec();
+void TestMat();
 #endif
 void TestCallback();
 void TestEventHandler();
@@ -29,6 +30,7 @@ int main() {
     TestToString();
 #ifdef PIXIE_TEST_MATH
     TestVec();
+    TestMat();
 #endif
     TestCallback();
     TestEventHandler();
