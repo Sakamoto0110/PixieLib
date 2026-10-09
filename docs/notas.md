@@ -387,8 +387,33 @@ operações. As respostas, todas aplicadas nas duas pontas:
   `Rotate`, do `LookAt`, do `Ortho` e do `Perspective`, os argumentos do `Ortho2D` nas duas pontas,
   o indexador, a ponte com o `Matrix4x4`, o `Equals`, a ordem das colunas e do texto, o apelido com
   a precisão errada e a inversa SIMD.
-- **[proposta]** As escolhas que não vinham decididas estão nas perguntas 6.4 e 6.5, e as
-  transformações 2D, para a próxima rodada, na 6.6.
+- As escolhas que não vinham decididas foram aceitas em 09/10: o `pixie::math` compilado, por causa
+  da inversa SIMD (6.4), e as escolhas das matrizes (6.5): só `mat3` e `mat4`, sem `int`; os nomes
+  do GLM no C#; o indexador `m[coluna, linha]`; o texto coluna por coluna; e as contas da `PxMat4f`
+  com as fórmulas do GLM, com só a conversão repassando ao `Matrix4x4`.
+
+### 4.15 As transformações 2D (6.6, 09/10; commit `215bdb2`)
+
+- **Na `mat3`**, com o ponto como `(x, y, 1)`. No C++, são as do GLM (`gtx/matrix_transform_2d`),
+  que o `pxMat.hpp` já inclui: `glm::translate(m, vec2)`, `glm::rotate(m, ângulo)`,
+  `glm::scale(m, vec2)`, `glm::shearX` e `glm::shearY`. No C#, `PxMat3.Translate`, `Rotate`,
+  `Scale`, `ShearX` e `ShearY`, com as fórmulas do GLM. Cada uma é `m` vezes a transformação, então
+  em `T * R * S * p` o `S` vem primeiro; com o Y para baixo, um ângulo positivo gira no sentido
+  horário na tela. O `ShearX(m, k)` do GLM soma `k * x` ao `y`, e o `ShearY(m, k)` soma `k * y` ao
+  `x`.
+- **O `GLM_ENABLE_EXPERIMENTAL`**: o GLM pede esse define para as extensões experimentais, como
+  esta. O `pxMat.hpp` o define só em volta desse include, e não para quem linka o `pixie::math`,
+  como a 6.6 dizia: assim os outros headers experimentais continuam pedindo o define.
+- **Ponto e `vec2`**: guardam os mesmos dados na mesma precisão, então um converte no outro,
+  explicitamente, como o ponto e o tamanho (4.9): `pxToVec2(ponto)` e `pxToPoint(vetor)` no C++, que
+  não pode dar construtor a um apelido, e `(PxVec2)ponto` e `(PxPoint)vetor` no C#.
+- **Os mesmos bits nas duas pontas**: as cinco transformações e o ponto transformado, em 5.000
+  matrizes aleatórias, em `double` e `float`, no g++ e no .NET 10.
+- Os testes passam no g++ 13 (também com o AddressSanitizer e o UBSan) e no clang++ 18, com
+  `-Werror`, e no .NET 10. Falham quando se quebra de propósito uma cópia: a ordem da soma do
+  `Translate`, o sinal do `Rotate`, os eixos do `Scale` e dos dois `Shear`, a ordem do produto no
+  `Shear`, e a ordem dos campos nas duas conversões, nas duas linguagens.
+- **[proposta]** As escolhas que não vinham decididas estão na pergunta 6.7.
 
 ## 5. Consequências, ainda não aplicadas
 

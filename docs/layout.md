@@ -95,6 +95,8 @@ O layout garante que os dados atravessam; estas regras garantem que eles querem 
   no canto superior esquerdo e o Y para baixo, e a `Ortho2D(largura, altura)` leva o (0, 0) ao canto
   superior esquerdo da tela, o (-1, 1). Com o Y para baixo, um ângulo positivo em torno do Z gira no
   sentido horário na tela.
+- Transformações 2D: na `mat3`, com o ponto como `(x, y, 1)`, as do GLM nas duas pontas
+  (`notas.md`, 4.15). O ponto e o `vec2` da mesma precisão convertem um no outro, explicitamente.
 - Texto da matriz: as colunas na ordem da memória, cada uma no formato do vetor, como em
   `((1, 0, 0), (0, 1, 0), (0, 0, 1))`.
 - Hex da cor: `0xRRGGBBAA`, a ordem em que o número é escrito, feita com deslocamento de bits. No

@@ -55,26 +55,13 @@ Respondidas: da 5.1 à 5.7 em 08/10, e a 5.8 em 09/10 (`notas.md`, seção 4.12)
 
 ## 6. Vetores e matrizes
 
-Respondidas em 09/10: da 6.1 à 6.3 (`notas.md`, seções 4.13 e 4.14).
+Respondidas em 09/10: da 6.1 à 6.6 (`notas.md`, seções 4.13 a 4.15).
 
-- **6.4. O `pixie::math` compilado** (commit `41dbe85`). Para a inversa SIMD da 6.2, o `pixie::math`
-  deixou de ser só headers: tem um `.cpp`, que o CMake compila como biblioteca estática. Para quem
-  usa pelo CMake, nada muda. A alternativa é voltar a só headers, com a `glm::inverse` comum, e a
-  inversa da `pxMat4f` levando o dobro do tempo. Sugestão: manter.
-- **6.5. As escolhas das matrizes** (commit `41dbe85`), feitas sem decisão anterior. O código já
-  está assim; a sugestão é manter.
-  - Só `mat3` e `mat4`, em `double` e `float`: sem matriz de `int` (o GLM não inverte inteiro), sem
-    `mat2` e sem as retangulares, como a `mat3x2`, que seria a `Matrix3x2` do `System.Numerics`.
-  - No C#, os nomes são os do GLM em PascalCase, e não os do `System.Numerics` (`CreateTranslation`,
-    `CreatePerspectiveFieldOfView`...), cujas projeções são para a profundidade em [0, 1]. O
-    `Translate(m, v)` multiplica `m` pela translação, como o `glm::translate`; para criar só a
-    translação, `Translate(Identity, v)`.
-  - O indexador do C# é `m[coluna, linha]`, como o `m[c][r]` do GLM; o do `Matrix4x4` é
-    `[linha, coluna]`.
-  - O texto da matriz vai coluna por coluna, na ordem da memória.
-  - Em `float`, as contas da `PxMat4f` são as fórmulas do GLM escritas no C#, e não as do
-    `System.Numerics`, que dão outros bits; só a conversão com o `Matrix4x4` repassa.
-- **6.6. As transformações 2D** (para a próxima rodada). Na `mat3`, com o ponto como `(x, y, 1)`:
-  translate, rotate e scale 2D. O GLM as tem no `gtx/matrix_transform_2d.hpp`, que é experimental e
-  pede o `GLM_ENABLE_EXPERIMENTAL` em quem linka o `pixie::math`. Sugestão: entram na próxima
-  rodada, nas duas pontas, junto com a conversão entre `pxPoint` e `pxVec2`, que ainda não existe.
+- **6.7. As escolhas das transformações 2D** (commit `215bdb2`), feitas sem decisão anterior. O
+  código já está assim; a sugestão é manter.
+  - O `GLM_ENABLE_EXPERIMENTAL` é definido só em volta do include das transformações 2D, e não para
+    quem linka o `pixie::math`, como a 6.6 dizia.
+  - O `ShearX` e o `ShearY` entram também, com o sentido do GLM: o `ShearX(m, k)` soma `k * x` ao
+    `y`.
+  - A conversão entre ponto e `vec2` é explícita, como a entre ponto e tamanho. O tamanho não
+    converte no `vec2`, e não há função para transformar um ponto: escreve-se `m * pxVec3(p, 1)`.
