@@ -26,25 +26,11 @@ internal static class PxText
         if (value == 0)
             return IsNegative(value) ? "-0" : "0";
 
-        // The fewest digits that read back as the same value. "R" does it on .NET, but on net481 it
-        // can give 17 digits where 16 are enough, and the parser of net481 is not exact, so it can
-        // take a candidate that is too short for the value. Both targets search the same way, and
-        // decide without a parser whether a candidate reads back as the value.
         long bits = System.BitConverter.DoubleToInt64Bits(value);
         int biased = (int)((bits >> 52) & 0x7FF);
         long fraction = bits & 0xFFFFFFFFFFFFFL;
-        string text = value.ToString("R", Invariant);
-        for (int digits = 1; digits <= 17; digits++)
-        {
-            string candidate = value.ToString("G" + digits, Invariant);
-            if (ReadsBack(candidate, biased == 0 ? fraction : fraction | (1L << 52), biased == 0 ? -1074 : biased - 1075,
-                          fraction == 0 && biased > 1))
-            {
-                text = candidate;
-                break;
-            }
-        }
-        return WithoutExponent(text);
+        return Shortest(value < 0, biased == 0 ? fraction : fraction | (1L << 52), biased == 0 ? -1074 : biased - 1075,
+                        fraction == 0 && biased > 1, 17);
     }
 
     public static string Number(float value)
@@ -59,43 +45,59 @@ internal static class PxText
         int bits = System.BitConverter.ToInt32(System.BitConverter.GetBytes(value), 0);
         int biased = (bits >> 23) & 0xFF;
         int fraction = bits & 0x7FFFFF;
-        string text = value.ToString("R", Invariant);
-        for (int digits = 1; digits <= 9; digits++)
-        {
-            string candidate = value.ToString("G" + digits, Invariant);
-            if (ReadsBack(candidate, biased == 0 ? fraction : fraction | (1 << 23), biased == 0 ? -149 : biased - 150,
-                          fraction == 0 && biased > 1))
-            {
-                text = candidate;
-                break;
-            }
-        }
-        return WithoutExponent(text);
+        return Shortest(value < 0, biased == 0 ? fraction : fraction | (1 << 23), biased == 0 ? -149 : biased - 150,
+                        fraction == 0 && biased > 1, 9);
     }
 
-    // Whether the decimal text reads back as the value mantissa * 2^exponent, without a parser: it does
-    // when it falls between the halfway points to the two neighbors, and on a halfway point when the
-    // mantissa is even (the rounding of IEEE). Below a power of two the neighbor is twice as close
-    // (closerBelow). Everything is counted in quarters of the last place, so the bounds are integers.
-    private static bool ReadsBack(string text, long mantissa, int exponent, bool closerBelow)
+    // The fewest significant digits that read back as the value mantissa * 2^exponent: for each count
+    // of digits, the value rounded to that many (half to even), until one reads back. The digits come
+    // from the exact value, and not from the runtime: the .NET Framework does not round the 16th and
+    // 17th digits of a double, nor the 9th of a float, always to the nearest, so the same value would
+    // have another text there (09/10, in the CI). Below a power of two the neighbor is twice as close
+    // (closerBelow).
+    private static string Shortest(bool negative, long mantissa, int exponent, bool closerBelow, int maxDigits)
     {
-        int e = text.IndexOfAny(new[] { 'E', 'e' });
-        string significand = (e < 0 ? text : text.Substring(0, e)).TrimStart('-');
-        int power = e < 0 ? 0 : int.Parse(text.Substring(e + 1), NumberStyles.AllowLeadingSign, Invariant);
-        int point = significand.IndexOf('.');
-        if (point >= 0)
-        {
-            power -= significand.Length - point - 1;
-            significand = significand.Remove(point, 1);
-        }
-
-        // text = digits * 10^power, and in quarters of 2^exponent it is numerator / denominator.
-        BigInteger numerator = BigInteger.Parse(significand, Invariant);
+        // The value is numerator / denominator, exactly, and lies in [10^power, 10^(power + 1)).
+        BigInteger numerator = mantissa;
         BigInteger denominator = BigInteger.One;
-        if (power >= 0)
-            numerator *= BigInteger.Pow(10, power);
+        if (exponent >= 0)
+            numerator <<= exponent;
         else
-            denominator = BigInteger.Pow(10, -power);
+            denominator <<= -exponent;
+        int power = (int)System.Math.Floor(System.Math.Log10(mantissa) + exponent * System.Math.Log10(2));
+        while (Scaled(numerator, -power).CompareTo(Scaled(denominator, power)) < 0)
+            power--;
+        while (Scaled(numerator, -power - 1).CompareTo(Scaled(denominator, power + 1)) >= 0)
+            power++;
+
+        for (int digits = 1; ; digits++)
+        {
+            // The value times 10^(digits - 1 - power), rounded half to even: digits significant digits,
+            // the last one at 10^last.
+            int last = power - digits + 1;
+            BigInteger divisor = Scaled(denominator, last);
+            BigInteger quotient = BigInteger.DivRem(Scaled(numerator, -last), divisor, out BigInteger remainder);
+            int half = (2 * remainder).CompareTo(divisor);
+            if (half > 0 || (half == 0 && !quotient.IsEven))
+                quotient++;
+
+            if (digits == maxDigits || ReadsBack(quotient, last, mantissa, exponent, closerBelow))
+                return Plain(negative, quotient, last);
+        }
+    }
+
+    // value * 10^power when power is positive, and the value itself otherwise: a comparison or a
+    // division of two values with powers of ten puts each power on the side where it is positive.
+    private static BigInteger Scaled(BigInteger value, int power) => power > 0 ? value * BigInteger.Pow(10, power) : value;
+
+    // Whether digits * 10^power reads back as mantissa * 2^exponent: it does when it falls between the
+    // halfway points to the two neighbors, and on a halfway point when the mantissa is even (the
+    // rounding of IEEE). Everything is counted in quarters of the last place, so the bounds are
+    // integers.
+    private static bool ReadsBack(BigInteger digits, int power, long mantissa, int exponent, bool closerBelow)
+    {
+        BigInteger numerator = Scaled(digits, power);
+        BigInteger denominator = power < 0 ? BigInteger.Pow(10, -power) : BigInteger.One;
         if (2 - exponent >= 0)
             numerator <<= 2 - exponent;
         else
@@ -107,30 +109,28 @@ internal static class PxText
         return (low > 0 || (low == 0 && even)) && (high < 0 || (high == 0 && even));
     }
 
-    // -0 compares equal to 0, so the sign comes from the bits; net481 also drops it when formatting.
-    private static bool IsNegative(double value) => System.BitConverter.DoubleToInt64Bits(value) < 0;
-
-    // Moves the decimal point of "1.5E+20" or "5E-324" to where the exponent says, with zeros.
-    private static string WithoutExponent(string text)
+    // digits * 10^power without an exponent and without trailing zeros: 15 * 10^-2 is 0.15, and 1 * 10^5
+    // is 100000.
+    private static string Plain(bool negative, BigInteger digits, int power)
     {
-        int e = text.IndexOfAny(new[] { 'E', 'e' });
-        if (e < 0)
-            return text;
+        while (!digits.IsZero && (digits % 10).IsZero)
+        {
+            digits /= 10;
+            power++;
+        }
 
-        bool negative = text[0] == '-';
-        string mantissa = text.Substring(negative ? 1 : 0, e - (negative ? 1 : 0));
-        int exponent = int.Parse(text.Substring(e + 1), NumberStyles.AllowLeadingSign, Invariant);
-        int point = mantissa.IndexOf('.');
-        string digits = point < 0 ? mantissa : mantissa.Remove(point, 1);
-        int integerDigits = (point < 0 ? mantissa.Length : point) + exponent;
-
+        string text = digits.ToString(Invariant);
+        int integerDigits = text.Length + power;
         string plain;
         if (integerDigits <= 0)
-            plain = "0." + new string('0', -integerDigits) + digits;
-        else if (integerDigits >= digits.Length)
-            plain = digits + new string('0', integerDigits - digits.Length);
+            plain = "0." + new string('0', -integerDigits) + text;
+        else if (power >= 0)
+            plain = text + new string('0', power);
         else
-            plain = digits.Substring(0, integerDigits) + "." + digits.Substring(integerDigits);
+            plain = text.Substring(0, integerDigits) + "." + text.Substring(integerDigits);
         return negative ? "-" + plain : plain;
     }
+
+    // -0 compares equal to 0, so the sign comes from the bits; net481 also drops it when formatting.
+    private static bool IsNegative(double value) => System.BitConverter.DoubleToInt64Bits(value) < 0;
 }
