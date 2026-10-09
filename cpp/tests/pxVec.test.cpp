@@ -55,6 +55,15 @@ void TestVec() {
     PX_CHECK(pxVec2f(1, 2) + pxVec2f(3, 4) == pxVec2f(4, 6));
     PX_CHECK(pxVec4(1, 2, 3, 4).w == 4 && glm::dot(pxVec4(1, 2, 3, 4), pxVec4(1)) == 10);
 
+    // GLM's vec4 dot adds in pairs, (x + y) + (z + w), and so does the C# one; with 1e16, adding 1 is
+    // lost, and adding in sequence would give 1. On MSVC, GLM adds in sequence (docs/layout.md, 3).
+#if defined(_MSC_VER)
+    PX_CHECK(glm::dot(pxVec4(1e16, 1, -1e16, 1), pxVec4(1)) == 1);
+#else
+    PX_CHECK(glm::dot(pxVec4(1e16, 1, -1e16, 1), pxVec4(1)) == 0);
+    PX_CHECK(glm::dot(pxVec4f(1e8f, 1, -1e8f, 1), pxVec4f(1)) == 0);
+#endif
+
     // A conversion between precisions is explicit, even the one that loses nothing
     // (GLM_FORCE_EXPLICIT_CTOR, from pixie::math), and truncates.
     static_assert(!std::is_convertible_v<pxVec3f, pxVec3> && !std::is_convertible_v<pxVec3, pxVec3i>);

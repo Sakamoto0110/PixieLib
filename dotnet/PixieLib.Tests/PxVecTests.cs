@@ -42,6 +42,11 @@ internal static class PxVecTests
         Check.That(new PxVec2f(1, 2) + new PxVec2f(3, 4) == new PxVec2f(4, 6));
         Check.That(PxVec4.Dot(new PxVec4(1, 2, 3, 4), PxVec4.One) == 10);
 
+        // The dot product of a vec4 adds in pairs, (x + y) + (z + w), as GLM does; with 1e16, adding 1
+        // is lost, and adding in sequence would give 1.
+        Check.That(PxVec4.Dot(new PxVec4(1e16, 1, -1e16, 1), PxVec4.One) == 0);
+        Check.That(PxVec4f.Dot(new PxVec4f(1e8f, 1, -1e8f, 1), PxVec4f.One) == 0);
+
         // The double ones give GLM's bits: Normalize multiplies by 1 / length, as glm::normalize.
         var n = PxVec3.Normalize(new PxVec3(3, 4, 0));
         Check.That(n.X == 3 * (1 / 5.0) && n.X != 0.6);

@@ -102,8 +102,9 @@ public struct PxVec4__S__ : IEquatable<PxVec4__S__>
 #else
 #if PX_DOUBLE
     // The formulas of GLM, in the same order, so that a double gives the same bits as in C++: the dot
-    // product adds from x on, and Normalize multiplies by 1 / length.
-    public static double Dot(PxVec4 a, PxVec4 b) => a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+    // product of a vec4 adds in pairs, as Vector4.Dot does in float (on MSVC, GLM adds in sequence), and
+    // Normalize multiplies by 1 / length.
+    public static double Dot(PxVec4 a, PxVec4 b) => (a.x * b.x + a.y * b.y) + (a.z * b.z + a.w * b.w);
     public readonly double Length() => Math.Sqrt(Dot(this, this));
     public readonly double LengthSquared() => Dot(this, this);
     public static double Distance(PxVec4 a, PxVec4 b) => (b - a).Length();
