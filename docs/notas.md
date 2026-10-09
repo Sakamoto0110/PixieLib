@@ -26,8 +26,9 @@ e a passagem que trouxe a parte em C# em `passagem-pixielib.md`.
 
 ## 2. O que a PixieLib não é (1.1)
 
-- Não implementa SIMD. Repassa: no C# em `float`, para o `System.Numerics` (seção 4.5); no C++,
-  para um backend opcional, a decidir.
+- Não implementa SIMD nem a matemática de vetores e matrizes. Repassa: no C# em `float`, para o
+  `System.Numerics` (seção 4.5); no C++, para o GLM (6.1, 09/10; seção 4.13). "Reinventar a roda,
+  mas não a madeira" (09/10).
 - Não chama código nativo. A parte em C# é 100% gerenciada, um pacote NuGet comum; quem faz
   P/Invoke é a PixieEngine, e a PixieLib só garante que os tipos atravessam.
 - Não é engine: nada de janela, render, input ou assets.
@@ -179,7 +180,7 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   vec2math, os eventos) fica para a próxima rodada.
 - **[proposta]** Os primitivos desta rodada: ponto, tamanho, retângulo, região, margens e as duas
   cores. Os vetores e as matrizes, com a matemática deles, vão para a próxima, junto com as
-  perguntas 1.11 a 1.13.
+  perguntas 1.11 a 1.13. Os vetores entraram em 09/10 (seção 4.13).
 
 ### 4.9 Os primitivos em C++ (commit `0424940`)
 
@@ -284,7 +285,46 @@ operações. As respostas, todas aplicadas nas duas pontas:
   recusado, o `Equals` com `==` e a ponte que arredonda os campos. O NaN do `PxConvert`, o da HSL no C#
   e o `PxHash.Of` só mudam algo no `net481`, onde os testes não rodam: no .NET 10 o cast e o hash já
   fazem o mesmo.
-- **[proposta]** As escolhas das operações que não vinham decididas estão na pergunta 5.8.
+- As escolhas das operações feitas sem decisão anterior foram aceitas em 09/10 (5.8): um retângulo
+  sem área não entra no `Union`; o `Contains` de um retângulo olha só as bordas; mover é `rect + ponto`,
+  e não um `Offset`; `Deflate` e `Inflate` não prendem o tamanho em zero; o `Center` inteiro arredonda
+  para zero; no C#, `Location` e `Size` têm `set`; a região só tem `Contains`, `IntersectsWith`,
+  `Intersect` e `Union`.
+
+### 4.13 Os vetores (6.1 e 1.11, 09/10; commit `947eac7`)
+
+- **O GLM faz a matemática no C++** (6.1, 09/10): é a matemática do OpenGL, pronta e testada, e a
+  PixieLib não refaz a inversa, o quatérnio e a projeção à mão. Fica fixo na 1.0.3, baixado pelo
+  CMake (`FetchContent`, só os headers), ou achado pelo `find_package` com `PIXIE_SYSTEM_GLM`.
+- **Um módulo próprio**, o `pixie::math`, como os eventos (1.10): quem só quer os primitivos desliga
+  o `PIXIE_MATH` e não baixa o GLM.
+- **Os vetores são apelidos dos do GLM** (09/10), o que responde à 1.11: `pxVec2`, `pxVec3` e
+  `pxVec4` são `glm::dvec2`, `glm::dvec3` e `glm::dvec4`, com `f` e `i` para `float` e `int32_t`
+  (4.1), e a API é a do GLM (`glm::dot`, `glm::cross`, `glm::length`, `glm::normalize`,
+  `glm::mix`...). O texto sai de uma função, `pxToString(v)`, no formato de 4.10. Os `static_assert`
+  do `pxVec.hpp` conferem o layout: os tipos alinhados do GLM (`GLM_FORCE_DEFAULT_ALIGNED_GENTYPES`)
+  fariam o `vec3` ter 16 bytes, e o build para.
+- **O SIMD** (medido em 09/10, `reviews/vec3-simd.md` na pasta do projeto): num `vec3` o compilador
+  já soma com uma instrução empacotada, e o GLM padrão não usa os caminhos SIMD dele, que só existem
+  nos tipos alinhados. O ganho real é na `mat4` (a inversa cai de 155 instruções para 68), assunto da
+  6.2, na rodada das matrizes.
+- **No C#**, `PxVec2`, `PxVec3` e `PxVec4` saem do gerador, com o layout dos vetores do GLM e os
+  nomes do `System.Numerics` (`Dot`, `Cross`, `Length()`, `Normalize`, `Lerp`, `Min`, `Max`,
+  `Clamp`, `Abs`, `Zero`, `One`, `UnitX`...). Em `float`, repassam ao `System.Numerics` e convertem
+  de e para o `Vector2`, `Vector3` e `Vector4` implicitamente; em `double` e `int`, são código próprio,
+  com as fórmulas do GLM. O inteiro não tem `Dot`, `Cross`, `Length` nem `Normalize`, como no GLM.
+- **Os mesmos bits nas duas pontas**: em `double` e em `float`, o `Dot`, o `Length`, o `Distance`, o
+  `Cross`, o `Normalize` e o `Lerp` dão o mesmo número que o GLM, conferido em 20.000 vetores
+  aleatórios. Para isso, o `Normalize` e o `Lerp` em `float` usam a fórmula do GLM sobre o
+  `System.Numerics` (multiplicar por 1 / comprimento; `a * (1 - t) + b * t`): os do `System.Numerics`
+  dariam um bit de diferença em metade dos casos.
+- Os testes passam no g++ 13 (também com o AddressSanitizer e o UBSan) e no clang++ 18, com
+  `-Werror`, e no .NET 10; o `net481` é conferido pela compilação, e o `PIXIE_SYSTEM_GLM` não foi
+  testado. Falham quando se quebra de propósito uma cópia: sem o `GLM_FORCE_EXPLICIT_CTOR` ou o
+  `GLM_FORCE_CTOR_INIT`, o apelido com a precisão errada, a ordem do texto, a fórmula do `Normalize`
+  e do `Lerp` em `double` e em `float`, o `Cross`, o `Equals`, a ordem dos campos e o `Min`. A
+  saturação na conversão para `int` só muda algo no `net481`.
+- **[proposta]** As escolhas que não vinham decididas estão na pergunta 6.3.
 
 ## 5. Consequências, ainda não aplicadas
 

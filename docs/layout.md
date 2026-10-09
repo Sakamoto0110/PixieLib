@@ -20,6 +20,12 @@ O tamanho está em bytes, por precisão: `double` (sem sufixo), `float` (`f`), `
 | `pxRect` | `PxRect` | `x`, `y`, `width`, `height` | 32 | 16 | 16 |
 | `pxRegion` | `PxRegion` | `x1`, `y1`, `x2`, `y2` | 32 | 16 | 16 |
 | `pxPadding` | `PxPadding` | `left`, `top`, `right`, `bottom` | 32 | 16 | 16 |
+| `pxVec2` | `PxVec2` | `x`, `y` | 16 | 8 | 8 |
+| `pxVec3` | `PxVec3` | `x`, `y`, `z` | 24 | 12 | 12 |
+| `pxVec4` | `PxVec4` | `x`, `y`, `z`, `w` | 32 | 16 | 16 |
+
+Os vetores do C++ são os do GLM (`notas.md`, 4.13), nos tipos sem alinhamento extra, os padrão; os
+de `float` do C# têm o mesmo layout que o `Vector2`, o `Vector3` e o `Vector4` do `System.Numerics`.
 
 As cores têm uma precisão só:
 
@@ -63,5 +69,12 @@ O layout garante que os dados atravessam; estas regras garantem que eles querem 
   qualquer que seja o sinal, e os infinitos, `inf` e `-inf`. Bytes e inteiros saem como números. A
   HSL não tem hex (`notas.md`, 4.2). Conferido: o texto de 44.905 `double` e `float` aleatórios é o
   mesmo nas duas linguagens (`notas.md`, 4.11).
+- Vetores: a matemática do C++ é a do GLM, e o C# usa as mesmas fórmulas, na mesma ordem; o `Dot`,
+  o `Length`, o `Distance`, o `Cross`, o `Normalize` e o `Lerp` dão os mesmos bits em `double` e em
+  `float` (`notas.md`, 4.13). Isso vale com o C++ compilado sem juntar multiplicação e soma numa
+  instrução só (FMA): com `-march` de um processador com FMA e `-ffp-contract=fast`, o último bit pode
+  mudar. O `Min`, o `Max`, o `Clamp` e o `Abs` com NaN ou -0 seguem cada biblioteca. No vetor
+  inteiro, o overflow e a conversão fora do intervalo são indefinidos no C++, porque a conta é do
+  GLM, e voltam ao contrário e saturam no C#.
 - Hex da cor: `0xRRGGBBAA`, a ordem em que o número é escrito, feita com deslocamento de bits. No
   C#, o `ToArgb()` em `0xAARRGGBB` existe só para o `System.Drawing`.
