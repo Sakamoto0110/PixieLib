@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <string>
 #include <type_traits>
@@ -27,13 +28,14 @@ struct pxRegion_t {
 
     template<typename U>
     constexpr explicit(!pxIsLossless<U, T>) pxRegion_t(const pxRegion_t<U>& o) noexcept
-        : x1(static_cast<T>(o.x1)), y1(static_cast<T>(o.y1)),
-          x2(static_cast<T>(o.x2)), y2(static_cast<T>(o.y2)) {}
+        : x1(pxConvert<T>(o.x1)), y1(pxConvert<T>(o.y1)),
+          x2(pxConvert<T>(o.x2)), y2(pxConvert<T>(o.y2)) {}
 
     constexpr explicit operator pxRect_t<T>() const noexcept { return { x1, y1, Width(), Height() }; }
 
-    constexpr T Width() const noexcept { return x2 - x1; }
-    constexpr T Height() const noexcept { return y2 - y1; }
+    // In int32_t the difference wraps around, as in C# (5.2).
+    constexpr T Width() const noexcept { return pxSub(x2, x1); }
+    constexpr T Height() const noexcept { return pxSub(y2, y1); }
 
     constexpr bool IsEmpty() const noexcept { return x1 == 0 && y1 == 0 && x2 == 0 && y2 == 0; }
 
@@ -44,7 +46,37 @@ struct pxRegion_t {
         return pt.x >= x1 && pt.x < x2 && pt.y >= y1 && pt.y < y2;
     }
 
+    // The same rules as in pxRect_t: r is inside when its edges are, whatever its size.
+    constexpr bool Contains(const pxRegion_t& r) const noexcept {
+        return r.x1 >= x1 && r.x2 <= x2 && r.y1 >= y1 && r.y2 <= y2;
+    }
+
+    // Regions that only touch share nothing, and neither does one with no area.
+    constexpr bool IntersectsWith(const pxRegion_t& r) const noexcept {
+        return r.x1 < x2 && x1 < r.x2 && r.y1 < y2 && y1 < r.y2 && HasArea() && r.HasArea();
+    }
+
+    // The part the two share, or the empty region (all zeros) when they share nothing.
+    static constexpr pxRegion_t Intersect(const pxRegion_t& a, const pxRegion_t& b) noexcept {
+        if (!a.IntersectsWith(b))
+            return {};
+        return { std::max(a.x1, b.x1), std::max(a.y1, b.y1), std::min(a.x2, b.x2), std::min(a.y2, b.y2) };
+    }
+
+    // The smallest region around both. One with no area adds nothing; when neither has area, the
+    // result is a.
+    static constexpr pxRegion_t Union(const pxRegion_t& a, const pxRegion_t& b) noexcept {
+        if (!b.HasArea())
+            return a;
+        if (!a.HasArea())
+            return b;
+        return { std::min(a.x1, b.x1), std::min(a.y1, b.y1), std::max(a.x2, b.x2), std::max(a.y2, b.y2) };
+    }
+
     friend constexpr bool operator==(const pxRegion_t&, const pxRegion_t&) noexcept = default;
+
+private:
+    constexpr bool HasArea() const noexcept { return x2 > x1 && y2 > y1; }
 };
 
 using pxRegion  = pxRegion_t<double>;

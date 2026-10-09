@@ -20,7 +20,11 @@ internal static class SystemDrawingTests
 
         PxRect fromRectangle = new Rectangle(1, 2, 3, 4);
         Check.That(fromRectangle == new PxRect(1, 2, 3, 4));
-        Check.That((Rectangle)new PxRect(0.4, 0.6, 2.5, 3.5) == new Rectangle(0, 1, 2, 4));
+        // Rectangle rounds the edges, not the fields (5.6): from 0.4 to 2.9 is 0 to 3.
+        Check.That((Rectangle)new PxRect(0.4, 0.6, 2.5, 3.5) == new Rectangle(0, 1, 3, 3));
+        Check.That((Rectangle)new PxRect(0.5, 0, 0.5, 1) == new Rectangle(0, 0, 1, 1));
+        Check.That((Rectangle)new PxRect(3e9, -3e9, 1, 1) == new Rectangle(int.MaxValue, int.MinValue, 0, 0));
+        Check.That((Point)new PxPoint(double.NaN, 3e9) == new Point(0, int.MaxValue));
         Check.That((RectangleF)new PxRect(1, 2, 3, 4) == new RectangleF(1, 2, 3, 4));
 
         Check.That(Check.Implicit<Point, PxPoint>() && Check.Explicit<PxPoint, Point>());

@@ -24,12 +24,12 @@ struct pxPadding_t {
 
     template<typename U>
     constexpr explicit(!pxIsLossless<U, T>) pxPadding_t(const pxPadding_t<U>& o) noexcept
-        : left(static_cast<T>(o.left)), top(static_cast<T>(o.top)),
-          right(static_cast<T>(o.right)), bottom(static_cast<T>(o.bottom)) {}
+        : left(pxConvert<T>(o.left)), top(pxConvert<T>(o.top)),
+          right(pxConvert<T>(o.right)), bottom(pxConvert<T>(o.bottom)) {}
 
-    // The space taken across and along.
-    constexpr T Horizontal() const noexcept { return left + right; }
-    constexpr T Vertical() const noexcept { return top + bottom; }
+    // The space taken across and along. In int32_t the sum wraps around, as in C# (5.2).
+    constexpr T Horizontal() const noexcept { return pxAdd(left, right); }
+    constexpr T Vertical() const noexcept { return pxAdd(top, bottom); }
 
     constexpr bool IsEmpty() const noexcept { return left == 0 && top == 0 && right == 0 && bottom == 0; }
 

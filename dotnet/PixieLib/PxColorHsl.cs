@@ -96,9 +96,12 @@ public struct PxColorHsl : IEquatable<PxColorHsl>
     }
 
     // Math.Round takes a half to the even neighbor (126.5 to 126), like std::nearbyint in C++. Out of
-    // range values, which only come from a saturation or lightness outside 0 to 1, are clamped (2.8).
+    // range values, which only come from a saturation or lightness outside 0 to 1, are clamped (2.8),
+    // and NaN is 0 (5.3).
     private static byte ToByte(double unit)
     {
+        if (double.IsNaN(unit))
+            return 0;
         double value = unit * 255;
         value = value < 0 ? 0 : value > 255 ? 255 : value;
         return (byte)Math.Round(value);
@@ -107,9 +110,10 @@ public struct PxColorHsl : IEquatable<PxColorHsl>
     public static bool operator ==(PxColorHsl x, PxColorHsl y) => x.h == y.h && x.s == y.s && x.l == y.l && x.a == y.a;
     public static bool operator !=(PxColorHsl x, PxColorHsl y) => !(x == y);
 
-    public readonly bool Equals(PxColorHsl other) => this == other;
+    // Equals compares each field with its own Equals, so a NaN equals itself; == follows IEEE (5.5).
+    public readonly bool Equals(PxColorHsl other) => h.Equals(other.h) && s.Equals(other.s) && l.Equals(other.l) && a == other.a;
     public override readonly bool Equals(object? obj) => obj is PxColorHsl other && Equals(other);
-    public override readonly int GetHashCode() => PxHash.Combine(h.GetHashCode(), s.GetHashCode(), l.GetHashCode(), a);
+    public override readonly int GetHashCode() => PxHash.Combine(PxHash.Of(h), PxHash.Of(s), PxHash.Of(l), a);
     public override readonly string ToString() =>
         PxText.Tuple(PxText.Number(h), PxText.Number(s), PxText.Number(l), PxText.Number(a));
 }

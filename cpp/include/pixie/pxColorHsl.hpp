@@ -75,8 +75,10 @@ struct pxColorHsl {
 private:
     // Rounds a half to the even neighbor, like Math.Round in C# (std::nearbyint in the default
     // rounding mode; std::round would take 126.5 to 127, C# to 126). Out of range values, which only
-    // come from a saturation or lightness outside 0 to 1, are clamped.
+    // come from a saturation or lightness outside 0 to 1, are clamped, and NaN is 0 (5.3).
     static std::uint8_t ToByte(double unit) noexcept {
+        if (std::isnan(unit))
+            return 0;
         return static_cast<std::uint8_t>(std::nearbyint(std::clamp(unit * 255, 0.0, 255.0)));
     }
 };

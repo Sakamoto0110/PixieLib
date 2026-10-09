@@ -20,7 +20,7 @@ struct pxSize_t {
 
     template<typename U>
     constexpr explicit(!pxIsLossless<U, T>) pxSize_t(const pxSize_t<U>& o) noexcept
-        : width(static_cast<T>(o.width)), height(static_cast<T>(o.height)) {}
+        : width(pxConvert<T>(o.width)), height(pxConvert<T>(o.height)) {}
 
     constexpr bool IsEmpty() const noexcept { return width == 0 && height == 0; }
 
@@ -28,13 +28,19 @@ struct pxSize_t {
 
     friend constexpr bool operator==(const pxSize_t&, const pxSize_t&) noexcept = default;
 
-    friend constexpr pxSize_t operator+(pxSize_t a, pxSize_t b) noexcept { return { a.width + b.width, a.height + b.height }; }
-    friend constexpr pxSize_t operator-(pxSize_t a, pxSize_t b) noexcept { return { a.width - b.width, a.height - b.height }; }
-    friend constexpr pxSize_t operator*(pxSize_t sz, T k) noexcept { return { sz.width * k, sz.height * k }; }
+    // In int32_t the arithmetic wraps around, as in C# (5.2), and dividing by zero is a precondition
+    // (5.4). The scalar is a T, or a type that C# converts to T implicitly (5.1).
+    friend constexpr pxSize_t operator+(pxSize_t a, pxSize_t b) noexcept { return { pxAdd(a.width, b.width), pxAdd(a.height, b.height) }; }
+    friend constexpr pxSize_t operator-(pxSize_t a, pxSize_t b) noexcept { return { pxSub(a.width, b.width), pxSub(a.height, b.height) }; }
+    friend constexpr pxSize_t operator*(pxSize_t sz, T k) noexcept { return { pxMul(sz.width, k), pxMul(sz.height, k) }; }
     friend constexpr pxSize_t operator*(T k, pxSize_t sz) noexcept { return sz * k; }
     friend constexpr pxSize_t operator/(pxSize_t sz, T k) noexcept { return { sz.width / k, sz.height / k }; }
     friend constexpr pxSize_t operator+(pxSize_t sz) noexcept { return sz; }
-    friend constexpr pxSize_t operator-(pxSize_t sz) noexcept { return { -sz.width, -sz.height }; }
+    friend constexpr pxSize_t operator-(pxSize_t sz) noexcept { return { pxNeg(sz.width), pxNeg(sz.height) }; }
+
+    template<pxRejectedScalar<T> K> friend pxSize_t operator*(pxSize_t, K) = delete;
+    template<pxRejectedScalar<T> K> friend pxSize_t operator*(K, pxSize_t) = delete;
+    template<pxRejectedScalar<T> K> friend pxSize_t operator/(pxSize_t, K) = delete;
 };
 
 using pxSize  = pxSize_t<double>;

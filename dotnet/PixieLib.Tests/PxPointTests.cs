@@ -37,5 +37,27 @@ internal static class PxPointTests
 
         // Integer points divide like integers.
         Check.That(new PxPointi(7, -7) / 2 == new PxPointi(3, -3));
+
+        // Integer points wrap around, as in C++ (5.2).
+        var big = new PxPointi(int.MaxValue, int.MinValue);
+        Check.That(big + new PxPointi(1, -1) == new PxPointi(int.MinValue, int.MaxValue));
+        Check.That(big - new PxPointi(-1, 1) == new PxPointi(int.MinValue, int.MaxValue));
+        Check.That(big * 2 == new PxPointi(-2, 0));
+        Check.That(-big == new PxPointi(-int.MaxValue, int.MinValue));
+        Check.That(big + new PxSizei(1, 0) == new PxPointi(int.MinValue, int.MinValue));
+
+        // To int out of range: saturated, and NaN is 0 (5.3).
+        Check.That((PxPointi)new PxPoint(3e9, -3e9) == new PxPointi(int.MaxValue, int.MinValue));
+        Check.That((PxPointi)new PxPoint(double.NaN, -2147483648.9) == new PxPointi(0, int.MinValue));
+        Check.That((PxPointi)new PxPointf(1e10f, -0.5f) == new PxPointi(int.MaxValue, 0));
+
+        // Equals is reflexive with NaN, == is IEEE (5.5).
+        var nan = new PxPoint(double.NaN, 0);
+        var sameNan = nan;
+        Check.That(nan.Equals(sameNan) && nan != sameNan);
+        Check.That(new HashSet<PxPoint> { nan }.Contains(nan));
+        Check.That(new PxPoint(0, -0.0).Equals(new PxPoint(0, 0)));
+        Check.That(new PxPoint(0, -0.0).GetHashCode() == new PxPoint(0, 0).GetHashCode());
+        Check.That(new PxPointf(float.NaN, 1).Equals(new PxPointf(float.NaN, 1)));
     }
 }

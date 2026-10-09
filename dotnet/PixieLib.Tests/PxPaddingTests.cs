@@ -17,5 +17,9 @@ internal static class PxPaddingTests
         PxPadding fromInt = new PxPaddingi(1, 2, 3, 4);
         Check.That(fromInt == p);
         Check.That(Check.Implicit<PxPaddingf, PxPadding>() && !Check.Implicit<PxPadding, PxPaddingf>());
+
+        // The sums wrap around in int (5.2), and NaN equals itself in Equals (5.5).
+        Check.That(new PxPaddingi(int.MaxValue, 0, 1, 0).Horizontal == int.MinValue);
+        Check.That(new PxPadding(double.NaN).Equals(new PxPadding(double.NaN)));
     }
 }

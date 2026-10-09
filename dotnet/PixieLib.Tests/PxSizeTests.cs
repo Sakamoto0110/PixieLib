@@ -27,5 +27,11 @@ internal static class PxSizeTests
         Check.That(Check.Explicit<PxSize, PxSizef>() && Check.Explicit<PxSize, PxSizei>());
         Check.That(Check.Explicit<PxSizei, PxSizef>() && Check.Explicit<PxSizef, PxSizei>());
         Check.That(!Check.Implicit<PxSize, PxSizef>() && !Check.Implicit<PxSizei, PxSizef>());
+
+        // The same rules as PxPoint (5.2, 5.3, 5.5).
+        Check.That(new PxSizei(int.MaxValue, 1) + new PxSizei(1, 1) == new PxSizei(int.MinValue, 2));
+        Check.That(-new PxSizei(int.MinValue, 0) == new PxSizei(int.MinValue, 0));
+        Check.That((PxSizei)new PxSize(-1e300, double.NaN) == new PxSizei(int.MinValue, 0));
+        Check.That(new PxSize(double.NaN, 1).Equals(new PxSize(double.NaN, 1)));
     }
 }

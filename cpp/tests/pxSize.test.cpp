@@ -1,8 +1,18 @@
+#include <cstdint>
+#include <limits>
 #include <type_traits>
 
 #include <pixie/pxSize.hpp>
 
 #include "check.hpp"
+
+namespace {
+
+template<typename S, typename K>
+concept Multipliable = requires(S s, K k) { s * k; } || requires(S s, K k) { k * s; } ||
+                       requires(S s, K k) { s / k; };
+
+}  // namespace
 
 void TestSize() {
     pxSize sz{ 3, 4.5 };
@@ -28,4 +38,10 @@ void TestSize() {
     static_assert(!std::is_convertible_v<pxSize, pxSizef> && !std::is_convertible_v<pxSize, pxSizei>);
     static_assert(!std::is_convertible_v<pxSizei, pxSizef> && !std::is_convertible_v<pxSizef, pxSizei>);
     static_assert(std::is_constructible_v<pxSizef, pxSize> && std::is_constructible_v<pxSizei, pxSize>);
+
+    // The same rules as pxPoint_t (5.1 to 5.3).
+    PX_CHECK(pxSizei(INT32_MAX, 1) + pxSizei(1, 1) == pxSizei(INT32_MIN, 2));
+    PX_CHECK(-pxSizei(INT32_MIN, 0) == pxSizei(INT32_MIN, 0));
+    PX_CHECK(pxSizei(pxSize{ -1e300, std::numeric_limits<double>::quiet_NaN() }) == pxSizei(INT32_MIN, 0));
+    static_assert(!Multipliable<pxSizei, double> && Multipliable<pxSize, int>);
 }

@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdint>
 #include <initializer_list>
+#include <limits>
 
 #include <pixie/pxColorHsl.hpp>
 
@@ -46,6 +47,9 @@ void TestColorHsl() {
 
     // A half rounds to the even neighbor, like Math.Round in C#: 126.5 is 126, 127.5 is 128.
     PX_CHECK(pxColorHsl::ToRgba({ 0, 0, 126.5 / 255 }).r == 126);
+
+    // NaN becomes 0 (5.3).
+    PX_CHECK(pxColorHsl::ToRgba({ 0, 0, std::numeric_limits<double>::quiet_NaN(), 7 }) == pxColorRgba(0, 0, 0, 7));
     PX_CHECK(pxColorHsl::ToRgba({ 0, 0, 127.5 / 255 }).r == 128);
 
     // Out of range lightness is clamped instead of overflowing the byte.

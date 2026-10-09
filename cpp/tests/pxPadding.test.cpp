@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <type_traits>
 
 #include <pixie/pxPadding.hpp>
@@ -18,4 +19,7 @@ void TestPadding() {
     pxPadding fromInt = pxPaddingi{ 1, 2, 3, 4 };
     PX_CHECK(fromInt == p);
     static_assert(std::is_convertible_v<pxPaddingf, pxPadding> && !std::is_convertible_v<pxPadding, pxPaddingf>);
+
+    // The sums wrap around in int32_t (5.2).
+    PX_CHECK(pxPaddingi(INT32_MAX, 0, 1, 0).Horizontal() == INT32_MIN);
 }

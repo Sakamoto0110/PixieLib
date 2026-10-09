@@ -42,6 +42,10 @@ internal static class PxColorHslTests
         // Out of range lightness is clamped instead of overflowing the byte.
         Check.That(PxColorHsl.ToRgba(new PxColorHsl(0, 0, 1.5)) == new PxColorRgba(255, 255, 255));
         Check.That(PxColorHsl.ToRgba(new PxColorHsl(0, 0, -0.5)) == new PxColorRgba(0, 0, 0));
+
+        // NaN becomes 0 (5.3), and equals itself in Equals (5.5).
+        Check.That(PxColorHsl.ToRgba(new PxColorHsl(0, 0, double.NaN, 7)) == new PxColorRgba(0, 0, 0, 7));
+        Check.That(new PxColorHsl(double.NaN, 0, 0).Equals(new PxColorHsl(double.NaN, 0, 0)));
     }
 
     private static bool Near(PxColorHsl a, PxColorHsl b) =>
