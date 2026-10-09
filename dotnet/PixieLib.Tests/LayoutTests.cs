@@ -61,13 +61,16 @@ internal static class LayoutTests
         Check.That(bytes.SequenceEqual(new byte[] { 0x11, 0x22, 0x33, 0x44 }));
     }
 
-    private static void Layout<T>(int size, params (string Field, int Offset)[] fields) where T : struct
+    // unmanaged: a primitive that held a reference would not compile here, on net481 too.
+    private static void Layout<T>(int size, params (string Field, int Offset)[] fields) where T : unmanaged
     {
         string name = typeof(T).Name;
         Check.That(Marshal.SizeOf<T>() == size, $"{name}: Marshal.SizeOf == {size}");
         Check.That(Unsafe.SizeOf<T>() == size, $"{name}: Unsafe.SizeOf == {size}");
         foreach (var (field, offset) in fields)
             Check.That((int)Marshal.OffsetOf<T>(field) == offset, $"{name}.{field} at {offset}");
+#if NET
         Check.That(!RuntimeHelpers.IsReferenceOrContainsReferences<T>(), $"{name} holds no references");
+#endif
     }
 }
