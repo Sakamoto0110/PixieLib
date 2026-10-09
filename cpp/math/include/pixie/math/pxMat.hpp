@@ -8,6 +8,18 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
+// The 2D transforms of a mat3 (6.6): glm::translate(m, vec2), glm::rotate(m, angle), glm::scale(m,
+// vec2), glm::shearX and glm::shearY. GLM keeps them among its experimental extensions, which ask for
+// GLM_ENABLE_EXPERIMENTAL; it is defined only around this include, so the other experimental headers
+// still ask for it.
+#ifndef GLM_ENABLE_EXPERIMENTAL
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_transform_2d.hpp>
+#undef GLM_ENABLE_EXPERIMENTAL
+#else
+#include <glm/gtx/matrix_transform_2d.hpp>
+#endif
+
 #include <pixie/math/pxVec.hpp>
 
 // The matrices are GLM's (6.1), under the names of PixieLib: the unsuffixed one is double, f is
@@ -15,8 +27,9 @@
 // memory is column-major, what GLSL and glUniformMatrix4fv take without transposing (1.12): m[3] is
 // the fourth column, where glm::translate puts the translation, and in M1 * M2 * v the M2 is applied
 // first. The math is GLM's too: glm::transpose, glm::determinant, glm::translate, glm::rotate,
-// glm::scale, glm::lookAt, glm::ortho, glm::perspective. The projections are OpenGL's: right-handed,
-// with the depth in [-1, 1] (1.13). The C# PxMat types have the same layout and the same functions,
+// glm::scale, glm::lookAt, glm::ortho, glm::perspective, and on a mat3 the 2D ones below. The
+// projections are OpenGL's: right-handed, with the depth in [-1, 1] (1.13). The 2D has Y down, so a
+// positive angle turns clockwise on the screen; a 2D point goes through a mat3 as pxVec3(p, 1). The C# PxMat types have the same layout and the same functions,
 // with the same bits (docs/notas.md, 4.14).
 //
 // With GLM_FORCE_CTOR_INIT, from pixie::math, a matrix starts as the identity, as GLSL's mat4(1);

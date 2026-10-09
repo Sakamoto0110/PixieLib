@@ -6,7 +6,8 @@ namespace PixieLib;
 
 // A 3x3 matrix in __T__, made of three columns. Same layout as pxMat3 in C++, which is the mat3 of GLM
 // (docs/layout.md), with the conventions of PxMat4: column-major, M * v (1.12), GLM's names and bits
-// (docs/notas.md, 4.14). System.Numerics has no 3x3 matrix, so there is no conversion with it.
+// (docs/notas.md, 4.14). It is also the matrix of the 2D transforms (6.6), with a point as (x, y, 1).
+// System.Numerics has no 3x3 matrix, so there is no conversion with it.
 //
 // The default is zero; a matrix of C++ starts as the identity (6.3), which here is Identity.
 [StructLayout(LayoutKind.Sequential)]
@@ -138,6 +139,36 @@ public struct PxMat3__S__ : IEquatable<PxMat3__S__>
             new PxVec3__S__(+(m10 * m21 - m20 * m11), -(m00 * m21 - m20 * m01), +(m00 * m11 - m10 * m01)));
         return inverse * oneOverDeterminant;
     }
+
+    // The 2D transforms of GLM (gtx/matrix_transform_2d), with the same names and bits. Each one is m
+    // times the transform, so the transform is applied before m: in T * R * S * p, the S comes first.
+
+    // glm::translate(m, vec2).
+    public static PxMat3__S__ Translate(PxMat3__S__ m, PxVec2__S__ v)
+    {
+        PxMat3__S__ result = m;
+        result.c2 = m.c0 * v.X + m.c1 * v.Y + m.c2;
+        return result;
+    }
+
+    // glm::rotate(m, angle), in radians. With Y down, as the 2D of PixieLib (1.13), a positive angle
+    // turns clockwise on the screen.
+    public static PxMat3__S__ Rotate(PxMat3__S__ m, __T__ angle)
+    {
+        __T__ c = PxMath.Cos(angle);
+        __T__ s = PxMath.Sin(angle);
+        return new PxMat3__S__(m.c0 * c + m.c1 * s, m.c0 * -s + m.c1 * c, m.c2);
+    }
+
+    // glm::scale(m, vec2).
+    public static PxMat3__S__ Scale(PxMat3__S__ m, PxVec2__S__ v) => new PxMat3__S__(m.c0 * v.X, m.c1 * v.Y, m.c2);
+
+    // glm::shearX(m, k), which adds k * x to y, and glm::shearY(m, k), which adds k * y to x.
+    public static PxMat3__S__ ShearX(PxMat3__S__ m, __T__ k) =>
+        m * new PxMat3__S__(new PxVec3__S__(1, k, 0), new PxVec3__S__(0, 1, 0), new PxVec3__S__(0, 0, 1));
+
+    public static PxMat3__S__ ShearY(PxMat3__S__ m, __T__ k) =>
+        m * new PxMat3__S__(new PxVec3__S__(1, 0, 0), new PxVec3__S__(k, 1, 0), new PxVec3__S__(0, 0, 1));
 
     // Between precisions: implicit to double, which loses nothing; explicit to float. In C++, through
     // GLM, both are explicit.

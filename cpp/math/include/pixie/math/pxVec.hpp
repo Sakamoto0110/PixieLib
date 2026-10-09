@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 
+#include <pixie/pxPoint.hpp>
 #include <pixie/pxToString.hpp>
 
 // The vectors are GLM's (6.1), under the names of PixieLib: the unsuffixed one is double, then f for
@@ -36,6 +37,19 @@ std::string pxToString(const glm::vec<L, T, Q>& v) {
         return pxTupleString(v.x, v.y, v.z);
     else
         return pxTupleString(v.x, v.y, v.z, v.w);
+}
+
+// A point and a vec2 of the same precision hold the same data, so each converts to the other, as a
+// point and a size do: explicitly, through a function, since an alias cannot have a constructor
+// (6.6). In C#, (PxVec2)point and (PxPoint)vector.
+template<typename T>
+constexpr glm::vec<2, T> pxToVec2(const pxPoint_t<T>& p) noexcept {
+    return glm::vec<2, T>(p.x, p.y);
+}
+
+template<typename T, glm::qualifier Q>
+constexpr pxPoint_t<T> pxToPoint(const glm::vec<2, T, Q>& v) noexcept {
+    return pxPoint_t<T>(v.x, v.y);
 }
 
 // The layout is the contract with C# (docs/layout.md).

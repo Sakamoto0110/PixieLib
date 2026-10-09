@@ -97,6 +97,11 @@ public struct PxVec2__S__ : IEquatable<PxVec2__S__>
     public static PxVec2__S__ Abs(PxVec2__S__ v) => new PxVec2__S__(v.x < 0 ? -v.x : v.x, v.y < 0 ? -v.y : v.y);
 #endif
 
+    // A point and a vec2 of the same precision hold the same data, so each converts to the other, as a
+    // point and a size do: explicitly (6.6). In C++, pxToVec2(point) and pxToPoint(vector).
+    public static explicit operator PxVec2__S__(PxPoint__S__ p) => new PxVec2__S__(p.X, p.Y);
+    public static explicit operator PxPoint__S__(PxVec2__S__ v) => new PxPoint__S__(v.x, v.y);
+
     // Between precisions: implicit when nothing is lost, explicit otherwise; to int it truncates,
     // saturates out of range and takes NaN to 0 (5.3). In C++, through GLM, all of them are explicit.
 #if PX_DOUBLE

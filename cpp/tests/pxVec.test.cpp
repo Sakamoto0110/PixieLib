@@ -74,6 +74,12 @@ void TestVec() {
     static_assert(Multipliable<pxVec3, double> && !Multipliable<pxVec3, int>);
     static_assert(Multipliable<pxVec3i, int> && !Multipliable<pxVec3i, double> && !Multipliable<pxVec3f, double>);
 
+    // A point and a vec2 convert to each other, explicitly, in the same precision (6.6).
+    PX_CHECK(pxToVec2(pxPoint(1.5, -2)) == pxVec2(1.5, -2) && pxToPoint(pxVec2i(3, 4)) == pxPointi(3, 4));
+    PX_CHECK(pxToPoint(pxToVec2(pxPointf(0.1f, 7))) == pxPointf(0.1f, 7));
+    static_assert(!std::is_convertible_v<pxPoint, pxVec2> && !std::is_convertible_v<pxVec2, pxPoint>);
+    static_assert(std::is_same_v<decltype(pxToVec2(pxPointi())), pxVec2i>);
+
     // The text, the same as the primitives'.
     PX_CHECK(pxToString(pxVec3(1.5, -2, 0)) == "(1.5, -2, 0)");
     PX_CHECK(pxToString(pxVec2f(0.1f, 1e20f)) == "(0.1, 100000000000000000000)");

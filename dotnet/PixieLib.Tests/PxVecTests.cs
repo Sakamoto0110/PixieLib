@@ -42,6 +42,11 @@ internal static class PxVecTests
         Check.That(new PxVec2f(1, 2) + new PxVec2f(3, 4) == new PxVec2f(4, 6));
         Check.That(PxVec4.Dot(new PxVec4(1, 2, 3, 4), PxVec4.One) == 10);
 
+        // A point and a vec2 convert to each other, explicitly, in the same precision (6.6).
+        Check.That((PxVec2)new PxPoint(1.5, -2) == new PxVec2(1.5, -2) && (PxPointi)new PxVec2i(3, 4) == new PxPointi(3, 4));
+        Check.That((PxPointf)(PxVec2f)new PxPointf(0.1f, 7) == new PxPointf(0.1f, 7));
+        Check.That(Check.Explicit<PxPoint, PxVec2>() && !Check.Implicit<PxPoint, PxVec2>() && Check.Explicit<PxVec2i, PxPointi>());
+
         // The dot product of a vec4 adds in pairs, (x + y) + (z + w), as GLM does; with 1e16, adding 1
         // is lost, and adding in sequence would give 1.
         Check.That(PxVec4.Dot(new PxVec4(1e16, 1, -1e16, 1), PxVec4.One) == 0);

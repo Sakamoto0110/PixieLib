@@ -134,6 +134,30 @@ internal static class PxMatTests
         Check.That(ortho2D * new PxVec4(400, 300, 0.5, 1) == new PxVec4(0, 0, -0.5, 1));
         Check.That(PxMat4f.Ortho2D(800, 600) * new PxVec4f(800, 0, 0, 1) == new PxVec4f(1, 1, 0, 1));
 
+        // The 2D transforms of a mat3 (6.6), with the point as (x, y, 1). In T * R * S * p, the S comes
+        // first; with Y down, a positive angle turns clockwise on the screen, as in 3D.
+        Check.That(PxMat3.Translate(PxMat3.Identity, new PxVec2(3, 4)) * new PxVec3(1, 1, 1) == new PxVec3(4, 5, 1));
+        Check.That(PxMat3.Scale(PxMat3.Identity, new PxVec2(2, 3)) * new PxVec3(1, 1, 1) == new PxVec3(2, 3, 1));
+        Check.That((PxMat3.Rotate(PxMat3.Identity, Math.PI / 2) * new PxVec3(1, 0, 1)).ToString() ==
+                   "(0.00000000000000006123233995736766, 1, 1)");
+        PxMat3 trs = PxMat3.Scale(PxMat3.Rotate(PxMat3.Translate(PxMat3.Identity, new PxVec2(10, 20)), Math.PI / 2), new PxVec2(2, 3));
+        Check.That(trs * new PxVec3(1, 1, 1) == new PxVec3(7, 22, 1));
+        Check.That(trs * new PxVec3((PxVec2)new PxPoint(1, 1), 1) == new PxVec3(7, 22, 1));
+        // GLM's ShearX(m, k) adds k * x to y, and ShearY(m, k) adds k * y to x.
+        Check.That(PxMat3.ShearX(PxMat3.Identity, 0.5) * new PxVec3(2, 3, 1) == new PxVec3(2, 4, 1));
+        Check.That(PxMat3.ShearY(PxMat3.Identity, 0.5) * new PxVec3(2, 3, 1) == new PxVec3(3.5, 3, 1));
+        Check.That(PxMat3.Rotate(N, Math.PI / 2).ToString() ==
+                   "((1.9, -0.39999999999999997, 0.5999999999999999), (-0.0999999999999999, -0.7, 1.3), " +
+                   "(-0.8, 1.1, 0.3))");
+        Check.That(PxMat3f.Rotate(nf, (float)Math.PI / 2).ToString() ==
+                   "((1.9, -0.40000004, 0.6000001), (-0.10000008, -0.7, 1.3), (-0.8, 1.1, 0.3))");
+        Check.That(PxMat3.Translate(N, new PxVec2(0.3, -1.7))[2].ToString() == "(-4, 1.9900000000000002, -1.11)");
+        Check.That(PxMat3f.Translate(nf, new PxVec2f(0.3f, -1.7f))[2].ToString() == "(-4, 1.99, -1.1100001)");
+        Check.That(PxMat3.Scale(N, new PxVec2(0.3, -1.7)).ToString() ==
+                   "((0.03, 0.21, -0.39), (-3.23, 0.68, -1.02), (-0.8, 1.1, 0.3))");
+        Check.That(PxMat3.ShearX(N, 0.3)[0].ToString() == "(0.6699999999999999, 0.58, -1.12)");
+        Check.That(PxMat3f.ShearY(nf, -1.7f)[1].ToString() == "(1.73, -1.59, 2.81)");
+
         // Between mat3 and mat4, and between precisions.
         Check.That(new PxMat3(M)[2] == new PxVec3(-0.8, 1.1, 0.3));
         Check.That(new PxMat4(N)[3] == PxVec4.UnitW && new PxMat4(N)[0] == new PxVec4(0.1, 0.7, -1.3, 0));

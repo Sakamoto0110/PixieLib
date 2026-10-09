@@ -163,6 +163,29 @@ void TestMat() {
     PX_CHECK(ortho2D * pxVec4(400, 300, 0.5, 1) == pxVec4(0, 0, -0.5, 1));
     PX_CHECK(pxOrtho2D(800.0f, 600.0f) * pxVec4f(800, 0, 0, 1) == pxVec4f(1, 1, 0, 1));
 
+    // The 2D transforms of a mat3 (6.6), GLM's, with the point as (x, y, 1). In T * R * S * p, the S
+    // comes first; with Y down, a positive angle turns clockwise on the screen, as in 3D.
+    PX_CHECK(glm::translate(pxMat3(1.0), pxVec2(3, 4)) * pxVec3(1, 1, 1) == pxVec3(4, 5, 1));
+    PX_CHECK(glm::scale(pxMat3(1.0), pxVec2(2, 3)) * pxVec3(1, 1, 1) == pxVec3(2, 3, 1));
+    PX_CHECK(pxToString(glm::rotate(pxMat3(1.0), pi / 2) * pxVec3(1, 0, 1)) ==
+             "(0.00000000000000006123233995736766, 1, 1)");
+    pxMat3 trs = glm::scale(glm::rotate(glm::translate(pxMat3(1.0), pxVec2(10, 20)), pi / 2), pxVec2(2, 3));
+    PX_CHECK(trs * pxVec3(1, 1, 1) == pxVec3(7, 22, 1));
+    // GLM's shearX(m, k) adds k * x to y, and shearY(m, k) adds k * y to x.
+    PX_CHECK(glm::shearX(pxMat3(1.0), 0.5) * pxVec3(2, 3, 1) == pxVec3(2, 4, 1));
+    PX_CHECK(glm::shearY(pxMat3(1.0), 0.5) * pxVec3(2, 3, 1) == pxVec3(3.5, 3, 1));
+    PX_CHECK(pxToString(glm::rotate(N, pi / 2)) ==
+             "((1.9, -0.39999999999999997, 0.5999999999999999), (-0.0999999999999999, -0.7, 1.3), "
+             "(-0.8, 1.1, 0.3))");
+    PX_CHECK(pxToString(glm::rotate(Nf, pif / 2)) ==
+             "((1.9, -0.40000004, 0.6000001), (-0.10000008, -0.7, 1.3), (-0.8, 1.1, 0.3))");
+    PX_CHECK(pxToString(glm::translate(N, pxVec2(0.3, -1.7))[2]) == "(-4, 1.9900000000000002, -1.11)");
+    PX_CHECK(pxToString(glm::translate(Nf, pxVec2f(0.3f, -1.7f))[2]) == "(-4, 1.99, -1.1100001)");
+    PX_CHECK(pxToString(glm::scale(N, pxVec2(0.3, -1.7))) ==
+             "((0.03, 0.21, -0.39), (-3.23, 0.68, -1.02), (-0.8, 1.1, 0.3))");
+    PX_CHECK(pxToString(glm::shearX(N, 0.3)[0]) == "(0.6699999999999999, 0.58, -1.12)");
+    PX_CHECK(pxToString(glm::shearY(Nf, -1.7f)[1]) == "(1.73, -1.59, 2.81)");
+
     // Between mat3 and mat4, and between precisions: explicit, as the vectors (6.3).
     PX_CHECK(pxMat3(M)[2] == pxVec3(-0.8, 1.1, 0.3));
     PX_CHECK(pxMat4(N)[3] == pxVec4(0, 0, 0, 1) && pxMat4(N)[0] == pxVec4(0.1, 0.7, -1.3, 0));
