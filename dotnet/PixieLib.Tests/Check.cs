@@ -17,6 +17,37 @@ internal static class Check
         Console.WriteLine($"{Path.GetFileName(file)}:{line}: check failed: {expression}");
     }
 
+    // The text of a primitive. A failure also prints the text that came out and the bits of each
+    // number in it, since some runtimes (the .NET Framework, on Windows) are only seen in the CI.
+    public static void Text(object actual, string expected, [CallerArgumentExpression(nameof(actual))] string expression = "",
+        [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+    {
+        string text = actual.ToString() ?? "";
+        if (text == expected)
+            return;
+        Failures++;
+        Console.WriteLine($"{Path.GetFileName(file)}:{line}: text of {expression}");
+        Console.WriteLine($"    expected {expected}");
+        Console.WriteLine($"    got      {text}");
+        Console.WriteLine($"    bits     {string.Join(" ", Bits(actual))}");
+    }
+
+    private static IEnumerable<string> Bits(object value)
+    {
+        switch (value)
+        {
+            case double d:
+                yield return BitConverter.DoubleToInt64Bits(d).ToString("X16");
+                yield break;
+            case float f:
+                yield return BitConverter.ToInt32(BitConverter.GetBytes(f), 0).ToString("X8");
+                yield break;
+        }
+        foreach (var field in value.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (string bits in Bits(field.GetValue(value)!))
+                yield return bits;
+    }
+
     public static void Throws<TException>(Action action, [CallerArgumentExpression(nameof(action))] string expression = "",
         [CallerFilePath] string file = "", [CallerLineNumber] int line = 0) where TException : Exception
     {

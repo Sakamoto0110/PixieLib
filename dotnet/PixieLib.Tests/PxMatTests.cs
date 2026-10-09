@@ -38,40 +38,40 @@ internal static class PxMatTests
         Check.That((b * new PxVec3(1)).X == 0 && (b * new PxMat3(new PxVec3(1), new PxVec3(1), new PxVec3(1)))[0].X == 0);
 
         // The same bits as the C++ tests.
-        Check.That((M * PxMat4.Transpose(M)).ToString() ==
+        Check.Text((M * PxMat4.Transpose(M)),
                    "((4.3225, -1.9700000000000002, 1.3699999999999997, 2.7), " +
                    "(-1.9700000000000002, 4.420000000000001, -4.66, -2.8900000000000006), " +
                    "(1.3699999999999997, -4.66, 7.9, -1.4800000000000004), " +
                    "(2.7, -2.8900000000000006, -1.4800000000000004, 12.942500000000003))");
-        Check.That((mf * PxMat4f.Transpose(mf)).ToString() ==
+        Check.Text((mf * PxMat4f.Transpose(mf)),
                    "((4.3224998, -1.97, 1.37, 2.7), (-1.97, 4.42, -4.66, -2.8899999), " +
                    "(1.37, -4.66, 7.8999996, -1.4799998), (2.7, -2.8899999, -1.4799998, 12.942501))");
-        Check.That((M * new PxVec4(0.3, -1.7, 2.9, 0.6)).ToString() == "(-5.37, 3.12, 0.8999999999999999, -6.715)");
-        Check.That((mf * new PxVec4f(0.3f, -1.7f, 2.9f, 0.6f)).ToString() == "(-5.37, 3.12, 0.9000001, -6.715)");
-        Check.That((new PxVec4(0.3, -1.7, 2.9, 0.6) * M).ToString() == "(-3.6100000000000003, 3.02, -2.8600000000000003, 10.295)");
-        Check.That((new PxVec4f(0.3f, -1.7f, 2.9f, 0.6f) * mf).ToString() == "(-3.61, 3.02, -2.8600001, 10.295)");
-        Check.That((N * PxMat3.Transpose(N)).ToString() ==
+        Check.Text((M * new PxVec4(0.3, -1.7, 2.9, 0.6)), "(-5.37, 3.12, 0.8999999999999999, -6.715)");
+        Check.Text((mf * new PxVec4f(0.3f, -1.7f, 2.9f, 0.6f)), "(-5.37, 3.12, 0.9000001, -6.715)");
+        Check.Text((new PxVec4(0.3, -1.7, 2.9, 0.6) * M), "(-3.6100000000000003, 3.02, -2.8600000000000003, 10.295)");
+        Check.Text((new PxVec4f(0.3f, -1.7f, 2.9f, 0.6f) * mf), "(-3.61, 3.02, -2.8600001, 10.295)");
+        Check.Text((N * PxMat3.Transpose(N)),
                    "((4.26, -1.5700000000000003, 0.7699999999999998), (-1.5700000000000003, 1.86, " +
                    "-0.8199999999999998), (0.7699999999999998, -0.8199999999999998, 2.14))");
-        Check.That((N * new PxVec3(0.3, -1.7, 2.9)).ToString() == "(-5.52, 4.08, -0.5400000000000001)");
-        Check.That((new PxVec3(0.3, -1.7, 2.9) * N).ToString() == "(-4.93, 2.99, -1.2400000000000002)");
+        Check.Text((N * new PxVec3(0.3, -1.7, 2.9)), "(-5.52, 4.08, -0.5400000000000001)");
+        Check.Text((new PxVec3(0.3, -1.7, 2.9) * N), "(-4.93, 2.99, -1.2400000000000002)");
 
         // The inverse and the determinant.
-        Check.That(PxMat4.Inverse(M).ToString() ==
+        Check.Text(PxMat4.Inverse(M),
                    "((0.040714062010648304, 0.5413628025591696, 0.005219751539826708, -0.1139397193265029), " +
                    "(0.9509082367679297, 0.28130732405708914, 0.891142081636914, 0.33335570369707546), " +
                    "(0.46938615721891636, 0.14238736521855852, 0.5729982252844765, 0.5636958823617139), " +
                    "(0.4274976511118071, -0.02997628741443332, 0.05480739116818045, 0.23220437564314794))");
-        Check.That(PxMat4f.Inverse(mf).ToString() ==
+        Check.Text(PxMat4f.Inverse(mf),
                    "((0.040714066, 0.54136276, 0.0052197482, -0.1139397), " +
                    "(0.95090824, 0.2813073, 0.8911419, 0.33335567), " +
                    "(0.4693861, 0.14238736, 0.57299817, 0.5636958), " +
                    "(0.42749763, -0.029976288, 0.054807395, 0.23220432))");
-        Check.That(PxMat3.Inverse(N).ToString() ==
+        Check.Text(PxMat3.Inverse(N),
                    "((0.2504816955684008, 0.5266538214515094, 0.032113037893384724), " +
                    "(0.33718689788053946, 0.32434168272318564, 0.8124598587026333), " +
                    "(-0.5684007707129094, 0.21515735388567758, 0.43994861913937056))");
-        Check.That(PxMat3f.Inverse(nf).ToString() ==
+        Check.Text(PxMat3f.Inverse(nf),
                    "((0.2504817, 0.52665377, 0.032113027), (0.33718687, 0.32434165, 0.81245977), " +
                    "(-0.5684007, 0.21515734, 0.43994856))");
         Check.That(PxMat4.Determinant(M) == -13.4106 && PxMat4f.Determinant(mf) == -13.410602f);
@@ -83,12 +83,12 @@ internal static class PxMatTests
                            new PxVec4(-0.2, -1.4, -2.1, -2.6), new PxVec4(1.1, -1.4, 1.8, 3));
         var pf = (PxMat4f)p;
         Check.That(PxMat4.Determinant(p) == 121.3586 && PxMat4f.Determinant(pf) == 121.358604f);
-        Check.That(PxMat4.Inverse(p).ToString() ==
+        Check.Text(PxMat4.Inverse(p),
                    "((-0.29013189011738755, -0.14986988973175364, 0.3410883118295695, 0.14036088089348428), " +
                    "(-0.13743566586957992, -0.02498380831683952, -0.22354410812253928, -0.30868846542395845), " +
                    "(0.2603688572544508, -0.08816845283317373, -0.29416951085460774, 0.08477355539698049), " +
                    "(-0.113976265382099, 0.09619425405368882, -0.05288459161526252, 0.08694892656968686))");
-        Check.That(PxMat4f.Inverse(pf).ToString() ==
+        Check.Text(PxMat4f.Inverse(pf),
                    "((-0.29013187, -0.1498699, 0.34108835, 0.14036086), " +
                    "(-0.13743566, -0.024983808, -0.22354412, -0.30868843), " +
                    "(0.26036882, -0.08816845, -0.29416952, 0.08477355), " +
@@ -96,33 +96,33 @@ internal static class PxMatTests
 
         // The transforms. With Y down, as the 2D of PixieLib (1.13), a positive angle turns clockwise on
         // the screen: the x axis goes to (0, 1), which points down.
-        Check.That((PxMat4.Rotate(PxMat4.Identity, Math.PI / 2, new PxVec3(0, 0, 1)) * new PxVec4(1, 0, 0, 0)).ToString() ==
+        Check.Text((PxMat4.Rotate(PxMat4.Identity, Math.PI / 2, new PxVec3(0, 0, 1)) * new PxVec4(1, 0, 0, 0)),
                    "(0.00000000000000006123233995736766, 1, 0, 0)");
-        Check.That(PxMat4.Rotate(M, Math.PI / 2, new PxVec3(1, 2, 3)).ToString() ==
+        Check.Text(PxMat4.Rotate(M, Math.PI / 2, new PxVec3(1, 2, 3)),
                    "((2.058149923103555, -0.6801167939308144, 0.3778563474377664, 1.0690141783282412), " +
                    "(-0.07970165181795241, 0.1898816152304328, 1.2367829303178968, -3.3141009783569753), " +
                    "(-0.13291553982255017, 1.1667845211566497, -0.6838074026911867, -0.08027074053809691), " +
                    "(0.25, -1.6, 2.4, 0.9))");
-        Check.That(PxMat4f.Rotate(mf, (float)Math.PI / 2, new PxVec3f(1, 2, 3)).ToString() ==
+        Check.Text(PxMat4f.Rotate(mf, (float)Math.PI / 2, new PxVec3f(1, 2, 3)),
                    "((2.0581498, -0.6801169, 0.3778564, 1.0690141), (-0.07970169, 0.18988162, 1.2367828, -3.3141007), " +
                    "(-0.1329155, 1.1667843, -0.6838074, -0.08027053), (0.25, -1.6, 2.4, 0.9))");
-        Check.That(PxMat4f.Translate(mf, new PxVec3f(0.3f, -1.7f, 2.9f))[3].ToString() == "(-5.2700005, 2.48, 1.8600001, -6.355)");
-        Check.That(PxMat4.Scale(M, new PxVec3(0.3, -1.7, 2.9)).ToString() ==
+        Check.Text(PxMat4f.Translate(mf, new PxVec3f(0.3f, -1.7f, 2.9f))[3], "(-5.2700005, 2.48, 1.8600001, -6.355)");
+        Check.Text(PxMat4.Scale(M, new PxVec3(0.3, -1.7, 2.9)),
                    "((0.03, 0.21, -0.39, 0.66), (-3.23, 0.68, -1.02, -0.085), (-2.32, 3.19, 0.87, -7.83), " +
                    "(0.25, -1.6, 2.4, 0.9))");
 
         // The camera and the projections are OpenGL's: right-handed, depth in [-1, 1] (1.13).
-        Check.That(PxMat4.LookAt(new PxVec3(0, 0, 5), PxVec3.Zero, PxVec3.UnitY).ToString() ==
+        Check.Text(PxMat4.LookAt(new PxVec3(0, 0, 5), PxVec3.Zero, PxVec3.UnitY),
                    "((1, 0, -0, 0), (-0, 1, -0, 0), (0, 0, 1, 0), (-0, -0, -5, 1))");
-        Check.That(PxMat4f.LookAt(new PxVec3f(1, 2, 3), new PxVec3f(-0.5f, 0.25f, 0), PxVec3f.UnitY).ToString() ==
+        Check.Text(PxMat4f.LookAt(new PxVec3f(1, 2, 3), new PxVec3f(-0.5f, 0.25f, 0), PxVec3f.UnitY),
                    "((0.8944272, -0.20686895, 0.39649117, 0), (0, 0.8865812, 0.46257302, 0), " +
                    "(-0.4472136, -0.4137379, 0.79298234, 0), (0.44721353, -0.3250798, -3.7005842, 1))");
-        Check.That(PxMat4.Perspective(Math.PI / 2, 16.0 / 9.0, 0.1, 100.0).ToString() ==
+        Check.Text(PxMat4.Perspective(Math.PI / 2, 16.0 / 9.0, 0.1, 100.0),
                    "((0.5625000000000001, 0, 0, 0), (0, 1.0000000000000002, 0, 0), " +
                    "(0, 0, -1.002002002002002, -1), (0, 0, -0.20020020020020018, 0))");
-        Check.That(PxMat4f.Perspective((float)Math.PI / 2, 16.0f / 9.0f, 0.1f, 100.0f).ToString() ==
+        Check.Text(PxMat4f.Perspective((float)Math.PI / 2, 16.0f / 9.0f, 0.1f, 100.0f),
                    "((0.5625, 0, 0, 0), (0, 1, 0, 0), (0, 0, -1.002002, -1), (0, 0, -0.2002002, 0))");
-        Check.That(PxMat4f.Ortho(-2.5f, 3.0f, -1.5f, 2.0f, 0.1f, 100.0f).ToString() ==
+        Check.Text(PxMat4f.Ortho(-2.5f, 3.0f, -1.5f, 2.0f, 0.1f, 100.0f),
                    "((0.36363637, 0, 0, 0), (0, 0.5714286, 0, 0), (0, 0, -0.02002002, 0), " +
                    "(-0.09090909, -0.14285715, -1.002002, 1))");
 
@@ -138,7 +138,7 @@ internal static class PxMatTests
         // first; with Y down, a positive angle turns clockwise on the screen, as in 3D.
         Check.That(PxMat3.Translate(PxMat3.Identity, new PxVec2(3, 4)) * new PxVec3(1, 1, 1) == new PxVec3(4, 5, 1));
         Check.That(PxMat3.Scale(PxMat3.Identity, new PxVec2(2, 3)) * new PxVec3(1, 1, 1) == new PxVec3(2, 3, 1));
-        Check.That((PxMat3.Rotate(PxMat3.Identity, Math.PI / 2) * new PxVec3(1, 0, 1)).ToString() ==
+        Check.Text((PxMat3.Rotate(PxMat3.Identity, Math.PI / 2) * new PxVec3(1, 0, 1)),
                    "(0.00000000000000006123233995736766, 1, 1)");
         PxMat3 trs = PxMat3.Scale(PxMat3.Rotate(PxMat3.Translate(PxMat3.Identity, new PxVec2(10, 20)), Math.PI / 2), new PxVec2(2, 3));
         Check.That(trs * new PxVec3(1, 1, 1) == new PxVec3(7, 22, 1));
@@ -146,17 +146,17 @@ internal static class PxMatTests
         // GLM's ShearX(m, k) adds k * x to y, and ShearY(m, k) adds k * y to x.
         Check.That(PxMat3.ShearX(PxMat3.Identity, 0.5) * new PxVec3(2, 3, 1) == new PxVec3(2, 4, 1));
         Check.That(PxMat3.ShearY(PxMat3.Identity, 0.5) * new PxVec3(2, 3, 1) == new PxVec3(3.5, 3, 1));
-        Check.That(PxMat3.Rotate(N, Math.PI / 2).ToString() ==
+        Check.Text(PxMat3.Rotate(N, Math.PI / 2),
                    "((1.9, -0.39999999999999997, 0.5999999999999999), (-0.0999999999999999, -0.7, 1.3), " +
                    "(-0.8, 1.1, 0.3))");
-        Check.That(PxMat3f.Rotate(nf, (float)Math.PI / 2).ToString() ==
+        Check.Text(PxMat3f.Rotate(nf, (float)Math.PI / 2),
                    "((1.9, -0.40000004, 0.6000001), (-0.10000008, -0.7, 1.3), (-0.8, 1.1, 0.3))");
-        Check.That(PxMat3.Translate(N, new PxVec2(0.3, -1.7))[2].ToString() == "(-4, 1.9900000000000002, -1.11)");
-        Check.That(PxMat3f.Translate(nf, new PxVec2f(0.3f, -1.7f))[2].ToString() == "(-4, 1.99, -1.1100001)");
-        Check.That(PxMat3.Scale(N, new PxVec2(0.3, -1.7)).ToString() ==
+        Check.Text(PxMat3.Translate(N, new PxVec2(0.3, -1.7))[2], "(-4, 1.9900000000000002, -1.11)");
+        Check.Text(PxMat3f.Translate(nf, new PxVec2f(0.3f, -1.7f))[2], "(-4, 1.99, -1.1100001)");
+        Check.Text(PxMat3.Scale(N, new PxVec2(0.3, -1.7)),
                    "((0.03, 0.21, -0.39), (-3.23, 0.68, -1.02), (-0.8, 1.1, 0.3))");
-        Check.That(PxMat3.ShearX(N, 0.3)[0].ToString() == "(0.6699999999999999, 0.58, -1.12)");
-        Check.That(PxMat3f.ShearY(nf, -1.7f)[1].ToString() == "(1.73, -1.59, 2.81)");
+        Check.Text(PxMat3.ShearX(N, 0.3)[0], "(0.6699999999999999, 0.58, -1.12)");
+        Check.Text(PxMat3f.ShearY(nf, -1.7f)[1], "(1.73, -1.59, 2.81)");
 
         // Between mat3 and mat4, and between precisions.
         Check.That(new PxMat3(M)[2] == new PxVec3(-0.8, 1.1, 0.3));
@@ -197,7 +197,7 @@ internal static class PxMatTests
         Check.That(new PxMat4(0.0).Equals(new PxMat4(-0.0)) && new PxMat4(0.0).GetHashCode() == new PxMat4(-0.0).GetHashCode());
 
         // The text, column by column, as in memory.
-        Check.That(PxMat3.Identity.ToString() == "((1, 0, 0), (0, 1, 0), (0, 0, 1))");
-        Check.That(new PxMat4f(1.5f).ToString() == "((1.5, 0, 0, 0), (0, 1.5, 0, 0), (0, 0, 1.5, 0), (0, 0, 0, 1.5))");
+        Check.Text(PxMat3.Identity, "((1, 0, 0), (0, 1, 0), (0, 0, 1))");
+        Check.Text(new PxMat4f(1.5f), "((1.5, 0, 0, 0), (0, 1.5, 0, 0), (0, 0, 1.5, 0), (0, 0, 0, 1.5))");
     }
 }
