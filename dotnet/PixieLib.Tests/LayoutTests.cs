@@ -29,6 +29,22 @@ internal static class LayoutTests
         Layout<PxPaddingf>(16, ("left", 0), ("top", 4), ("right", 8), ("bottom", 12));
         Layout<PxPaddingi>(16, ("left", 0), ("top", 4), ("right", 8), ("bottom", 12));
 
+        // The vectors: the same layout as GLM's packed vec2, vec3 and vec4 (pxVec.hpp).
+        Layout<PxVec2>(16, ("x", 0), ("y", 8));
+        Layout<PxVec2f>(8, ("x", 0), ("y", 4));
+        Layout<PxVec2i>(8, ("x", 0), ("y", 4));
+        Layout<PxVec3>(24, ("x", 0), ("y", 8), ("z", 16));
+        Layout<PxVec3f>(12, ("x", 0), ("y", 4), ("z", 8));
+        Layout<PxVec3i>(12, ("x", 0), ("y", 4), ("z", 8));
+        Layout<PxVec4>(32, ("x", 0), ("y", 8), ("z", 16), ("w", 24));
+        Layout<PxVec4f>(16, ("x", 0), ("y", 4), ("z", 8), ("w", 12));
+        Layout<PxVec4i>(16, ("x", 0), ("y", 4), ("z", 8), ("w", 12));
+
+        // The float ones are System.Numerics' in memory, so the conversion is a copy of the same bytes.
+        Check.That(Unsafe.SizeOf<PxVec3f>() == Unsafe.SizeOf<System.Numerics.Vector3>());
+        var v = new System.Numerics.Vector3(1, 2, 3);
+        Check.That(Unsafe.As<System.Numerics.Vector3, PxVec3f>(ref v) == new PxVec3f(1, 2, 3));
+
         Layout<PxColorRgba>(4, ("r", 0), ("g", 1), ("b", 2), ("a", 3));
         Layout<PxColorHsl>(32, ("h", 0), ("s", 8), ("l", 16), ("a", 24));
 

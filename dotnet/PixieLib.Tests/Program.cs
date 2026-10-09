@@ -9,6 +9,7 @@ PxPaddingTests.Run();
 PxColorRgbaTests.Run();
 PxColorHslTests.Run();
 ToStringTests.Run();
+PxVecTests.Run();
 SystemDrawingTests.Run();
 
 Console.WriteLine(Check.Failures == 0 ? "all checks passed" : $"{Check.Failures} check(s) failed");

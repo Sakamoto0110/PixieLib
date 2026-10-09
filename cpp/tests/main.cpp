@@ -10,6 +10,9 @@ void TestPadding();
 void TestColorRgba();
 void TestColorHsl();
 void TestToString();
+#ifdef PIXIE_TEST_MATH
+void TestVec();
+#endif
 void TestCallback();
 void TestEventHandler();
 void TestSubscription();
@@ -24,6 +27,9 @@ int main() {
     TestColorRgba();
     TestColorHsl();
     TestToString();
+#ifdef PIXIE_TEST_MATH
+    TestVec();
+#endif
     TestCallback();
     TestEventHandler();
     TestSubscription();
