@@ -249,7 +249,10 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   o clamp, o layout, a ordem do hex, as regras de precisão, o texto, a cultura e o gerador.
 - O texto de 44.905 `double` e `float` aleatórios, comparado linha a linha, é o mesmo no C++ e no
   C#.
-- **[proposta]** As escolhas que não vinham decididas estão nas perguntas 3.1 a 3.5.
+- As escolhas que não vinham decididas (3.1 a 3.5) foram aceitas em 09/10: o namespace `PixieLib`,
+  os testes em `dotnet/PixieLib.Tests`, a ponte com o `System.Drawing` só no `double` e na cor, as
+  conversões entre as cores só na `PxColorHsl`, sem o `ToHexString` nem as conversões com `int`, e
+  o que é propriedade no C# como método no C++, com o mesmo nome.
 
 ### 4.12 A revisão do 2D (5.1 a 5.7, 08/10; commit `b863ed4`)
 
@@ -426,6 +429,11 @@ operações. As respostas, todas aplicadas nas duas pontas:
   entre as cores ficam só na `PxColorHsl` (`FromRgba` e `ToRgba`); saem o `ToHexString` e as
   conversões explícitas da cor com `int` (o `ToArgb` e o `FromArgb` ficam); o `ToString` passa ao
   formato da 4.10; e as conversões do WinForms e do WPF viram métodos de extensão no editor (4.4).
+  Um ponto que o compilador não pega: o construtor de quatro `byte` da `PxColorArgb` recebe o alfa
+  primeiro, e o da `PxColorRgba` por último, então um `new(255, 0, 128, 255)` continua compilando
+  com a cor trocada; o da `PxColorHsl` também, quando o último argumento é um inteiro que cabe num
+  `byte` (conferido em 09/10 numa cópia do editor, onde o único caso é o `Gadget.Fill` do
+  DemoObjects).
 
 ## 6. Como commitar
 

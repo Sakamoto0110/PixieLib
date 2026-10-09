@@ -15,22 +15,7 @@ Todas respondidas em 08/10, da 2.1 à 2.9 (`notas.md`, seções 4.9 e 4.10).
 
 ## 3. Os primitivos em C#
 
-O que eu escolhi ao escrever o lado C# (commit `c841ae5`) sem decisão anterior. O código já está
-assim; a sugestão de cada uma é manter.
-
-- **3.1. O namespace** é `PixieLib`, o nome da DLL.
-- **3.2. Os testes ficam no repositório**, em `dotnet/PixieLib.Tests`, um console sem framework,
-  como os do C++ (2.1), e não num console de fora, como no rework. Rodam no `net10.0`; o `net481` é
-  conferido pela compilação.
-- **3.3. A ponte com o `System.Drawing`** só existe nos tipos em `double` e na cor, como no
-  InteractiveEditor de hoje; os tipos em `float` e `int` ganham a deles quando alguém precisar.
-- **3.4. O vocabulário da cor igual ao do C++.** As conversões entre as cores ficam só na
-  `PxColorHsl` (`FromRgba` e `ToRgba`); saem o `PxColorArgb.FromHsl` e o `ToHsl`, o `ToHexString`
-  e as conversões explícitas com `int`, que não diziam se o número era ARGB ou RGBA. O `ToArgb` e o
-  `FromArgb` ficam, para o `System.Drawing` (2.4).
-- **3.5. O que é propriedade no C# é método no C++**, com o mesmo nome: `IsEmpty`, `Right`,
-  `Width` e `Horizontal` são propriedades no C# e métodos no C++ (`IsEmpty()`), cada um no jeito da
-  sua linguagem.
+Todas respondidas em 09/10, da 3.1 à 3.5 (`notas.md`, seção 4.11).
 
 ## 4. Os eventos em C++
 
