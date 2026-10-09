@@ -201,7 +201,8 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
   - **O hex da cor** (2.4): `FromHex` e `ToHex` em `0xRRGGBBAA`, nas duas pontas; o `ToArgb` do C#
     fica só para o `System.Drawing`.
   - **As precisões fechadas** (2.5): o modelo só aceita `double`, `float` e `int32_t`.
-  - **A conversão que perde** (2.6) é explícita e trunca, como um cast.
+  - **A conversão que perde** (2.6) é explícita e trunca, como um cast. Fora do intervalo do `int`,
+    satura, e NaN vira 0 (5.3, seção 4.12).
   - **O escalar** (2.7) do `*` e do `/` é do tipo do primitivo: um `pxPointi` divide como inteiro.
   - **O clamp** (2.8): a conversão de HSL para RGBA prende o valor entre 0 e 255 antes de
     arredondar.
@@ -245,6 +246,45 @@ para que o editor, a NekoLib e os bindings da engine falem os mesmos tipos (pass
 - O texto de 44.905 `double` e `float` aleatórios, comparado linha a linha, é o mesmo no C++ e no
   C#.
 - **[proposta]** As escolhas que não vinham decididas estão nas perguntas 3.1 a 3.5.
+
+### 4.12 A revisão do 2D (5.1 a 5.7, 08/10; commit `b863ed4`)
+
+A revisão dos primitivos 2D achou pontos em que o C++ e o C# diziam coisas diferentes, e faltavam
+operações. As respostas, todas aplicadas nas duas pontas:
+
+- **O escalar** (5.1): o `*` e o `/` só aceitam um escalar que o C# converteria implicitamente para
+  o tipo do primitivo (`pxIsImplicitScalar`, em `pxPrecision.hpp`). `pxPointi * 0.5` não compila
+  mais no C++, como já não compilava no C#; antes virava `pxPointi * 0`. `pxPoint * 2` continua.
+- **O overflow de inteiro** (5.2): em `int32_t`, a conta volta ao contrário, como no C# (`unchecked`,
+  o padrão), em vez de ser comportamento indefinido; no C++ ela passa por `uint32_t` (`pxAdd`,
+  `pxSub`, `pxMul`, `pxNeg`). O `Right()` de um retângulo que passa do fim também volta ao contrário;
+  o `Contains` e as operações novas do retângulo calculam as bordas em 64 bits, e valem para qualquer
+  retângulo.
+- **A conversão para `int`** (5.3): trunca, satura fora do intervalo e leva NaN a 0, o que o .NET faz
+  num cast desde o 9. Está escrita à mão nas duas pontas (`pxConvert` no C++, `PxConvert.ToInt32` no
+  C#), porque no C++ o cast fora do intervalo é indefinido e o `net481` dá `int.MinValue`. Vale para
+  as conversões entre precisões, para a ponte com o `System.Drawing` e, com NaN, para a HSL.
+- **A divisão inteira por zero** (5.4) é pré-condição, como no próprio `int`: indefinida no C++,
+  exceção no C#.
+- **O `Equals` do C#** (5.5) compara cada campo com o `Equals` dele: um NaN é igual a si mesmo, e o
+  primitivo funciona como chave de `Dictionary` e `HashSet`. O `==` continua IEEE, como o
+  `operator==` do C++. O hash (`PxHash.Of`) trata 0 e -0, e todos os NaN, como iguais, também no
+  `net481`.
+- **A ponte com o `Rectangle`** (5.6) arredonda as bordas, não os campos: a largura é o que o
+  retângulo cobre. `(0.5, 0, 0.5, 1)` vira largura 1, de 0 a 1, e não 0.
+- **As operações** (5.7), nas duas pontas, com os nomes do C# e o jeito de cada linguagem (3.5):
+  - Retângulo: `Location` e `Size`, `Center`, `+` e `-` com um ponto (move, o tamanho fica),
+    `Contains` de um retângulo, `IntersectsWith`, `Intersect`, `Union`, e `Deflate` e `Inflate` com
+    uma margem.
+  - Região: `Contains` de uma região, `IntersectsWith`, `Intersect` e `Union`, com as mesmas regras.
+- Os testes passam no g++ 13 (também com o AddressSanitizer e o UBSan) e no clang++ 18, com
+  `-Werror`, e no .NET 10; o `net481` é conferido pela compilação. Falham quando se quebra de
+  propósito uma cópia: a saturação, o NaN, o `Contains` sem 64 bits, o `Union` e o `IntersectsWith`
+  sem a regra da área, o `Center`, a soma sem `uint32_t` (pelo UBSan), o NaN da HSL no C++, o escalar
+  recusado, o `Equals` com `==` e a ponte que arredonda os campos. O NaN do `PxConvert`, o da HSL no C#
+  e o `PxHash.Of` só mudam algo no `net481`, onde os testes não rodam: no .NET 10 o cast e o hash já
+  fazem o mesmo.
+- **[proposta]** As escolhas das operações que não vinham decididas estão na pergunta 5.8.
 
 ## 5. Consequências, ainda não aplicadas
 

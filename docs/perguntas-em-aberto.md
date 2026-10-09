@@ -64,3 +64,23 @@ Respondidas em 08/10, da 4.1 à 4.7 (`notas.md`, seção 4.6); a 4.6 trouxe o `F
     atribuição por cópia, as que iam para o `b` continuam.
   - O `pxEvent` pode ser ligado a um handler por qualquer um, mas só o dono pode fazê-lo alvo de
     uma ligação, porque ser alvo é ser invocado.
+
+## 5. O 2D
+
+Respondidas em 08/10, da 5.1 à 5.7, as da revisão do 2D (`notas.md`, seção 4.12).
+
+- **5.8. As escolhas das operações** (commit `b863ed4`), feitas sem decisão anterior. O código já está
+  assim; a sugestão é manter.
+  - Um retângulo sem área (largura ou altura zero ou negativa) não entra no `Union`, para um `Union`
+    que começa do vazio não crescer até (0, 0); se nenhum dos dois tem área, o resultado é o primeiro.
+  - O `Contains` de um retângulo olha só as bordas: um retângulo sem área encostado na borda direita
+    está dentro, como no `System.Drawing`.
+  - Mover é `rect + ponto` e `rect - ponto`, e não um `Offset`: no `System.Drawing` o `Offset` muda o
+    retângulo e não devolve nada, e um `Offset` que devolvesse um novo seria fácil de chamar e
+    descartar.
+  - `Deflate` e `Inflate` devolvem um retângulo novo e não prendem o tamanho em zero: uma margem maior
+    que o retângulo dá tamanho negativo.
+  - O `Center` em `int` arredonda a metade para zero, como a divisão inteira.
+  - No C#, `Location` e `Size` têm `set`, como os campos e como no `System.Drawing`.
+  - A região ganhou só o item 2 da revisão (`Contains`, `IntersectsWith`, `Intersect` e `Union`); o
+    `Center`, o movimento e as margens ficaram só no retângulo.

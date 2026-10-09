@@ -45,7 +45,15 @@ O layout garante que os dados atravessam; estas regras garantem que eles querem 
   baixo não (`x >= x1 && x < x2`).
 - Região e retângulo: `x2 = x + width`, `y2 = y + height`.
 - Entre precisões: implícita quando não perde nada (`float` e `int32` para `double`), explícita
-  quando perde, truncando como um cast.
+  quando perde. Para `int32`, trunca, satura fora do intervalo e leva NaN a 0 (`notas.md`, 4.12).
+- Inteiros: a conta volta ao contrário quando passa do `int32` (`INT32_MAX + 1` é `INT32_MIN`), e a
+  divisão por zero é pré-condição. As bordas do retângulo, nas operações dele, são calculadas em 64
+  bits.
+- Igualdade: o `==` segue o IEEE nas duas pontas (NaN é diferente de tudo); no C#, o `Equals` diz que
+  NaN é igual a NaN, para o primitivo servir de chave.
+- Operações do retângulo e da região: `Intersect` dá o vazio (todos os campos zero) quando os dois não
+  se tocam; quem só encosta não intersecta, e quem não tem área não intersecta nada nem entra no
+  `Union`. O `Contains` de um retângulo olha só as bordas.
 - HSL para RGBA: a meia unidade arredonda para o par (o padrão do `Math.Round` do C#; no C++,
   `std::nearbyint`), e o valor é preso entre 0 e 255 antes.
 - Texto (`ToString`): os campos na ordem, entre parênteses, separados por `, `, como em
