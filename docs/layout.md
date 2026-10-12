@@ -23,6 +23,7 @@ O tamanho está em bytes, por precisão: `double` (sem sufixo), `float` (`f`), `
 | `pxVec2` | `PxVec2` | `x`, `y` | 16 | 8 | 8 |
 | `pxVec3` | `PxVec3` | `x`, `y`, `z` | 24 | 12 | 12 |
 | `pxVec4` | `PxVec4` | `x`, `y`, `z`, `w` | 32 | 16 | 16 |
+| `pxSegment` | `PxSegment` | `start`, `end`, dois pontos, um depois do outro | 32 | 16 | 16 |
 | `pxMat3` | `PxMat3` | três colunas `pxVec3`, uma depois da outra | 72 | 36 | não tem |
 | `pxMat4` | `PxMat4` | quatro colunas `pxVec4`, uma depois da outra | 128 | 64 | não tem |
 
@@ -101,6 +102,16 @@ O layout garante que os dados atravessam; estas regras garantem que eles querem 
   sentido horário na tela.
 - Transformações 2D: na `mat3`, com o ponto como `(x, y, 1)`, as do GLM nas duas pontas
   (`notas.md`, 4.15). O ponto e o `vec2` da mesma precisão convertem um no outro, explicitamente.
+- Ponto e vetor (`notas.md`, 4.18): ponto − ponto dá um vetor, ponto ± vetor e ponto ± tamanho dão
+  um ponto, e o retângulo se move por um vetor; ponto + ponto, ponto × k, ponto / k e −ponto não
+  existem. `mat3 * ponto` é o ponto como `(x, y, 1)`, com a translação. O `Lerp` de dois pontos e o
+  `PointAt` do segmento usam a fórmula do `glm::mix`, `a * (1 - t) + b * t`, no tipo do `t`; no
+  `int32`, o `t` é `double` e o resultado trunca, como o `glm::mix` de um `ivec2`, e satura fora do
+  intervalo, onde no GLM a conversão seria indefinida.
+- O comprimento do vetor inteiro (`notas.md`, 4.17): `Length` e `Distance` em `double`, com cada
+  lado ao quadrado em `double`, e `LengthSquared` e `DistanceSquared` exatos em 64 bits, que voltam
+  ao contrário passando do `int64`; a diferença do `Distance` é calculada em 64 bits. O segmento
+  inteiro mede pelo `Distance`; o `Direction` dele volta ao contrário como o ponto.
 - Texto da matriz: as colunas na ordem da memória, cada uma no formato do vetor, como em
   `((1, 0, 0), (0, 1, 0), (0, 0, 1))`.
 - Hex da cor: `0xRRGGBBAA`, a ordem em que o número é escrito, feita com deslocamento de bits. No

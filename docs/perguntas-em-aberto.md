@@ -41,3 +41,24 @@ seção 4.16).
 Todas respondidas em 12/10, da 8.1 à 8.5 (`notas.md`, seções 4.17 e 4.18): o segmento primeiro, no
 `pixie::math`, com as restrições do inteiro do GLM e a exceção do comprimento; sem o raio; e o
 ponto separado do vetor, com a conversão explícita.
+
+## 9. A implementação da seção 8
+
+1. **As escolhas do commit `a2c0eff`**, feitas ao escrever, sem decisão anterior (`notas.md`,
+   seções 4.17 e 4.18):
+   - O `+` de um operando do ponto fica: não depende da origem, e a 8.1 tirou só o `−`.
+   - Só ponto + vetor, e não vetor + ponto: a 8.1 listou ponto ± vetor, e no C# o vetor + ponto
+     pediria um operador no `PxVec2`.
+   - O `t` do `Lerp` e do `PointAt` é do tipo do ponto em `double` e `float`, e `double` no inteiro;
+     um ponto `float` recusa um `t` em `double`, como o escalar (5.1).
+   - O `Lerp` e o `PointAt` inteiros saturam fora do intervalo do `int` (5.3), onde o `glm::mix`
+     seria indefinido; dentro dele, dão o mesmo que o `glm::mix`.
+   - O segmento não tem `Empty` nem `IsEmpty`; no C#, `Start` e `End` têm `set`, como o `Location`
+     do retângulo; no C++, os campos são `start` e `end`. O `Length` é do tipo do segmento em
+     `double` e `float`, e `double` no inteiro.
+   - O `Length` e o `Distance` do inteiro elevam cada lado ao quadrado em `double`, e não tiram a
+     raiz do quadrado exato, para as duas pontas darem os mesmos bits.
+   - A versão subiu para a 0.2.0 agora, no `PixieLib.csproj`, e o `GIT_TAG` do README continua na
+     0.1.0 até a publicação.
+
+   Sugestão: aceitar todas.

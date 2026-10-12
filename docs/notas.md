@@ -474,7 +474,7 @@ as sugestões em 09/10 ("ok"), com a 4.8.
     (`layout.md`, 3), e a PixieLib não escreve a sua: no `net481`, os testes esperam o valor do .NET
     Framework (commit `5777471`).
 
-### 4.17 O segmento (8.2 a 8.5, 12/10)
+### 4.17 O segmento (8.2 a 8.5, 12/10; commit `a2c0eff`)
 
 - A engine vai precisar de segmentos: desenho de debug, gizmos, bordas, colisão e linhas lançadas
   (linha de visão, sensores). Entra o segmento; a reta infinita (`PxLine`, para recorte e
@@ -500,10 +500,13 @@ as sugestões em 09/10 ("ok"), com a 4.8.
     `double`, não. No C#, onde o modelo não escolhe o tipo do `t`, o natural é `double`, a precisão
     padrão (4.1), com o truncamento do `PxConvert` (5.3); para `t` entre 0 e 1 o resultado sempre
     cabe no `int`.
-- **[proposta]** A forma, nas três precisões do gerador, com o `PxSegmenti` para linhas em pixels:
-  `PxSegment { PxPoint Start; PxPoint End; }`, com `Direction()` → vetor, `End - Start` sem
-  normalizar, cujo comprimento é o do segmento; e `PointAt(t)` → ponto, a fórmula do `glm::mix`,
-  `Start * (1 - t) + End * t`, que dá os mesmos bits nas duas pontas, como o `Lerp` (4.13).
+- **Aplicado** (commit `a2c0eff`): `PxSegment`, `PxSegmentf` e `PxSegmenti` saem do gerador, e
+  `pxSegment_t` está no `pixie/math/pxSegment.hpp`, com o layout de dois pontos, `start` e `end`
+  (`layout.md`). `Direction()` é `End - Start`, sem normalizar, e o comprimento dele é o do
+  segmento; `PointAt(t)` é o `Lerp` de ponto (4.18), a fórmula do `glm::mix`, `Start * (1 - t) +
+  End * t`; `Length()` é o `glm::distance` em `double` e `float`, e o `Distance` do inteiro abaixo
+  no `PxSegmenti`, em `double`. No inteiro, o `Direction` volta ao contrário como o ponto (5.2), e o
+  `Length` não, porque a diferença dele é em 64 bits.
 - **O comprimento do inteiro** (8.3), a exceção à regra acima: o comprimento de um vetor inteiro
   quase nunca é inteiro ((3, 1) mede √10), devolver `int` arredondado perde informação em silêncio
   (P8.5), e não ter `Length()` obriga a converter para algo comum. Então o inteiro ganha
@@ -515,16 +518,23 @@ as sugestões em 09/10 ("ok"), com a 4.8.
     métodos a um apelido do GLM, as funções `pxLength`, `pxLengthSquared`, `pxDistance` e
     `pxDistanceSquared` para o `pxVec2i`, no `pxVec.hpp`, com as mesmas contas.
   - O `LengthSquared()` faz a conta em 64 bits e estoura num caso só, (`int.MinValue`,
-    `int.MinValue`), que dá 2⁶³ e volta ao contrário, como o resto do inteiro (5.2).
+    `int.MinValue`), que dá 2⁶³ e volta ao contrário, como o resto do inteiro (5.2). O
+    `DistanceSquared` estoura mais cedo, entre pontos a uns 3 bilhões de distância, porque a
+    diferença chega a 2³² - 1.
   - O `Distance` e o `DistanceSquared` subtraem em 64 bits, porque `b - a` em `int` volta ao
-    contrário entre pontos distantes, pelo mesmo motivo do `Contains` (5.2).
-  - O `Length()` é a raiz do `LengthSquared()` convertido para `double`: acima de 2⁵³ o quadrado
-    arredonda antes da raiz, mas dá os mesmos bits nas duas pontas.
+    contrário entre pontos distantes, pelo mesmo motivo do `Contains` (5.2). O `Distance(a, b)` é o
+    comprimento de `b - a`, como o `glm::distance`.
+  - O `Length()` e o `Distance` elevam cada lado ao quadrado em `double`, somam e tiram a raiz, e
+    não a raiz do quadrado exato: o C# não tem um tipo mais largo para fazer a conta, e assim as
+    duas pontas dão os mesmos bits. Enquanto um quadrado cabe em 53 bits a conta é exata; acima,
+    ele arredonda, e (1721854523, -1661267722) mede 2392612263.3085847, onde a raiz exata daria
+    2392612263.308584. Não voltam ao contrário.
   - Custo: um tipo inteiro com um método que devolve ponto flutuante, e quatro funções no C++ que
-    o GLM não tem; aqui a PixieLib completa onde o GLM recusa (seção 2). Ainda não aplicado.
+    o GLM não tem; aqui a PixieLib completa onde o GLM recusa (seção 2). Aplicado no commit
+    `a2c0eff`.
 - A separação entre ponto e vetor foi respondida no mesmo dia (8.1, seção 4.18).
 
-### 4.18 Ponto e vetor (8.1, 12/10)
+### 4.18 Ponto e vetor (8.1, 12/10; commit `a2c0eff`)
 
 O ponto diz *onde* algo está, o vetor *quanto e para onde* algo anda, o tamanho *quanto* algo
 ocupa. O teste de uma operação é mudar a origem do mundo: uma conta válida dá a mesma resposta
@@ -569,8 +579,36 @@ a aritmética que veio do editor. Aceito em 12/10, nas seis partes:
    escolher atualizar. Pela regra do SemVer antes da 1.0, a próxima versão é a 0.2.0, porque quebra
    API (4.16: uma versão nova começa subindo o `Version` do `PixieLib.csproj`).
 
-Ainda não aplicado. Nos testes, o grosso da mudança está no `PxPointTests.cs` e no
-`pxPoint.test.cpp`.
+**Aplicado** no commit `a2c0eff`, com o segmento e o comprimento do inteiro (4.17):
+
+- No C++, o `pxPoint.hpp` declara o ponto − ponto com o tipo de retorno vindo de um modelo,
+  `pxPointDifference<T>`, cuja versão geral para num `static_assert` com a mensagem; o `pxVec.hpp`
+  dá o tipo e define o operador. Sem ele, o g++ e o clang mostram primeiro a mensagem ("point -
+  point gives a vector, and the vectors live in pixie::math: include <pixie/math/pxVec.hpp> and link
+  pixie::math"), conferido em 12/10; o MSVC só pelo CI. Ponto ± vetor e retângulo ± vetor são
+  modelos no `pxVec.hpp`, e o `mat3 * ponto` está no `pxMat.hpp`.
+- No C#, o `PxPoint` perde os operadores e ganha `PxPoint - PxPoint → PxVec2`, `PxPoint ± PxVec2`
+  e o `Lerp`; o `PxRect` se move por um `PxVec2`; o `PxMat3` multiplica um `PxPoint`. Os testes
+  conferem pela reflexão que nenhum operador do ponto ou do vetor recebe ponto + ponto, ponto × k,
+  ponto / k, −ponto ou retângulo + ponto: com a conversão explícita, esses são os únicos candidatos
+  que o C# olha.
+- A versão do pacote subiu para a 0.2.0 no `PixieLib.csproj`. O `GIT_TAG v0.1.0` do README fica até
+  a 0.2.0 ser publicada.
+- Os mesmos bits nas duas pontas: o `Lerp` e o `PointAt` nas três precisões, o `Length` do
+  segmento nas três, o `mat3 * ponto` em `double` e `float`, e o `Length`, o `LengthSquared`, o
+  `Distance` e o `DistanceSquared` do inteiro, 17 valores em 20.000 casos aleatórios, iguais no
+  g++, no clang e no .NET 10. O `Lerp` inteiro é igual ao `glm::mix` de um `ivec2` com `t` em
+  `double` em 200.000 casos dentro do intervalo, e o de `float`, ao do `vec2`.
+- Os testes passam no g++ 13 (também com o AddressSanitizer e o UBSan), no clang++ 18, sem o
+  `PIXIE_MATH`, e no .NET 10; o `net481` é conferido pela compilação, e o MSVC e o `net481` rodam
+  no CI. Falham quando se quebra de propósito uma cópia: a fórmula do `Lerp`, o `Lerp` inteiro
+  arredondando em vez de truncar, o `t` em `float` no inteiro, o ponto + ponto de volta, a ordem do
+  ponto − ponto, a conversão implícita para o vetor, a diferença do `Distance` em 32 bits, o
+  quadrado sem 64 bits ou pelo `double`, a raiz do quadrado exato, o retângulo que muda de tamanho
+  ao mover, o `w = 0` no `mat3 * ponto`, o comprimento do segmento inteiro pelo `Direction`, o
+  `PointAt` invertido e a ordem dos campos do segmento. O hash do segmento sem o `PxHash` só muda
+  algo no `net481`, como nos outros primitivos (4.12).
+- As escolhas feitas ao escrever, sem decisão anterior, estão na pergunta 9.1.
 
 ## 5. Consequências
 
