@@ -39,28 +39,8 @@ entry may keep an explicit gate after promotion.
 
 ## Current promoted work
 
-### `PXL-TODO-001` — Adopt the documentation policy
+None as of 2026-10-12.
 
-**Status:** in-progress
-
-**Source:** owner decision on 2026-10-12, accepting the migration map of the
-`inventory/design` step (questions 10.1 to 10.9)
-
-**Accepted scope:** the documentation policy, schema, and templates derived from
-PixieEngine's, with PixieInspector's .NET additions; the six documents written
-before the policy archived whole, in Portuguese, as imported records; the notes
-portal; the four ideas the notes left for later as proposals; the root
-documents, the development guide, and the layout contract in English; the
-module documents (`MANIFEST.md`, `README.md`, `REFERENCE.md`) of `primitives`,
-`math`, `events`, and `generator`, written from the current source. Out of
-scope: any change to product code or public API, and the promotion of any
-proposal.
-
-**Dependencies and gates:** the owner accepts the migration map; met on
-2026-10-12.
-
-**Completion criteria:** every document named in the scope exists with valid
-metadata and resolving links; every module reference is checked claim by claim
-against the source; no product code changes; the completion is archived.
-
-**Breakdown:** [`TASKLIST.md`](TASKLIST.md#pxl-todo-001--adopt-the-documentation-policy)
+`PXL-TODO-001` (adopt the documentation policy) completed on 2026-10-12. Its
+entry, breakdown, and verification are preserved in the
+[archive record](docs/archive/documentation-foundation-2026-10-12.md).
