@@ -1,3 +1,53 @@
+# Imported: Diagnosis of the 2023 Code (pt-BR)
+
+**Document ID:** ARCHIVE-DIAGNOSIS-2023-20261002
+
+**Schema version:** 1
+
+**Kind:** roadmap/status
+
+**Lifecycle:** historical
+
+**Subject:** what the 2023 code actually did, checked with g++ 13.3 and the AddressSanitizer on copies outside the repository; nothing was fixed
+
+**Surface:** archive-record
+
+**Boundary:** global
+
+**Authority role:** evidence
+
+**Mutation:** snapshot
+
+**Indexing:** include
+
+**Archive ID:** PXL-ARCHIVE-005
+
+**Type:** import
+
+**Origin:** owner decision: the documentation migration of 2026-10-12 (PXL-TODO-001)
+
+**Author:** claude
+
+**Reference date:** 2026-10-02
+
+**Commits:** with this record (parent `e0186c65321fd112d389bdabd11a6e2b3d748a6d`)
+
+**Reference commit:** `7a43f42a6b1d784ce3051b13ce8e5e3bd91857a7`, the last commit that changed the document
+
+**Original path:** `docs/diagnostico-2023.md`, in this repository
+
+**Current state:** The current code is described by the module references under [`docs/modules/`](../modules/)
+
+The body below is the document as it stood at the reference commit, unchanged and in Portuguese
+(pt-BR). It predates the [documentation policy](../governance/documentation-policy.md), which was
+adopted on 2026-10-12; current documents are in English. Its paths are relative to
+`cpp/Demo/Pixielib/include/` at the tag `legado-2023`. The code it describes was replaced when
+PixieLib restarted (section 4.7 of [PXL-ARCHIVE-001](decision-notes-2026-10-12.md)). Current facts
+were extracted, in English, to their current owners; where this record and a current owner disagree,
+the current owner wins.
+
+---
+
 # Diagnóstico do código de 2023
 
 O que o código antigo faz de fato, verificado em 02/10/2026: compilado com o g++ 13.3

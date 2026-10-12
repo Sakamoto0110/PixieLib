@@ -1,3 +1,53 @@
+# Imported: PixieLib Handoff (pt-BR)
+
+**Document ID:** ARCHIVE-PIXIELIB-HANDOFF-20261002
+
+**Schema version:** 1
+
+**Kind:** roadmap/status
+
+**Lifecycle:** historical
+
+**Subject:** the context handoff that started the C# side of PixieLib, written at the end of an InteractiveEditor rework session
+
+**Surface:** archive-record
+
+**Boundary:** global
+
+**Authority role:** evidence
+
+**Mutation:** snapshot
+
+**Indexing:** include
+
+**Archive ID:** PXL-ARCHIVE-003
+
+**Type:** import
+
+**Origin:** owner decision: the documentation migration of 2026-10-12 (PXL-TODO-001)
+
+**Author:** claude
+
+**Reference date:** 2026-10-02
+
+**Commits:** with this record (parent `e0186c65321fd112d389bdabd11a6e2b3d748a6d`)
+
+**Reference commit:** `7a43f42a6b1d784ce3051b13ce8e5e3bd91857a7`, the last commit that changed the document
+
+**Original path:** `docs/passagem-pixielib.md`, in this repository
+
+**Current state:** What PixieLib is, its decisions, and how to commit are in [PXL-ARCHIVE-001](decision-notes-2026-10-12.md) and in the current owners listed there
+
+The body below is the document as it stood at the reference commit, unchanged and in Portuguese
+(pt-BR). It predates the [documentation policy](../governance/documentation-policy.md), which was
+adopted on 2026-10-12; current documents are in English. PixieInspector keeps another copy of this
+handoff as its PXI-ARCHIVE-003; this is the copy of the repository it was written for. Its questions
+(section 6) were answered in [PXL-ARCHIVE-001](decision-notes-2026-10-12.md), and its account of the
+repository describes the 2023 code. Current facts were extracted, in English, to their current
+owners; where this record and a current owner disagree, the current owner wins.
+
+---
+
 # Passagem de contexto: a PixieLib em C#
 
 Para começar a parte em C# da PixieLib num contexto novo. Escrita em 2 de outubro de 2026, no fim de

@@ -1,3 +1,54 @@
+# Imported: Decision Notes (pt-BR)
+
+**Document ID:** ARCHIVE-DECISION-NOTES-20261012
+
+**Schema version:** 1
+
+**Kind:** roadmap/status
+
+**Lifecycle:** historical
+
+**Subject:** the pre-policy decision notes: what PixieLib is and is not, every answered question from 1.1 to 9.1 with its commits, and the rules for committing
+
+**Surface:** archive-record
+
+**Boundary:** global
+
+**Authority role:** evidence
+
+**Mutation:** snapshot
+
+**Indexing:** include
+
+**Archive ID:** PXL-ARCHIVE-001
+
+**Type:** import
+
+**Origin:** owner decision: the documentation migration of 2026-10-12 (PXL-TODO-001)
+
+**Author:** claude
+
+**Reference date:** 2026-10-12
+
+**Commits:** with this record (parent `e0186c65321fd112d389bdabd11a6e2b3d748a6d`)
+
+**Reference commit:** `e0186c65321fd112d389bdabd11a6e2b3d748a6d`, the last commit that changed the document
+
+**Original path:** `docs/notas.md`, in this repository
+
+**Current state:** Current facts now live in their owners: [`ROADMAP.md`](../../ROADMAP.md), [`DEPENDENCIES.md`](../../DEPENDENCIES.md), the [development guide](../development.md), the [layout contract](../layout.md), and the module references under [`docs/modules/`](../modules/)
+
+The body below is the document as it stood at the reference commit, unchanged and in Portuguese
+(pt-BR). It predates the [documentation policy](../governance/documentation-policy.md), which was
+adopted on 2026-10-12; current documents are in English. The source cites this record by section
+(`docs/notas.md, 4.13`, now a [portal](../notas.md)) and by question number (`(5.2)`, `P8.5`): a
+number such as `5.2` is the question, and the section of the notes that cites it holds the answer. A
+`P` number is a question of the InteractiveEditor rework, as the top of the notes explains. Current
+facts were extracted, in English, to their current owners; where this record and a current owner
+disagree, the current owner wins.
+
+---
+
 # Notas da PixieLib
 
 O que já foi decidido, com a data e o número da pergunta: `1.3` é a pergunta 1.3 de
