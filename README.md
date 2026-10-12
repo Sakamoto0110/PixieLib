@@ -89,8 +89,17 @@ into one instruction: GCC and Clang need `-ffp-contract=off`, and MSVC does not 
 default `/fp:precise`. GLM compiled by MSVC adds the dot product of a `vec4` in sequence instead of
 in pairs, so there the last bit of a few `vec4` and `mat4` operations can differ.
 
-The decisions behind the library, with their reasons, are in
-[docs/notas.md](https://github.com/Sakamoto0110/PixieLib/blob/main/docs/notas.md), in Portuguese.
+## Documentation
+
+- [ROADMAP.md](https://github.com/Sakamoto0110/PixieLib/blob/main/ROADMAP.md): what PixieLib is and
+  is not, who uses it, and where it is going.
+- [TODO.md](https://github.com/Sakamoto0110/PixieLib/blob/main/TODO.md): promoted work.
+  [TASKLIST.md](https://github.com/Sakamoto0110/PixieLib/blob/main/TASKLIST.md): its task breakdowns.
+- [DEPENDENCIES.md](https://github.com/Sakamoto0110/PixieLib/blob/main/DEPENDENCIES.md): every
+  dependency and its status.
+- [docs/](https://github.com/Sakamoto0110/PixieLib/blob/main/docs/README.md): the documentation
+  index, the module references, the development guide, the proposals, and the archive, where the
+  decisions behind the library are kept with their reasons.
 
 ## License
 
