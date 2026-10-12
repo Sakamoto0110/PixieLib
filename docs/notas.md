@@ -298,7 +298,8 @@ operações. As respostas, todas aplicadas nas duas pontas:
   sem área não entra no `Union`; o `Contains` de um retângulo olha só as bordas; mover é `rect + ponto`,
   e não um `Offset`; `Deflate` e `Inflate` não prendem o tamanho em zero; o `Center` inteiro arredonda
   para zero; no C#, `Location` e `Size` têm `set`; a região só tem `Contains`, `IntersectsWith`,
-  `Intersect` e `Union`.
+  `Intersect` e `Union`. Desfeito em parte em 12/10 (8.1, seção 4.18): mover passou a ser
+  `rect ± vetor`.
 
 ### 4.13 Os vetores (6.1 e 1.11, 09/10; commit `947eac7`)
 
@@ -421,7 +422,8 @@ operações. As respostas, todas aplicadas nas duas pontas:
   `Shear`, e a ordem dos campos nas duas conversões, nas duas linguagens.
 - As escolhas que não vinham decididas (6.7) foram aceitas em 09/10: o `GLM_ENABLE_EXPERIMENTAL` só
   em volta do include, os dois `Shear` com o sentido do GLM, a conversão explícita entre ponto e
-  `vec2`, sem conversão do tamanho e sem função para transformar um ponto.
+  `vec2`, sem conversão do tamanho e sem função para transformar um ponto. Desfeito em parte em
+  12/10 (8.1, seção 4.18): a `mat3` passa a transformar um ponto.
 
 ### 4.16 O primeiro deploy (7.1 a 7.4, 09/10; commits `5693b4c` a `5777471`)
 
@@ -520,7 +522,55 @@ as sugestões em 09/10 ("ok"), com a 4.8.
     arredonda antes da raiz, mas dá os mesmos bits nas duas pontas.
   - Custo: um tipo inteiro com um método que devolve ponto flutuante, e quatro funções no C++ que
     o GLM não tem; aqui a PixieLib completa onde o GLM recusa (seção 2). Ainda não aplicado.
-- Ainda aberta: a separação entre ponto e vetor (8.1).
+- A separação entre ponto e vetor foi respondida no mesmo dia (8.1, seção 4.18).
+
+### 4.18 Ponto e vetor (8.1, 12/10)
+
+O ponto diz *onde* algo está, o vetor *quanto e para onde* algo anda, o tamanho *quanto* algo
+ocupa. O teste de uma operação é mudar a origem do mundo: uma conta válida dá a mesma resposta
+geométrica onde quer que o (0, 0) esteja. Ponto − ponto passa; ponto × 3 não (a bola em (100, 50)
+vai a (300, 150); com a origem 100 à direita, ela está em (0, 50) e vai a (0, 150), outro lugar).
+Os tipos já eram separados nas duas linguagens; o que muda é a semântica do ponto, que ainda tinha
+a aritmética que veio do editor. Aceito em 12/10, nas seis partes:
+
+1. **A aritmética do ponto.** Saem ponto + ponto, ponto × k, ponto / k e o − de um operando: os três
+   últimos dependem da origem, pelo mesmo teste. Ponto − ponto passa a dar um vetor; entram
+   ponto ± vetor → ponto e o `Lerp` de dois pontos, que vale porque os pesos somam 1 e a origem se
+   cancela, com a fórmula e as regras do inteiro do `PointAt` do segmento (4.17). Ponto ± tamanho →
+   ponto fica.
+2. **A conversão entre ponto e vetor continua explícita** (6.7), e não implícita, como pedia a
+   proposta da passagem (seção 4). Testado em 12/10, fora do repositório:
+   - No C#, com a conversão implícita, `p + q` compila: o candidato é o `operator+(PxPoint, PxVec2)`
+     do próprio ponto, que aceita o `q` convertido, e dá (4, 6) para (1, 2) e (3, 4). Compilam
+     também `v + p`, `v * p`, `PxVec2.Dot(p, q)` e `PxVec2.Lerp(p, q, t)`. Um
+     `[Obsolete("...", true)] operator+(PxPoint, PxPoint)` fecha o `p + q` (CS0619), mas não os
+     outros.
+   - No C++, a conversão implícita teria de estar no `pxPoint_t`, e o `pxPoint.hpp` é do `core`, sem
+     o GLM: ela desfaria o `PIXIE_MATH` (4.13). Com um operador `friend` que não é modelo, o estilo
+     do `pxPoint.hpp`, `p + q` também compilaria; como modelo, não.
+   - Se o `(PxVec2)p` incomodar na leitura, um método com nome (como `p.ToVector()`) faz o mesmo e
+     se lê melhor; é cosmético, e não foi decidido.
+3. **No C++, o que envolve o vetor fica no `pxVec.hpp`**, em operadores modelo, para que nenhuma
+   conversão entre por baixo. Sem o `PIXIE_MATH`, ponto − ponto não compila, porque o vetor mora no
+   módulo de matemática. O erro tem de dizer o que fazer: um `static_assert` (ou, no mínimo, um
+   comentário no lugar do erro) dizendo que é preciso incluir o `pxVec.hpp` e ligar o `PIXIE_MATH`,
+   em vez de uma mensagem de modelo ilegível.
+4. **Mover um retângulo é `rect ± vetor`**: mover é deslocar, então é vetor. Isso desfaz o
+   `rect + ponto` da 5.8; no C++, também no `pxVec.hpp`. "Colocar em" continua sendo atribuir a
+   posição (`Location`).
+5. **`mat3 * ponto`, com `w = 1`**, nas duas pontas: era o motivo principal da separação, e desfaz a
+   parte da 6.7 que dizia "sem função para transformar um ponto". O `mat3 * vec2`, com `w = 0`, fica
+   para quando alguém transformar direções. A engine vai precisar dele (girar uma velocidade junto
+   com o objeto), e o pedido sai de lá; no C++ os dois são tipos do GLM, e um `operator*` deles fora
+   do namespace `glm` não é achado pelo ADL e some dentro de qualquer namespace que declare outro
+   `operator*`, então a forma fica para aquela hora.
+6. **A quebra da API**, antes da 1.0, que é o momento. Ela não pega ninguém de surpresa: o
+   InteractiveEditor referencia a PixieLib com a versão exata (`Version="0.1.0"`) e só quebra quando
+   escolher atualizar. Pela regra do SemVer antes da 1.0, a próxima versão é a 0.2.0, porque quebra
+   API (4.16: uma versão nova começa subindo o `Version` do `PixieLib.csproj`).
+
+Ainda não aplicado. Nos testes, o grosso da mudança está no `PxPointTests.cs` e no
+`pxPoint.test.cpp`.
 
 ## 5. Consequências
 
