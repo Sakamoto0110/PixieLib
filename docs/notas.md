@@ -608,7 +608,15 @@ a aritmética que veio do editor. Aceito em 12/10, nas seis partes:
   ao mover, o `w = 0` no `mat3 * ponto`, o comprimento do segmento inteiro pelo `Direction`, o
   `PointAt` invertido e a ordem dos campos do segmento. O hash do segmento sem o `PxHash` só muda
   algo no `net481`, como nos outros primitivos (4.12).
-- As escolhas feitas ao escrever, sem decisão anterior, estão na pergunta 9.1.
+- As escolhas feitas ao escrever, sem decisão anterior, foram aceitas em 12/10 (9.1): o `+` de um
+  operando do ponto fica, porque não depende da origem; só ponto + vetor, e não vetor + ponto; o `t`
+  do `Lerp` e do `PointAt` é do tipo do ponto em `double` e `float`, e `double` no inteiro, e um
+  ponto `float` recusa um `t` em `double` (5.1); o `Lerp` e o `PointAt` inteiros saturam fora do
+  intervalo do `int` (5.3), onde o `glm::mix` seria indefinido; o segmento não tem `Empty` nem
+  `IsEmpty`, `Start` e `End` têm `set` no C#, os campos são `start` e `end` no C++, e o `Length` é
+  do tipo do segmento em `double` e `float`, e `double` no inteiro; o `Length` e o `Distance` do
+  inteiro elevam cada lado ao quadrado em `double`; e a versão subiu para a 0.2.0 já, com o
+  `GIT_TAG` do README na 0.1.0 até a publicação.
 
 ## 5. Consequências
 
