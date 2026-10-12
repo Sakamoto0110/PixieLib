@@ -58,4 +58,5 @@ Runtime scenarios: none
   [PXL-PROPOSAL-001](../../proposals/mat3-times-vec2.md),
   [PXL-PROPOSAL-002](../../proposals/infinite-line.md), and
   [PXL-PROPOSAL-003](../../proposals/named-point-conversion.md).
-- No on-demand surface exists yet.
+- No on-demand surface exists yet. The migration of the point arithmetic to
+  0.2.0 is in [`primitives`](../primitives/migrations/0.1.0-to-0.2.0.md).

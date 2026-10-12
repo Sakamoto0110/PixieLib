@@ -55,4 +55,5 @@ Runtime scenarios: none
   to 4.5, 4.9 to 4.12, and 4.18; the source cites them by question number.
 - Proposals that touch the module:
   [PXL-PROPOSAL-004](../../proposals/std-formatter.md).
-- No on-demand surface exists yet.
+- [`migrations/`](migrations/): [from 0.1.0 to 0.2.0](migrations/0.1.0-to-0.2.0.md),
+  for code that did arithmetic with points.
