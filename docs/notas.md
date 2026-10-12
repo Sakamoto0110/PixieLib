@@ -472,17 +472,37 @@ as sugestões em 09/10 ("ok"), com a 4.8.
     (`layout.md`, 3), e a PixieLib não escreve a sua: no `net481`, os testes esperam o valor do .NET
     Framework (commit `5777471`).
 
-### 4.17 Segmento e raio (8.2, 12/10)
+### 4.17 O segmento (8.2, 8.4 e 8.5, 12/10)
 
-- A engine vai precisar de segmentos (desenho de debug, gizmos, bordas, colisão) e de raios
-  (picking no viewport do editor). Entram primeiro o segmento e o raio; a reta infinita (`PxLine`,
-  para recorte e semiplanos) só quando algo pedir.
+- A engine vai precisar de segmentos: desenho de debug, gizmos, bordas, colisão e linhas lançadas
+  (linha de visão, sensores). Entra o segmento; a reta infinita (`PxLine`, para recorte e
+  semiplanos) só quando algo pedir (8.2).
+- **Sem raio** (8.5): um raio é origem mais direção e só se distingue do segmento por não ter fim.
+  Na prática, ele é criado com a direção normalizada e multiplicado por um comprimento, e aí vira um
+  segmento (`Start + dir × len`). O picking do editor é 2D, como a engine primeiro, e não usa raio:
+  é uma consulta de ponto, que pergunta que forma contém o cursor. Lançar uma linha tem distância
+  máxima, então é um segmento; o `RayCast` do Box2D também recebe dois pontos, `p1` e `p2`. Se o 3D
+  vier, um raio 3D entra com ele, com o nome na convenção de dimensão que a PixieLib adotar (como
+  `PxVec2` e `PxVec3`); sem um raio em 2D, não há conflito de nome.
+- **No C++, no `pixie::math`** (8.4): o `Direction()` devolve um vetor, que é do GLM, então o
+  segmento fica ao lado do `pxVec.hpp`, e não no `core` com o ponto e o retângulo.
+- **As restrições do inteiro são as do GLM** (8.4): o que o GLM recusa num vetor inteiro o segmento
+  inteiro também não tem, e o C# segue o mesmo. Conferido no GLM 1.0.3 em 12/10:
+  - `glm::length`, `glm::distance`, `glm::normalize` e `glm::dot` de um `ivec2` param no
+    `static_assert` ("accepts only floating-point inputs"): o `PxSegmenti` não tem `Length()`, a não
+    ser que a 8.3 abra a exceção, e o vetor inteiro continua sem `Normalize` (4.13). Uma direção
+    unitária vem de normalizar o vetor, em `double` ou `float`.
+  - `glm::mix` de dois `ivec2` aceita um `t` em ponto flutuante: faz a conta no tipo do `t` e
+    trunca para `int`, então `mix((1, -2), (4, -5), 0.5)` dá (2, -3). O `PointAt` inteiro existe e
+    é esse. Com `t` em `float`, as coordenadas acima de 2²⁴ perdem precisão (2²⁴ + 1 vira 2²⁴); com
+    `double`, não. No C#, onde o modelo não escolhe o tipo do `t`, o natural é `double`, a precisão
+    padrão (4.1), com o truncamento do `PxConvert` (5.3); para `t` entre 0 e 1 o resultado sempre
+    cabe no `int`.
 - **[proposta]** A forma, nas três precisões do gerador, com o `PxSegmenti` para linhas em pixels:
-  - `PxSegment { PxPoint Start; PxPoint End; }`, com `Direction()` → vetor, `End - Start`;
-    `PointAt(t)` → ponto, `Start + (End - Start) * t`; e o `Length()` (8.3).
-  - `PxRay { PxPoint Origin; PxVec2 Direction; }`.
-- Ainda abertas: a separação entre ponto e vetor (8.1), o `Length` do inteiro (8.3), onde o
-  segmento fica no C++ e o `PointAt` inteiro (8.4), e a direção e a dimensão do raio (8.5).
+  `PxSegment { PxPoint Start; PxPoint End; }`, com `Direction()` → vetor, `End - Start` sem
+  normalizar, cujo comprimento é o do segmento; e `PointAt(t)` → ponto, a fórmula do `glm::mix`,
+  `Start * (1 - t) + End * t`, que dá os mesmos bits nas duas pontas, como o `Lerp` (4.13).
+- Ainda abertas: a separação entre ponto e vetor (8.1) e o `Length` do inteiro (8.3).
 
 ## 5. Consequências
 

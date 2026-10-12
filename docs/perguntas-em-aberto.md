@@ -36,13 +36,13 @@ Todas respondidas em 09/10, da 7.1 à 7.4, feitas na conversa: a versão 0.1.0, 
 publicação por um workflow que o void dispara, e o CI com o Windows antes do deploy (`notas.md`,
 seção 4.16).
 
-## 8. Segmento, raio e a separação entre ponto e vetor
+## 8. O segmento e a separação entre ponto e vetor
 
-A engine vai precisar de segmentos (desenho de debug, gizmos, bordas, colisão) e de raios (picking
-no viewport do editor), e pensar no primitivo de linha trouxe a pergunta de separar o ponto do
-vetor. A 8.2, segmento e raio primeiro, foi respondida em 12/10 (`notas.md`, seção 4.17). O que
-segue foi conferido no código e testado em 12/10, fora do repositório: o C# no .NET 10, o C++ no
-g++ 13 com o GLM 1.0.3.
+A engine vai precisar de segmentos (desenho de debug, gizmos, bordas, colisão), e pensar no
+primitivo de linha trouxe a pergunta de separar o ponto do vetor. A 8.2, a 8.4 e a 8.5 foram
+respondidas em 12/10 (`notas.md`, seção 4.17): o segmento primeiro, sem o raio. O que segue foi
+conferido no código e testado em 12/10, fora do repositório: o C# no .NET 10, o C++ no g++ 13 com
+o GLM 1.0.3.
 
 1. **Separar o ponto (posição) do vetor (deslocamento)?** A distinção é *onde* contra *quanto e para
    onde*: o ponto diz onde algo está, o vetor quanto e para onde algo anda, o tamanho quanto algo
@@ -97,8 +97,8 @@ g++ 13 com o GLM 1.0.3.
      que só quer dois números escreve `(PxVec2)p`, e o layout usa retângulos e tamanhos, não
      vetores. Desempenho: nenhum, o layout de memória é o mesmo.
 
-2. Respondida em 12/10: o segmento e o raio primeiro; a reta infinita, quando algo pedir
-   (`notas.md`, seção 4.17).
+2. Respondida em 12/10: o segmento primeiro; a reta infinita, quando algo pedir. O raio saiu na
+   mesma data (8.5) (`notas.md`, seção 4.17).
 
 3. **`Length()` nos tipos inteiros** (`PxVec2i`, `PxSegmenti`)? O comprimento de um vetor inteiro
    quase nunca é inteiro: (3, 1) mede √10 ≈ 3,162. As opções: devolver `int` arredondado, que perde
@@ -131,17 +131,12 @@ g++ 13 com o GLM 1.0.3.
    no C++ que o GLM não tem (a seção 2 das notas diz que a PixieLib não inventa a matemática; aqui
    ela completa onde o GLM recusa). O `Dot` inteiro continua de fora.
 
-4. **Onde o segmento fica, e o `PointAt` inteiro.** O `Direction()` devolve um vetor, então no C++
-   o segmento depende do GLM e vai para o `pixie::math`, ao lado do `pxVec.hpp`, e não para o
-   `core` com o ponto e o retângulo. No inteiro, `Start + (End - Start) * t` com `t` em `double` não
-   compila (o escalar do inteiro é inteiro, 5.1). **Sugestão**: o segmento e o raio no
-   `pixie::math`; o `PointAt` só em `double` e `float` (`PX_FLOATING`), e o `PxSegmenti` com
-   `Start`, `End`, `Direction()` e o que a 8.3 decidir.
+   **Depois da 8.4** (12/10): a regra de lá, o que o GLM recusa no inteiro a PixieLib também não
+   tem, responde esta pela segunda opção, sem `Length()` no inteiro, e é o que o C# já faz (4.13). A
+   sugestão acima vira exceção à regra; seguindo a regra, a resposta é "sem `Length`", e quem
+   precisa converte para `PxVec2`. Falta só o void confirmar qual das duas.
 
-5. **O raio.** Duas coisas que a 8.2 não diz: se a direção é normalizada, e se o picking do editor é
-   em 2D. Uma struct com campos públicos e layout de contrato não guarda invariante, e normalizar
-   num construtor esconde o custo e o caso do vetor zero. Se o viewport do editor for 3D, o raio
-   precisa de um ponto 3D, que não existe, e o nome `PxRay` em 2D atrapalha o 3D depois (os vetores
-   são `PxVec2` e `PxVec3`). **Sugestão**: a direção como veio, sem normalizar, com
-   `PointAt(t) = Origin + Direction * t`, e o raio em 2D agora, se o picking for 2D; se for 3D,
-   decidir o ponto 3D antes.
+4. Respondida em 12/10: o segmento vai para o `pixie::math`, porque depende do GLM, e as
+   restrições do inteiro são as do GLM (`notas.md`, seção 4.17).
+
+5. Respondida em 12/10: o raio sai da proposta (`notas.md`, seção 4.17).
