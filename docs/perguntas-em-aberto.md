@@ -39,7 +39,7 @@ seção 4.16).
 ## 8. O segmento e a separação entre ponto e vetor
 
 A engine vai precisar de segmentos (desenho de debug, gizmos, bordas, colisão), e pensar no
-primitivo de linha trouxe a pergunta de separar o ponto do vetor. A 8.2, a 8.4 e a 8.5 foram
+primitivo de linha trouxe a pergunta de separar o ponto do vetor. Da 8.2 à 8.5, todas
 respondidas em 12/10 (`notas.md`, seção 4.17): o segmento primeiro, sem o raio. O que segue foi
 conferido no código e testado em 12/10, fora do repositório: o C# no .NET 10, o C++ no g++ 13 com
 o GLM 1.0.3.
@@ -100,41 +100,8 @@ o GLM 1.0.3.
 2. Respondida em 12/10: o segmento primeiro; a reta infinita, quando algo pedir. O raio saiu na
    mesma data (8.5) (`notas.md`, seção 4.17).
 
-3. **`Length()` nos tipos inteiros** (`PxVec2i`, `PxSegmenti`)? O comprimento de um vetor inteiro
-   quase nunca é inteiro: (3, 1) mede √10 ≈ 3,162. As opções: devolver `int` arredondado, que perde
-   informação em silêncio (contra a P8.5); não ter `Length()`, como hoje; ou `Length()` em `double`
-   e `LengthSquared()` exato em `long`, que compara distâncias sem raiz.
-
-   **O que o código já tem.** A falta do `Length` no inteiro tem motivo registrado: "o inteiro não
-   tem `Dot`, `Cross`, `Length` nem `Normalize`, como no GLM" (4.13, aceito na 6.3). No C++,
-   `glm::length` e `glm::dot` de um `ivec2` param no `static_assert` ("accepts only floating-point
-   inputs", testado em 12/10). Pôr o `Length` só no C# deixa uma operação sem par no C++; nas duas
-   pontas, o C++ ganha funções próprias fora do GLM.
-
-   **As referências**, conferidas no código delas em 12/10: a Godot (`Vector2i`) tem `length()` em
-   `double` e `length_squared()` em `int64_t`; a Unity (`Vector2Int`) tem `magnitude` em `float` e
-   `sqrMagnitude` em `int`, que estoura com coordenadas grandes.
-
-   **Detalhes, se entrar:**
-   - O `LengthSquared()` em `long` estoura num caso só, (`int.MinValue`, `int.MinValue`), que dá
-     2⁶³; volta ao contrário, como o resto do inteiro (5.2).
-   - O `Distance` e o `DistanceSquared` subtraem em 64 bits: `b - a` em `int` volta ao contrário
-     entre pontos distantes, e o `Contains` já calcula as bordas em 64 bits pelo mesmo motivo (5.2).
-   - O `Length()` é `Math.Sqrt((double)LengthSquared())`: acima de 2⁵³ o quadrado arredonda antes
-     da raiz, mas dá os mesmos bits nas duas pontas se o C++ fizer o mesmo.
-   - O gerador não muda: um bloco `#if PX_INT` no modelo basta, porque ele só define o `PX_INT`.
-
-   **Sugestão**: a terceira opção, nas duas pontas: no C#, `Length()`, `LengthSquared()`,
-   `Distance` e `DistanceSquared` no bloco `PX_INT` do `PxVec2`; no C++, `pxLength`,
-   `pxLengthSquared`, `pxDistance` e `pxDistanceSquared` para o `pxVec2i` no `pxVec.hpp`, com as
-   mesmas contas. Custo: um tipo inteiro com um método que devolve ponto flutuante, e quatro funções
-   no C++ que o GLM não tem (a seção 2 das notas diz que a PixieLib não inventa a matemática; aqui
-   ela completa onde o GLM recusa). O `Dot` inteiro continua de fora.
-
-   **Depois da 8.4** (12/10): a regra de lá, o que o GLM recusa no inteiro a PixieLib também não
-   tem, responde esta pela segunda opção, sem `Length()` no inteiro, e é o que o C# já faz (4.13). A
-   sugestão acima vira exceção à regra; seguindo a regra, a resposta é "sem `Length`", e quem
-   precisa converte para `PxVec2`. Falta só o void confirmar qual das duas.
+3. Respondida em 12/10: `Length()` em `double` e `LengthSquared()` exato em `long` no inteiro,
+   nas duas pontas, como exceção à regra da 8.4 (`notas.md`, seção 4.17).
 
 4. Respondida em 12/10: o segmento vai para o `pixie::math`, porque depende do GLM, e as
    restrições do inteiro são as do GLM (`notas.md`, seção 4.17).

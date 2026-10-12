@@ -472,7 +472,7 @@ as sugestões em 09/10 ("ok"), com a 4.8.
     (`layout.md`, 3), e a PixieLib não escreve a sua: no `net481`, os testes esperam o valor do .NET
     Framework (commit `5777471`).
 
-### 4.17 O segmento (8.2, 8.4 e 8.5, 12/10)
+### 4.17 O segmento (8.2 a 8.5, 12/10)
 
 - A engine vai precisar de segmentos: desenho de debug, gizmos, bordas, colisão e linhas lançadas
   (linha de visão, sensores). Entra o segmento; a reta infinita (`PxLine`, para recorte e
@@ -489,9 +489,9 @@ as sugestões em 09/10 ("ok"), com a 4.8.
 - **As restrições do inteiro são as do GLM** (8.4): o que o GLM recusa num vetor inteiro o segmento
   inteiro também não tem, e o C# segue o mesmo. Conferido no GLM 1.0.3 em 12/10:
   - `glm::length`, `glm::distance`, `glm::normalize` e `glm::dot` de um `ivec2` param no
-    `static_assert` ("accepts only floating-point inputs"): o `PxSegmenti` não tem `Length()`, a não
-    ser que a 8.3 abra a exceção, e o vetor inteiro continua sem `Normalize` (4.13). Uma direção
-    unitária vem de normalizar o vetor, em `double` ou `float`.
+    `static_assert` ("accepts only floating-point inputs"): o vetor inteiro continua sem `Normalize`
+    e sem `Dot` (4.13), e uma direção unitária vem de normalizar o vetor, em `double` ou `float`. O
+    comprimento é a exceção, abaixo.
   - `glm::mix` de dois `ivec2` aceita um `t` em ponto flutuante: faz a conta no tipo do `t` e
     trunca para `int`, então `mix((1, -2), (4, -5), 0.5)` dá (2, -3). O `PointAt` inteiro existe e
     é esse. Com `t` em `float`, as coordenadas acima de 2²⁴ perdem precisão (2²⁴ + 1 vira 2²⁴); com
@@ -502,7 +502,25 @@ as sugestões em 09/10 ("ok"), com a 4.8.
   `PxSegment { PxPoint Start; PxPoint End; }`, com `Direction()` → vetor, `End - Start` sem
   normalizar, cujo comprimento é o do segmento; e `PointAt(t)` → ponto, a fórmula do `glm::mix`,
   `Start * (1 - t) + End * t`, que dá os mesmos bits nas duas pontas, como o `Lerp` (4.13).
-- Ainda abertas: a separação entre ponto e vetor (8.1) e o `Length` do inteiro (8.3).
+- **O comprimento do inteiro** (8.3), a exceção à regra acima: o comprimento de um vetor inteiro
+  quase nunca é inteiro ((3, 1) mede √10), devolver `int` arredondado perde informação em silêncio
+  (P8.5), e não ter `Length()` obriga a converter para algo comum. Então o inteiro ganha
+  `Length()` em `double` e `LengthSquared()` exato em `long`, que compara distâncias sem raiz, nas
+  duas pontas; é o modelo da Godot (`Vector2i`: `double` e `int64_t`). A Unity (`Vector2Int`) usa
+  `float` e `int`, que estoura com coordenadas grandes.
+  - No C#, `Length()`, `LengthSquared()`, `Distance` e `DistanceSquared` num bloco `#if PX_INT` do
+    `PxVec2`, sem mudar o gerador; o `PxSegmenti.Length()` vem do vetor. No C++, que não pode dar
+    métodos a um apelido do GLM, as funções `pxLength`, `pxLengthSquared`, `pxDistance` e
+    `pxDistanceSquared` para o `pxVec2i`, no `pxVec.hpp`, com as mesmas contas.
+  - O `LengthSquared()` faz a conta em 64 bits e estoura num caso só, (`int.MinValue`,
+    `int.MinValue`), que dá 2⁶³ e volta ao contrário, como o resto do inteiro (5.2).
+  - O `Distance` e o `DistanceSquared` subtraem em 64 bits, porque `b - a` em `int` volta ao
+    contrário entre pontos distantes, pelo mesmo motivo do `Contains` (5.2).
+  - O `Length()` é a raiz do `LengthSquared()` convertido para `double`: acima de 2⁵³ o quadrado
+    arredonda antes da raiz, mas dá os mesmos bits nas duas pontas.
+  - Custo: um tipo inteiro com um método que devolve ponto flutuante, e quatro funções no C++ que
+    o GLM não tem; aqui a PixieLib completa onde o GLM recusa (seção 2). Ainda não aplicado.
+- Ainda aberta: a separação entre ponto e vetor (8.1).
 
 ## 5. Consequências
 
