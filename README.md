@@ -46,7 +46,7 @@ C++20 and CMake 3.20. The CMake project is in `cpp/`:
 include(FetchContent)
 FetchContent_Declare(pixielib
     GIT_REPOSITORY https://github.com/Sakamoto0110/PixieLib.git
-    GIT_TAG v0.1.0
+    GIT_TAG v0.2.0
     SOURCE_SUBDIR cpp)
 FetchContent_MakeAvailable(pixielib)
 

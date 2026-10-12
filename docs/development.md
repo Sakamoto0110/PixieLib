@@ -125,5 +125,6 @@ A new version starts by raising the `Version` of
 `.github/workflows/publish.yml` (Actions, Publish, Run workflow) on `main`: it
 runs CI, packs, publishes to nuget.org through trusted publishing, and creates
 the tag `v<Version>` and its release. A version that exists on nuget.org cannot
-be replaced, only unlisted. After a release, the `GIT_TAG` of the README's
-`FetchContent` example moves to the new tag.
+be replaced, only unlisted. Before the run, the `GIT_TAG` of the README's
+`FetchContent` example moves to the tag the run will create, because the README
+goes into the package.
