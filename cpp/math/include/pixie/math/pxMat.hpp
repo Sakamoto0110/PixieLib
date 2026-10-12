@@ -29,8 +29,9 @@
 // first. The math is GLM's too: glm::transpose, glm::determinant, glm::translate, glm::rotate,
 // glm::scale, glm::lookAt, glm::ortho, glm::perspective, and on a mat3 the 2D ones below. The
 // projections are OpenGL's: right-handed, with the depth in [-1, 1] (1.13). The 2D has Y down, so a
-// positive angle turns clockwise on the screen; a 2D point goes through a mat3 as pxVec3(p, 1). The C# PxMat types have the same layout and the same functions,
-// with the same bits (docs/notas.md, 4.14).
+// positive angle turns clockwise on the screen; a 2D point goes through a mat3 as m * point, which
+// is (x, y, 1). The C# PxMat types have the same layout and the same functions, with the same bits
+// (docs/notas.md, 4.14).
 //
 // With GLM_FORCE_CTOR_INIT, from pixie::math, a matrix starts as the identity, as GLSL's mat4(1);
 // the default of the C# struct is zero (6.3).
@@ -73,6 +74,16 @@ template<typename T>
     requires std::is_floating_point_v<T>
 glm::mat<4, 4, T> pxOrtho2D(T width, T height) {
     return glm::ortho(T(0), width, height, T(0));
+}
+
+// A point through a mat3 (8.1): as (x, y, 1), so the translation applies, which is what tells a
+// point from a vector. It is GLM's m * vec3(x, y, 1), with the same bits as PxMat3 * PxPoint in C#.
+// A vec2 through a mat3, as (x, y, 0), waits until something needs it.
+template<typename T, glm::qualifier Q>
+    requires std::is_floating_point_v<T>
+pxPoint_t<T> operator*(const glm::mat<3, 3, T, Q>& m, pxPoint_t<T> p) noexcept {
+    glm::vec<3, T, Q> v = m * glm::vec<3, T, Q>(p.x, p.y, T(1));
+    return { v.x, v.y };
 }
 
 // The text of a matrix, column by column, as it is in memory: "((1, 0, 0), (0, 1, 0), (0, 0, 1))".

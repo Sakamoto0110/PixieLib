@@ -5,10 +5,14 @@ crosses P/Invoke and arrives in C++ as a `pxRect`, with no conversion.
 
 - Points, sizes, rectangles, regions, paddings, and RGBA and HSL colors, in `double`, `float` and
   `int`.
-- Vectors and matrices, with the 2D transforms and the 3D projections. In C++ they are
+- Vectors, segments and matrices, with the 2D transforms and the 3D projections. In C++ they are
   [GLM](https://github.com/g-truc/glm)'s; C# follows GLM's formulas, in the same order, so both
   sides give the same bits.
 - In C++ only: events with the shape of C#'s (`+=`, `-=`, and subscriptions that end on their own).
+
+A point is a position and a vector a displacement: point - point is a vector, a point or a rectangle
+moves by a vector, and a 3x3 matrix applies its translation to a point. What depends on where the
+origin is, as point + point or point * 2, does not compile.
 
 It is not an engine: no window, rendering, input or assets, and no dependency on a UI framework.
 The C# package is fully managed and calls no native code.
@@ -30,6 +34,8 @@ bool inside = screen.Contains(new PxPoint(100, 50));     // true
 var orange = new PxColorRgba(255, 128, 0);                // alpha last, 255 by default
 var turn = PxMat3.Rotate(PxMat3.Identity, Math.PI / 2);  // 2D transforms on a 3x3 matrix
 PxVec3 moved = turn * new PxVec3(1, 0, 1);                // the vector is a column: M * v
+PxVec2 step = new PxPoint(4, 6) - new PxPoint(1, 2);     // (3, 4): point - point is a vector
+double length = new PxSegment(new PxPoint(1, 2), new PxPoint(4, 6)).Length();  // 5
 ```
 
 ## C++

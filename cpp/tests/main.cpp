@@ -13,6 +13,7 @@ void TestToString();
 #ifdef PIXIE_TEST_MATH
 void TestVec();
 void TestMat();
+void TestSegment();
 #endif
 void TestCallback();
 void TestEventHandler();
@@ -31,6 +32,7 @@ int main() {
 #ifdef PIXIE_TEST_MATH
     TestVec();
     TestMat();
+    TestSegment();
 #endif
     TestCallback();
     TestEventHandler();

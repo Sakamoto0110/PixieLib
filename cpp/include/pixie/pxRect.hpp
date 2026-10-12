@@ -97,13 +97,8 @@ struct pxRect_t {
 
     friend constexpr bool operator==(const pxRect_t&, const pxRect_t&) noexcept = default;
 
-    // Moved by a point: the size stays.
-    friend constexpr pxRect_t operator+(const pxRect_t& r, pxPoint_t<T> pt) noexcept {
-        return { pxAdd(r.x, pt.x), pxAdd(r.y, pt.y), r.width, r.height };
-    }
-    friend constexpr pxRect_t operator-(const pxRect_t& r, pxPoint_t<T> pt) noexcept {
-        return { pxSub(r.x, pt.x), pxSub(r.y, pt.y), r.width, r.height };
-    }
+    // Moving is a displacement, so a rectangle moves by a vector, rect + vector, which is in
+    // <pixie/math/pxVec.hpp> with the vectors (8.1). Putting it somewhere is setting x and y.
 
 private:
     using W = pxWide_t<T>;

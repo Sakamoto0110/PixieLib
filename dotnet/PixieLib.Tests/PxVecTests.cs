@@ -47,6 +47,26 @@ internal static class PxVecTests
         Check.That((PxPointf)(PxVec2f)new PxPointf(0.1f, 7) == new PxPointf(0.1f, 7));
         Check.That(Check.Explicit<PxPoint, PxVec2>() && !Check.Implicit<PxPoint, PxVec2>() && Check.Explicit<PxVec2i, PxPointi>());
 
+        // The length of an integer vec2, which GLM refuses (8.3): in double, and squared in long. The
+        // same values as the C++ tests of pxLength and the others.
+        Check.That(new PxVec2i(3, 4).Length() == 5 && new PxVec2i(3, 4).LengthSquared() == 25);
+        Check.That(new PxVec2i(3, 1).Length() == 3.1622776601683795 && new PxVec2i(3, -1).LengthSquared() == 10);
+        // 64 bits, where int would wrap: the square of int.MinValue is 2^62.
+        Check.That(new PxVec2i(int.MinValue, 0).LengthSquared() == 4611686018427387904);
+        // The one length whose square passes long.MaxValue: 2^63 wraps around (5.2), the length does not.
+        Check.That(new PxVec2i(int.MinValue, int.MinValue).LengthSquared() == long.MinValue);
+        Check.That(new PxVec2i(int.MinValue, int.MinValue).Length() == 3037000499.97605);
+        // The distance takes the difference in 64 bits: from int.MinValue to int.MaxValue is 2^32 - 1,
+        // which int would wrap to -1. Its square passes long.MaxValue and wraps.
+        Check.That(PxVec2i.Distance(new PxVec2i(int.MinValue, 0), new PxVec2i(int.MaxValue, 0)) == 4294967295);
+        Check.That(PxVec2i.DistanceSquared(new PxVec2i(int.MinValue, 0), new PxVec2i(int.MaxValue, 0)) == -8589934591);
+        Check.That(PxVec2i.Distance(new PxVec2i(1, 1), new PxVec2i(4, 5)) == 5 && PxVec2i.DistanceSquared(new PxVec2i(4, 5), new PxVec2i(1, 1)) == 25);
+        // Beyond 2^53 each square rounds in double: 94906267^2 is odd and above it.
+        Check.That(new PxVec2i(94906267, 0).Length() == 94906267);
+        Check.That(PxVec2i.Distance(PxVec2i.Zero, new PxVec2i(-123456789, 987654321)) == 995340462.62581);
+        // And the root of the double sum, not of the exact one, which would be 2392612263.308584.
+        Check.That(new PxVec2i(1721854523, -1661267722).Length() == 2392612263.3085847);
+
         // The dot product of a vec4 adds in pairs, (x + y) + (z + w), as GLM does; with 1e16, adding 1
         // is lost, and adding in sequence would give 1.
         Check.That(PxVec4.Dot(new PxVec4(1e16, 1, -1e16, 1), PxVec4.One) == 0);

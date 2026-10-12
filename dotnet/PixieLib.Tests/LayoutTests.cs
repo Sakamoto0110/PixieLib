@@ -40,6 +40,11 @@ internal static class LayoutTests
         Layout<PxVec4f>(16, ("x", 0), ("y", 4), ("z", 8), ("w", 12));
         Layout<PxVec4i>(16, ("x", 0), ("y", 4), ("z", 8), ("w", 12));
 
+        // The segment: the two points, one after the other (pxSegment.hpp).
+        Layout<PxSegment>(32, ("start", 0), ("end", 16));
+        Layout<PxSegmentf>(16, ("start", 0), ("end", 8));
+        Layout<PxSegmenti>(16, ("start", 0), ("end", 8));
+
         // The float ones are System.Numerics' in memory, so the conversion is a copy of the same bytes.
         Check.That(Unsafe.SizeOf<PxVec3f>() == Unsafe.SizeOf<System.Numerics.Vector3>());
         var v = new System.Numerics.Vector3(1, 2, 3);

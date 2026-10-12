@@ -171,6 +171,13 @@ void TestMat() {
              "(0.00000000000000006123233995736766, 1, 1)");
     pxMat3 trs = glm::scale(glm::rotate(glm::translate(pxMat3(1.0), pxVec2(10, 20)), pi / 2), pxVec2(2, 3));
     PX_CHECK(trs * pxVec3(1, 1, 1) == pxVec3(7, 22, 1));
+    // A point goes through as (x, y, 1), so the translation applies (8.1).
+    PX_CHECK(trs * pxPoint(1, 1) == pxPoint(7, 22));
+    PX_CHECK(glm::translate(pxMat3(1.0), pxVec2(3, 4)) * pxPoint(1, 1) == pxPoint(4, 5));
+    PX_CHECK(glm::translate(pxMat3f(1.0f), pxVec2f(3, 4)) * pxPointf(1, 1) == pxPointf(4, 5));
+    // The same bits as the translation column of glm::translate(N, (0.3, -1.7)), and as C#.
+    PX_CHECK((N * pxPoint(0.3, -1.7)).ToString() == "(-4, 1.9900000000000002)");
+    PX_CHECK((pxMat3f(N) * pxPointf(0.3f, -1.7f)).ToString() == "(-4, 1.99)");
     // GLM's shearX(m, k) adds k * x to y, and shearY(m, k) adds k * y to x.
     PX_CHECK(glm::shearX(pxMat3(1.0), 0.5) * pxVec3(2, 3, 1) == pxVec3(2, 4, 1));
     PX_CHECK(glm::shearY(pxMat3(1.0), 0.5) * pxVec3(2, 3, 1) == pxVec3(3.5, 3, 1));

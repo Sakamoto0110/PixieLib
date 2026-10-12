@@ -6,6 +6,13 @@
 
 #include "check.hpp"
 
+namespace {
+
+template<typename R, typename P>
+concept Movable = requires(R r, P p) { r + p; } || requires(R r, P p) { r - p; };
+
+}  // namespace
+
 void TestRect() {
     pxRect r{ 1, 2, 3, 4 };
     PX_CHECK(r.Right() == 4 && r.Bottom() == 6);
@@ -34,9 +41,8 @@ void TestRect() {
     PX_CHECK(pxRecti(0, 0, 3, -3).Center() == pxPointi(1, -1));
     PX_CHECK(pxRecti(INT32_MAX - 1, 0, 4, 2).Center() == pxPointi(INT32_MIN, 1));
 
-    // Moved by a point.
-    PX_CHECK(r + pxPoint(1, -1) == pxRect(2, 1, 3, 4));
-    PX_CHECK(r - pxPoint(1, -1) == pxRect(0, 3, 3, 4));
+    // A rectangle moves by a vector, not by a point (8.1); rect + vector is in pxVec.test.cpp.
+    static_assert(!Movable<pxRect, pxPoint> && !Movable<pxRecti, pxPointi>);
 
     // Contains in int32_t computes x + width in 64 bits, so a rectangle near the end works (5.2),
     // while Right wraps around, as in C#.

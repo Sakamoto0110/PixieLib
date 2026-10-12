@@ -6,7 +6,7 @@ namespace PixieLib;
 
 // A 3x3 matrix in __T__, made of three columns. Same layout as pxMat3 in C++, which is the mat3 of GLM
 // (docs/layout.md), with the conventions of PxMat4: column-major, M * v (1.12), GLM's names and bits
-// (docs/notas.md, 4.14). It is also the matrix of the 2D transforms (6.6), with a point as (x, y, 1).
+// (docs/notas.md, 4.14). It is also the matrix of the 2D transforms (6.6): m * point is (x, y, 1).
 // System.Numerics has no 3x3 matrix, so there is no conversion with it.
 //
 // The default is zero; a matrix of C++ starts as the identity (6.3), which here is Identity.
@@ -106,6 +106,15 @@ public struct PxMat3__S__ : IEquatable<PxMat3__S__>
         new PxVec3__S__(PxVec3__S__.Dot(m.c0, v), PxVec3__S__.Dot(m.c1, v), PxVec3__S__.Dot(m.c2, v));
 
     public static PxMat3__S__ operator *(PxMat3__S__ a, PxMat3__S__ b) => new PxMat3__S__(a * b.c0, a * b.c1, a * b.c2);
+
+    // A point through the matrix (8.1): as (x, y, 1), so the translation applies, which is what tells a
+    // point from a vector. The same bits as m * vec3(x, y, 1) in GLM, as pxMat3 * pxPoint in C++. A
+    // PxVec2 through it, as (x, y, 0), waits until something needs it.
+    public static PxPoint__S__ operator *(PxMat3__S__ m, PxPoint__S__ p)
+    {
+        PxVec3__S__ v = m * new PxVec3__S__(p.X, p.Y, 1);
+        return new PxPoint__S__(v.X, v.Y);
+    }
 
     public static PxMat3__S__ Transpose(PxMat3__S__ m) => new PxMat3__S__(
         new PxVec3__S__(m.c0.X, m.c1.X, m.c2.X),

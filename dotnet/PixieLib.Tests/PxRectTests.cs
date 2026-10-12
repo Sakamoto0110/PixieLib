@@ -35,9 +35,11 @@ internal static class PxRectTests
         moved.Size = new PxSize(7, 8);
         Check.That(moved == new PxRect(5, 6, 7, 8));
 
-        // Moved by a point.
-        Check.That(r + new PxPoint(1, -1) == new PxRect(2, 1, 3, 4));
-        Check.That(r - new PxPoint(1, -1) == new PxRect(0, 3, 3, 4));
+        // Moved by a vector, not by a point (8.1); the size stays.
+        Check.That(r + new PxVec2(1, -1) == new PxRect(2, 1, 3, 4));
+        Check.That(r - new PxVec2(1, -1) == new PxRect(0, 3, 3, 4));
+        Check.That(new PxRecti(int.MaxValue, 0, 1, 1) + new PxVec2i(1, 0) == new PxRecti(int.MinValue, 0, 1, 1));
+        Check.That(!Check.Operator<PxRect, PxPoint>("op_Addition") && !Check.Operator<PxRect, PxPoint>("op_Subtraction"));
 
         // Contains in int computes X + Width in 64 bits, so a rectangle near the end works (5.2), while
         // Right wraps around, as in C++.

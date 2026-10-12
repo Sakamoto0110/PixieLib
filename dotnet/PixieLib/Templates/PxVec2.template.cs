@@ -90,6 +90,36 @@ public struct PxVec2__S__ : IEquatable<PxVec2__S__>
     public static PxVec2 Lerp(PxVec2 a, PxVec2 b, double amount) => a * (1 - amount) + b * amount;
 #endif
 
+#if PX_INT
+    // The length of an integer vector, which GLM refuses (glm::length asks for floating point): it is
+    // seldom an integer, (3, 1) measures the root of 10, so it comes in double, and the squared one,
+    // exact, in long, which compares distances without a root (8.3). In C++, pxLength,
+    // pxLengthSquared, pxDistance and pxDistanceSquared, with the same bits.
+    //
+    // The squares are computed in 64 bits, and so is the difference of Distance, which in int would
+    // wrap around. The squared length wraps around past long.MaxValue, as the rest of the integers
+    // (5.2): the length only at (int.MinValue, int.MinValue), the distance between points about 3
+    // billion apart. The lengths in double square each side in double, exact while a square fits in
+    // 53 bits and rounded beyond, as in C++; they do not wrap.
+    public readonly double Length() => Hypot(x, y);
+    public readonly long LengthSquared() => unchecked((long)x * x + (long)y * y);
+    public static double Distance(PxVec2i a, PxVec2i b) => Hypot((long)b.x - a.x, (long)b.y - a.y);
+
+    public static long DistanceSquared(PxVec2i a, PxVec2i b)
+    {
+        long dx = (long)b.x - a.x;
+        long dy = (long)b.y - a.y;
+        return unchecked(dx * dx + dy * dy);
+    }
+
+    private static double Hypot(long dx, long dy)
+    {
+        double x = dx;
+        double y = dy;
+        return Math.Sqrt(x * x + y * y);
+    }
+#endif
+
     // GLM's min and max: (b < a) ? b : a, component by component.
     public static PxVec2__S__ Min(PxVec2__S__ a, PxVec2__S__ b) => new PxVec2__S__(b.x < a.x ? b.x : a.x, b.y < a.y ? b.y : a.y);
     public static PxVec2__S__ Max(PxVec2__S__ a, PxVec2__S__ b) => new PxVec2__S__(a.x < b.x ? b.x : a.x, a.y < b.y ? b.y : a.y);

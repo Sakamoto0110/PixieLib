@@ -71,6 +71,20 @@ internal static class Check
 
     public static bool Explicit<TFrom, TTo>() => HasOperator<TFrom, TTo>("op_Explicit");
 
+    // Whether an operator of either operand's type takes (TA, TB), as op_Addition: those are the only
+    // candidates C# looks at, so with no implicit conversion between them, a false here means that
+    // a + b does not compile.
+    public static bool Operator<TA, TB>(string name) =>
+        typeof(TA).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Concat(typeof(TB).GetMethods(BindingFlags.Public | BindingFlags.Static))
+            .Any(m => m.Name == name && m.GetParameters() is { Length: 2 } p
+                && p[0].ParameterType == typeof(TA) && p[1].ParameterType == typeof(TB));
+
+    // The same for a unary operator, as op_UnaryNegation.
+    public static bool Operator<T>(string name) =>
+        typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Any(m => m.Name == name && m.GetParameters() is { Length: 1 } p && p[0].ParameterType == typeof(T));
+
     private static bool HasOperator<TFrom, TTo>(string name) =>
         typeof(TFrom).GetMethods(BindingFlags.Public | BindingFlags.Static)
             .Concat(typeof(TTo).GetMethods(BindingFlags.Public | BindingFlags.Static))

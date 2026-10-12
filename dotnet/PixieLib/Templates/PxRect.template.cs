@@ -124,9 +124,9 @@ public struct PxRect__S__ : IEquatable<PxRect__S__>
     public readonly PxRect__S__ Inflate(PxPadding__S__ p) =>
         new PxRect__S__(x - p.Left, y - p.Top, width + p.Horizontal, height + p.Vertical);
 
-    // Moved by a point: the size stays.
-    public static PxRect__S__ operator +(PxRect__S__ r, PxPoint__S__ pt) => new PxRect__S__(r.x + pt.X, r.y + pt.Y, r.width, r.height);
-    public static PxRect__S__ operator -(PxRect__S__ r, PxPoint__S__ pt) => new PxRect__S__(r.x - pt.X, r.y - pt.Y, r.width, r.height);
+    // Moved by a vector, a displacement (8.1): the size stays. Putting it somewhere is setting Location.
+    public static PxRect__S__ operator +(PxRect__S__ r, PxVec2__S__ v) => new PxRect__S__(r.x + v.X, r.y + v.Y, r.width, r.height);
+    public static PxRect__S__ operator -(PxRect__S__ r, PxVec2__S__ v) => new PxRect__S__(r.x - v.X, r.y - v.Y, r.width, r.height);
 
     private readonly Wide Right64 => (Wide)x + width;
     private readonly Wide Bottom64 => (Wide)y + height;

@@ -151,6 +151,13 @@ internal static class PxMatTests
         PxMat3 trs = PxMat3.Scale(PxMat3.Rotate(PxMat3.Translate(PxMat3.Identity, new PxVec2(10, 20)), Math.PI / 2), new PxVec2(2, 3));
         Check.That(trs * new PxVec3(1, 1, 1) == new PxVec3(7, 22, 1));
         Check.That(trs * new PxVec3((PxVec2)new PxPoint(1, 1), 1) == new PxVec3(7, 22, 1));
+        // A point goes through as (x, y, 1), so the translation applies (8.1).
+        Check.That(trs * new PxPoint(1, 1) == new PxPoint(7, 22));
+        Check.That(PxMat3.Translate(PxMat3.Identity, new PxVec2(3, 4)) * new PxPoint(1, 1) == new PxPoint(4, 5));
+        Check.That(PxMat3f.Translate(PxMat3f.Identity, new PxVec2f(3, 4)) * new PxPointf(1, 1) == new PxPointf(4, 5));
+        // The same bits as the translation column of Translate(N, (0.3, -1.7)), and as C++.
+        Check.Text(N * new PxPoint(0.3, -1.7), "(-4, 1.9900000000000002)");
+        Check.Text((PxMat3f)N * new PxPointf(0.3f, -1.7f), "(-4, 1.99)");
         // GLM's ShearX(m, k) adds k * x to y, and ShearY(m, k) adds k * y to x.
         Check.That(PxMat3.ShearX(PxMat3.Identity, 0.5) * new PxVec3(2, 3, 1) == new PxVec3(2, 4, 1));
         Check.That(PxMat3.ShearY(PxMat3.Identity, 0.5) * new PxVec3(2, 3, 1) == new PxVec3(3.5, 3, 1));
