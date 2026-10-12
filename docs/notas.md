@@ -472,6 +472,18 @@ as sugestões em 09/10 ("ok"), com a 4.8.
     (`layout.md`, 3), e a PixieLib não escreve a sua: no `net481`, os testes esperam o valor do .NET
     Framework (commit `5777471`).
 
+### 4.17 Segmento e raio (8.2, 12/10)
+
+- A engine vai precisar de segmentos (desenho de debug, gizmos, bordas, colisão) e de raios
+  (picking no viewport do editor). Entram primeiro o segmento e o raio; a reta infinita (`PxLine`,
+  para recorte e semiplanos) só quando algo pedir.
+- **[proposta]** A forma, nas três precisões do gerador, com o `PxSegmenti` para linhas em pixels:
+  - `PxSegment { PxPoint Start; PxPoint End; }`, com `Direction()` → vetor, `End - Start`;
+    `PointAt(t)` → ponto, `Start + (End - Start) * t`; e o `Length()` (8.3).
+  - `PxRay { PxPoint Origin; PxVec2 Direction; }`.
+- Ainda abertas: a separação entre ponto e vetor (8.1), o `Length` do inteiro (8.3), onde o
+  segmento fica no C++ e o `PointAt` inteiro (8.4), e a direção e a dimensão do raio (8.5).
+
 ## 5. Consequências
 
 - **No InteractiveEditor** (aplicado em 09/10, no commit `424f6d0` da `rework-claude` dele, que

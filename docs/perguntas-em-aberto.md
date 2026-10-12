@@ -1,6 +1,6 @@
 # Perguntas em aberto
 
-Estado de 09/10/2026. As respondidas saem daqui e vão para `notas.md`, citadas pelo número. Os
+Estado de 12/10/2026. As respondidas saem daqui e vão para `notas.md`, citadas pelo número. Os
 números não são reaproveitados. A sugestão, quando há, vem no fim de cada pergunta, e dá para
 responder pelo número: "1.7: sim".
 
@@ -35,3 +35,113 @@ Todas respondidas em 09/10, da 6.1 à 6.7 (`notas.md`, seções 4.13 a 4.15).
 Todas respondidas em 09/10, da 7.1 à 7.4, feitas na conversa: a versão 0.1.0, a licença MIT, a
 publicação por um workflow que o void dispara, e o CI com o Windows antes do deploy (`notas.md`,
 seção 4.16).
+
+## 8. Segmento, raio e a separação entre ponto e vetor
+
+A engine vai precisar de segmentos (desenho de debug, gizmos, bordas, colisão) e de raios (picking
+no viewport do editor), e pensar no primitivo de linha trouxe a pergunta de separar o ponto do
+vetor. A 8.2, segmento e raio primeiro, foi respondida em 12/10 (`notas.md`, seção 4.17). O que
+segue foi conferido no código e testado em 12/10, fora do repositório: o C# no .NET 10, o C++ no
+g++ 13 com o GLM 1.0.3.
+
+1. **Separar o ponto (posição) do vetor (deslocamento)?** A distinção é *onde* contra *quanto e para
+   onde*: o ponto diz onde algo está, o vetor quanto e para onde algo anda, o tamanho quanto algo
+   ocupa. Fazem sentido ponto ± vetor → ponto, ponto − ponto → vetor, vetor ± vetor e vetor × k →
+   vetor, ponto ± tamanho → ponto, e tamanho ± tamanho e tamanho × k → tamanho. Não fazem ponto +
+   ponto, ponto × k nem `Dot` de pontos: mudar a origem do mundo muda a resposta (a bola em
+   (100, 50) vezes 3 vai a (300, 150); com a origem 100 à direita, ela está em (0, 50) e vai a
+   (0, 150), outro lugar da tela), e ponto − ponto não muda. A exceção é o `Lerp(a, b, t)`: os pesos
+   somam 1 e a origem se cancela, então ele entra como operação própria do ponto, no lugar da soma
+   solta. O motivo técnico mais forte é a matriz: na `mat3`, o ponto é `(x, y, 1)` e leva a
+   translação, o vetor é `(x, y, 0)` e não leva, e com dois tipos `m * ponto` e `m * vetor` fazem a
+   coisa certa.
+
+   **O que o código já tem.** Os tipos já são separados nas duas linguagens, não só no C++: o
+   `PxPoint` e o `PxVec2` do C# são structs distintas, e a conversão entre eles é explícita (6.7,
+   seção 4.15). O que falta é a semântica: o ponto ainda tem a aritmética que veio do editor
+   (ponto + ponto, ponto − ponto → ponto, × k, / k e o − de um operando); no `core`, quem faz o
+   papel do deslocamento é o tamanho ("a point moves by a size", 4.9); e mover um retângulo é
+   `rect + ponto` (5.8).
+
+   **O que os testes mostraram sobre a conversão implícita** de ponto para vetor, que a proposta da
+   passagem (seção 4) pedia:
+   - **C#**: `p + q` compila. O candidato é o `operator+(PxPoint, PxVec2)` do próprio ponto, que
+     aceita o `q` convertido, e devolve um ponto, (4, 6) para (1, 2) e (3, 4). Também compilam
+     `v + p`, `v * p` (produto por componente), `PxVec2.Dot(p, q)` e `PxVec2.Lerp(p, q, t)`, este
+     devolvendo um vetor. Só são recusados `p * 3`, `-p` e `p == q` (sem um `==` do ponto). Um
+     `[Obsolete("...", true)] operator+(PxPoint, PxPoint)` fecha o `p + q` (CS0619), o `= delete` do
+     C#, mas não os outros.
+   - **C++**: com o operador ponto + vetor como `friend` que não é modelo, o estilo do `pxPoint.hpp`
+     hoje, `p + q` compila; como modelo, não. `glm::dot(p, q)` e `v + p` não compilam, porque as
+     funções do GLM são modelos e não convertem. Mas a conversão implícita teria de estar no
+     `pxPoint_t`, e o `pxPoint.hpp` é do `core`, sem o GLM: ela só existe se o `core` incluir o GLM,
+     o que desfaz o `PIXIE_MATH` (4.13). O mesmo vale para ponto − ponto → vetor: o `core` não sabe
+     dizer o vetor.
+   - Com a conversão implícita, então, as duas pontas diriam coisas diferentes: o C# aceita o `Dot`
+     de dois pontos, o C++ não.
+
+   **Sugestão**: separar, mas com a conversão explícita que já existe (6.7), e não implícita.
+   - O ponto perde ponto + ponto, × k, / k e o − de um operando; ponto − ponto passa a dar um vetor;
+     ganha ponto ± vetor → ponto e o `Lerp` de dois pontos. Ponto ± tamanho → ponto fica.
+   - No C++, o que envolve o vetor vai para o `pxVec.hpp`, em operadores modelo, para que nenhuma
+     conversão entre por baixo; sem o `PIXIE_MATH`, ponto − ponto deixa de compilar.
+   - Mover um retângulo passa a ser `rect ± vetor`, o que desfaz a 5.8; no C++, também no
+     `pxVec.hpp`.
+   - `mat3 * ponto` com `w = 1`, nas duas pontas, o que desfaz a parte da 6.7 que dizia "sem função
+     para transformar um ponto". O `mat3 * vec2` com `w = 0` fica para quando pedirem: no C++ os
+     dois são tipos do GLM, e um `operator*` deles fora do namespace `glm` não é achado pelo ADL e
+     some dentro de qualquer namespace que declare outro `operator*`.
+   - Custo: quebra a API da 0.1.0 (abaixo da 1.0 ela pode mudar, 7.1) e o editor: o que usar
+     ponto + ponto, ponto × k ou `rect + ponto` deixa de compilar (não conferido, o editor é outro
+     repositório). Nos testes, o grosso está no `PxPointTests.cs` e no `pxPoint.test.cpp`. O código
+     que só quer dois números escreve `(PxVec2)p`, e o layout usa retângulos e tamanhos, não
+     vetores. Desempenho: nenhum, o layout de memória é o mesmo.
+
+2. Respondida em 12/10: o segmento e o raio primeiro; a reta infinita, quando algo pedir
+   (`notas.md`, seção 4.17).
+
+3. **`Length()` nos tipos inteiros** (`PxVec2i`, `PxSegmenti`)? O comprimento de um vetor inteiro
+   quase nunca é inteiro: (3, 1) mede √10 ≈ 3,162. As opções: devolver `int` arredondado, que perde
+   informação em silêncio (contra a P8.5); não ter `Length()`, como hoje; ou `Length()` em `double`
+   e `LengthSquared()` exato em `long`, que compara distâncias sem raiz.
+
+   **O que o código já tem.** A falta do `Length` no inteiro tem motivo registrado: "o inteiro não
+   tem `Dot`, `Cross`, `Length` nem `Normalize`, como no GLM" (4.13, aceito na 6.3). No C++,
+   `glm::length` e `glm::dot` de um `ivec2` param no `static_assert` ("accepts only floating-point
+   inputs", testado em 12/10). Pôr o `Length` só no C# deixa uma operação sem par no C++; nas duas
+   pontas, o C++ ganha funções próprias fora do GLM.
+
+   **As referências**, conferidas no código delas em 12/10: a Godot (`Vector2i`) tem `length()` em
+   `double` e `length_squared()` em `int64_t`; a Unity (`Vector2Int`) tem `magnitude` em `float` e
+   `sqrMagnitude` em `int`, que estoura com coordenadas grandes.
+
+   **Detalhes, se entrar:**
+   - O `LengthSquared()` em `long` estoura num caso só, (`int.MinValue`, `int.MinValue`), que dá
+     2⁶³; volta ao contrário, como o resto do inteiro (5.2).
+   - O `Distance` e o `DistanceSquared` subtraem em 64 bits: `b - a` em `int` volta ao contrário
+     entre pontos distantes, e o `Contains` já calcula as bordas em 64 bits pelo mesmo motivo (5.2).
+   - O `Length()` é `Math.Sqrt((double)LengthSquared())`: acima de 2⁵³ o quadrado arredonda antes
+     da raiz, mas dá os mesmos bits nas duas pontas se o C++ fizer o mesmo.
+   - O gerador não muda: um bloco `#if PX_INT` no modelo basta, porque ele só define o `PX_INT`.
+
+   **Sugestão**: a terceira opção, nas duas pontas: no C#, `Length()`, `LengthSquared()`,
+   `Distance` e `DistanceSquared` no bloco `PX_INT` do `PxVec2`; no C++, `pxLength`,
+   `pxLengthSquared`, `pxDistance` e `pxDistanceSquared` para o `pxVec2i` no `pxVec.hpp`, com as
+   mesmas contas. Custo: um tipo inteiro com um método que devolve ponto flutuante, e quatro funções
+   no C++ que o GLM não tem (a seção 2 das notas diz que a PixieLib não inventa a matemática; aqui
+   ela completa onde o GLM recusa). O `Dot` inteiro continua de fora.
+
+4. **Onde o segmento fica, e o `PointAt` inteiro.** O `Direction()` devolve um vetor, então no C++
+   o segmento depende do GLM e vai para o `pixie::math`, ao lado do `pxVec.hpp`, e não para o
+   `core` com o ponto e o retângulo. No inteiro, `Start + (End - Start) * t` com `t` em `double` não
+   compila (o escalar do inteiro é inteiro, 5.1). **Sugestão**: o segmento e o raio no
+   `pixie::math`; o `PointAt` só em `double` e `float` (`PX_FLOATING`), e o `PxSegmenti` com
+   `Start`, `End`, `Direction()` e o que a 8.3 decidir.
+
+5. **O raio.** Duas coisas que a 8.2 não diz: se a direção é normalizada, e se o picking do editor é
+   em 2D. Uma struct com campos públicos e layout de contrato não guarda invariante, e normalizar
+   num construtor esconde o custo e o caso do vetor zero. Se o viewport do editor for 3D, o raio
+   precisa de um ponto 3D, que não existe, e o nome `PxRay` em 2D atrapalha o 3D depois (os vetores
+   são `PxVec2` e `PxVec3`). **Sugestão**: a direção como veio, sem normalizar, com
+   `PointAt(t) = Origin + Direction * t`, e o raio em 2D agora, se o picking for 2D; se for 3D,
+   decidir o ponto 3D antes.
