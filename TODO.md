@@ -20,7 +20,7 @@
 
 **Indexing:** include
 
-**Last promotion decision:** 2026-10-12
+**Last promotion decision:** 2026-10-13
 
 ## Purpose and admission rule
 
@@ -39,7 +39,31 @@ entry may keep an explicit gate after promotion.
 
 ## Current promoted work
 
-None as of 2026-10-12.
+### `PXL-TODO-002` — Keep the events' Forward links sound across modules
+
+**Status:** in-progress
+
+**Source:** owner decision on 2026-10-13, to apply the session's
+recommendations for the events; the defects are
+[EVENTS-ISSUE-001 and EVENTS-ISSUE-002](docs/modules/events/ISSUES.md)
+
+**Accepted scope:** a handler tells a `Forward` link apart by a field of its
+slot instead of by the type of a callable, so that a handler linked in one
+module (a DLL, or a shared library that hides its symbols) can be copied,
+moved, and checked for loops in another; `-=` with a handler skips links, as
+`+=` does; a test with a second module, built as a shared library that hides
+its symbols; the events reference states what equality holds across modules.
+Out of scope: making callbacks built in different modules compare equal.
+
+**Dependencies and gates:** none.
+
+**Completion criteria:** both issues reproduced before the fix and fixed; the
+C++ tests pass on g++ with the sanitizers, on Clang, and on MSVC in CI; the new
+tests fail on deliberately broken copies, the code before the fix among them;
+the events reference, manifest, and issues describe the result; the completion
+is archived.
+
+**Breakdown:** none
 
 `PXL-TODO-001` (adopt the documentation policy) completed on 2026-10-12. Its
 entry, breakdown, and verification are preserved in the

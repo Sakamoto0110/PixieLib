@@ -49,4 +49,4 @@ Runtime scenarios: none
   [PXL-ARCHIVE-001](../../archive/decision-notes-2026-10-12.md), section 4.6;
   the 2023 code it was ported from, and its three bugs, are in
   [PXL-ARCHIVE-005](../../archive/diagnosis-2023-code-2026-10-02.md).
-- No on-demand surface exists yet.
+- [`ISSUES.md`](ISSUES.md): the confirmed defects.
