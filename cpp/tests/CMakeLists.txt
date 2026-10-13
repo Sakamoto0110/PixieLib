@@ -12,8 +12,17 @@ add_executable(pixie_tests
     pxEventHandler.test.cpp
     pxSubscription.test.cpp
     pxEvent.test.cpp
+    pxEventsAcrossModules.test.cpp
 )
 target_link_libraries(pixie_tests PRIVATE pixie::pixie pixie::events)
+
+# A second module for the events, a shared library that hides its symbols as a DLL does, so it has
+# its own copy of each type's tag (pxEventsOtherModule.hpp).
+add_library(pixie_tests_module SHARED pxEventsOtherModule.cpp)
+target_link_libraries(pixie_tests_module PRIVATE pixie::events)
+target_compile_definitions(pixie_tests_module PRIVATE PX_OTHER_MODULE_BUILD)
+set_target_properties(pixie_tests_module PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
+target_link_libraries(pixie_tests PRIVATE pixie_tests_module)
 
 if(PIXIE_MATH)
     target_sources(pixie_tests PRIVATE pxVec.test.cpp pxMat.test.cpp pxSegment.test.cpp)
@@ -27,8 +36,10 @@ endif()
 # does not fuse with its default /fp:precise.
 if(MSVC)
     target_compile_options(pixie_tests PRIVATE /W4 /WX /permissive-)
+    target_compile_options(pixie_tests_module PRIVATE /W4 /WX /permissive-)
 else()
     target_compile_options(pixie_tests PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Werror -ffp-contract=off)
+    target_compile_options(pixie_tests_module PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Werror)
 endif()
 
 add_test(NAME pixie_tests COMMAND pixie_tests)

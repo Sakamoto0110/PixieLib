@@ -104,16 +104,16 @@ private:
     struct Slot {
         std::uint64_t id;
         Callback callback;
+        // The target, when the slot is a link added by Forward, whose callback is then empty. The
+        // target keeps the subscription of the slot, so the link ends with it, and fixes this
+        // pointer when it moves. A link is told apart here and not by the type of a callable,
+        // because each module (a DLL, or a shared library that hides its symbols) has its own tag
+        // per type, and a handler linked in one module may be copied or moved in another.
+        pxEventHandler* forward;
         bool alive;
 
-        Slot(std::uint64_t i, Callback&& c) noexcept : id(i), callback(std::move(c)), alive(true) {}
-    };
-
-    // The callback that Forward adds. The target keeps the subscription of it, so the link ends
-    // with the target, and fixes the pointer here when it moves (Retarget).
-    struct ForwardBinding {
-        pxEventHandler* target;
-        void operator()(pxEventArg<TArgs>... args) const { target->Dispatch(args...); }
+        Slot(std::uint64_t i, Callback&& c, pxEventHandler* f) noexcept
+            : id(i), callback(std::move(c)), forward(f), alive(true) {}
     };
 
     // One per running Invoke, on its stack, so the handler can tell each of them that it died.
@@ -145,19 +145,19 @@ private:
         return i < m_slots.size() ? m_slots[i] : m_pending[i - m_slots.size()];
     }
 
-    std::uint64_t Append(Callback&& callback) {
+    std::uint64_t Append(Callback&& callback, pxEventHandler* forward = nullptr) {
         // During an Invoke, or while an earlier merge is still owed, new callbacks wait in
         // m_pending; ids keep growing along m_slots and then m_pending.
         std::vector<Slot>& target = (m_depth > 0 || !m_pending.empty()) ? m_pending : m_slots;
         const std::uint64_t id = m_nextId++;
-        target.emplace_back(id, std::move(callback));
+        target.emplace_back(id, std::move(callback), forward);
         ++m_alive;
         return id;
     }
 
-    static bool IsForward(const Slot& slot) noexcept {
-        return slot.callback.template Target<ForwardBinding>() != nullptr;
-    }
+    // A link is not a callback: copies and += with a handler do not carry it, and -= does not
+    // find it.
+    static bool IsCallback(const Slot& slot) noexcept { return slot.alive && slot.forward == nullptr; }
 
     // Ids grow along m_slots and then m_pending.
     Slot* FindById(std::uint64_t id) noexcept {
@@ -222,8 +222,8 @@ pxEventHandler<TArgs...>& pxEventHandler<TArgs...>::operator=(const pxEventHandl
     std::uint64_t id = m_nextId;
     for (std::size_t i = 0; i < o.Size(); ++i) {
         const Slot& slot = o.At(i);
-        if (slot.alive && !IsForward(slot))
-            slots.emplace_back(id++, Callback(slot.callback));
+        if (IsCallback(slot))
+            slots.emplace_back(id++, Callback(slot.callback), nullptr);
     }
 
     // Nothing throws from here on. The old callbacks die last, with the handler consistent.
@@ -259,7 +259,7 @@ void pxEventHandler<TArgs...>::Join(const pxEventHandler& o) {
     const std::size_t size = o.Size();
     for (std::size_t i = 0; i < size; ++i) {
         const Slot& slot = o.At(i);
-        if (slot.alive && !IsForward(slot))
+        if (IsCallback(slot))
             Append(Callback(slot.callback));
     }
 }
@@ -273,7 +273,7 @@ bool pxEventHandler<TArgs...>::Forward(pxEventHandler& target) {
     // Linked where it lives, in the vector, instead of moved in from a temporary.
     pxSubscription& link = target.m_incoming.emplace_back();
     try {
-        Link(link, Append(Callback(ForwardBinding{ &target })));
+        Link(link, Append(Callback(), &target));
     } catch (...) {
         target.m_incoming.pop_back();
         throw;
@@ -299,10 +299,7 @@ bool pxEventHandler<TArgs...>::Reaches(const pxEventHandler& to) const noexcept 
     // Forward refuses loops, so this walk always ends.
     for (std::size_t i = 0; i < Size(); ++i) {
         const Slot& slot = At(i);
-        if (!slot.alive)
-            continue;
-        const ForwardBinding* link = slot.callback.template Target<ForwardBinding>();
-        if (link != nullptr && (link->target == &to || link->target->Reaches(to)))
+        if (slot.alive && slot.forward != nullptr && (slot.forward == &to || slot.forward->Reaches(to)))
             return true;
     }
     return false;
@@ -312,7 +309,7 @@ template<typename... TArgs>
 bool pxEventHandler<TArgs...>::Remove(const Callback& callback) {
     for (std::size_t i = Size(); i-- > 0;) {
         Slot& slot = At(i);
-        if (slot.alive && slot.callback == callback) {
+        if (IsCallback(slot) && slot.callback == callback) {
             Kill(slot);
             Compact();
             return true;
@@ -326,10 +323,10 @@ bool pxEventHandler<TArgs...>::Remove(const pxEventHandler& o) {
     std::vector<std::size_t> mine;
     std::vector<std::size_t> theirs;
     for (std::size_t i = 0; i < Size(); ++i)
-        if (At(i).alive)
+        if (IsCallback(At(i)))
             mine.push_back(i);
     for (std::size_t i = 0; i < o.Size(); ++i)
-        if (o.At(i).alive)
+        if (IsCallback(o.At(i)))
             theirs.push_back(i);
     if (theirs.empty() || theirs.size() > mine.size())
         return false;
@@ -363,7 +360,10 @@ void pxEventHandler<TArgs...>::Dispatch(pxEventArg<TArgs>... args) {
             Slot& slot = m_slots[i];
             if (!slot.alive)
                 continue;
-            slot.callback.Call(args...);
+            if (slot.forward != nullptr)
+                slot.forward->Dispatch(args...);
+            else
+                slot.callback.Call(args...);
             if (frame.destroyed)
                 return;
         }
@@ -428,7 +428,7 @@ void pxEventHandler<TArgs...>::TakeFrom(pxEventHandler& o) noexcept {
     o.m_incoming.clear();
     for (const pxSubscription& link : m_incoming)
         if (Slot* slot = SlotOf(link))
-            slot->callback.template Target<ForwardBinding>()->target = this;
+            slot->forward = this;
 }
 
 template<typename... TArgs>

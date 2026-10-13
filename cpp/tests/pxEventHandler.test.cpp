@@ -324,6 +324,19 @@ static void TestForward() {
         PX_CHECK(Run(copy) == "a");
     }
 
+    // -= does not find a link, so a handler joined with += leaves with -=, links and all.
+    {
+        pxEventHandler<> a, b, c;
+        b += &B;
+        b.Forward(c);
+        c += &C;
+        a += b;
+        PX_CHECK(!a.Remove(pxEventHandler<>::Callback()) && !b.Remove(pxEventHandler<>::Callback()));
+        PX_CHECK(a.Remove(b) && a.IsEmpty());
+        b -= b;
+        PX_CHECK(Run(b) == "c" && b.Unforward(c));
+    }
+
     // The target destroyed by its own callback, in the middle of the source's Invoke.
     {
         pxEventHandler<> a;

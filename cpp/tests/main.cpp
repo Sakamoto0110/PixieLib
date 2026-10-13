@@ -19,6 +19,7 @@ void TestCallback();
 void TestEventHandler();
 void TestSubscription();
 void TestEvent();
+void TestAcrossModules();
 
 int main() {
     TestSize();
@@ -38,6 +39,7 @@ int main() {
     TestEventHandler();
     TestSubscription();
     TestEvent();
+    TestAcrossModules();
 
     if (pxCheckFailures == 0)
         std::printf("all checks passed\n");
