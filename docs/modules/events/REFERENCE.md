@@ -65,6 +65,12 @@ One callable kept by value, what a C# delegate with one target is.
   equals only the copies of its own callback, as in C#. Pointers to virtual
   members compare as expected on GCC, Clang, and MSVC, though the standard
   leaves it unspecified.
+- **Equality across modules**: each module (an executable, a DLL, or a shared
+  library that hides its symbols) has its own tag per callable type, and often
+  its own copy of an inline function, so a callback built in one module may
+  not equal the same callback built in another, and a `-=` there may not find
+  it. A copy stays equal to its original in any module, and a `pxSubscription`
+  removes its callback from any module.
 
 ## `pxEventHandler<TArgs...>`
 
@@ -77,7 +83,8 @@ Callbacks invoked in order, what a C# multicast delegate is.
   are now; joining a handler with itself doubles it once.
 - **`-=` and `Remove`** remove the last occurrence of the callback, as C#, and
   return whether one was found. With a handler, they remove the last run of
-  callbacks equal to all of that handler's, in order.
+  callbacks equal to all of that handler's callbacks, in order; the links of
+  either handler are skipped.
 - **`Invoke` and `operator()`** call the callbacks in order. `Count()` is the
   number of live callbacks, `IsEmpty()` whether it is zero, and `Clear()`
   removes them all.
@@ -102,8 +109,10 @@ Callbacks invoked in order, what a C# multicast delegate is.
   (`target` already reaches this handler), is refused with `false`, so no
   `Invoke` recurses forever. **`Unforward(target)`** ends the last link from
   this handler to `target`. A link ends when either handler dies, and follows
-  both when they move. A copy of a handler, and `+=` with a handler, do not
-  carry its links.
+  both when they move, also when the link was made in another module. A link is
+  an entry of the list but not a callback: `Count()` counts it and `Clear()`
+  ends it, but `-=` does not find it, and a copy of a handler, and `+=` with a
+  handler, do not carry it.
 
 ## `pxSubscription`
 
@@ -131,8 +140,12 @@ it, or make it the target of a `Forward`.
 ## Validation expectations
 
 The tests in `cpp/tests/pxCallback.test.cpp`, `pxEventHandler.test.cpp`,
-`pxSubscription.test.cpp`, and `pxEvent.test.cpp` run on g++ (also with the
-address and undefined-behavior sanitizers), Clang, and MSVC in CI. They catch
-the three bugs of the 2023 code and failed on each of 23 deliberately broken
-copies when they were written, listed in section 4.6 of
-[PXL-ARCHIVE-001](../../archive/decision-notes-2026-10-12.md).
+`pxSubscription.test.cpp`, `pxEvent.test.cpp`, and
+`pxEventsAcrossModules.test.cpp` run on g++ (also with the address and
+undefined-behavior sanitizers), Clang, and MSVC in CI. The last one links a
+second module, `pxEventsOtherModule.cpp`, built as a shared library that hides
+its symbols, as a DLL does. They catch the three bugs of the 2023 code and the
+two [issues](ISSUES.md) of 2026-10-13, and failed on each of the deliberately
+broken copies listed in section 4.6 of
+[PXL-ARCHIVE-001](../../archive/decision-notes-2026-10-12.md) and in
+[PXL-ARCHIVE-009](../../archive/events-forward-across-modules-2026-10-13.md).

@@ -25,7 +25,7 @@ with `Status: fixed`; the contract is the [technical reference](REFERENCE.md).
 
 ## `EVENTS-ISSUE-001` — A Forward link is lost in another module
 
-**Status:** confirmed
+**Status:** fixed
 
 **Severity:** high: a write through a null pointer, a read of freed memory, or
 an `Invoke` that never ends
@@ -55,15 +55,16 @@ move.
 module only.
 
 **Intended fix:** a link is marked in its slot, not by the type of its
-callable ([PXL-TODO-002](../../../TODO.md)).
+callable; done in `448ce89`
+([PXL-ARCHIVE-009](../../archive/events-forward-across-modules-2026-10-13.md)).
 
-**Fix release:** none yet
+**Fix release:** the first release after 0.2.0
 
 **Roadmap:** none
 
 ## `EVENTS-ISSUE-002` — `-=` with a handler that has a link removes nothing
 
-**Status:** confirmed
+**Status:** fixed
 
 **Severity:** low: the callbacks stay, and `Remove` returns `false`
 
@@ -80,9 +81,9 @@ returns `false`.
 
 **Workaround:** remove the callbacks one by one.
 
-**Intended fix:** `-=` skips links, as `+=` does
-([PXL-TODO-002](../../../TODO.md)).
+**Intended fix:** `-=` skips links, as `+=` does; done in `448ce89`
+([PXL-ARCHIVE-009](../../archive/events-forward-across-modules-2026-10-13.md)).
 
-**Fix release:** none yet
+**Fix release:** the first release after 0.2.0
 
 **Roadmap:** none

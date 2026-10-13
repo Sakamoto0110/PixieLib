@@ -35,7 +35,7 @@ Profiles: none
 Technical reference: docs/modules/events/REFERENCE.md
 Related boundaries: none
 Source: cpp/events/include/pixie/events
-Tests: cpp/tests/pxCallback.test.cpp, cpp/tests/pxEventHandler.test.cpp, cpp/tests/pxSubscription.test.cpp, cpp/tests/pxEvent.test.cpp
+Tests: cpp/tests/pxCallback.test.cpp, cpp/tests/pxEventHandler.test.cpp, cpp/tests/pxSubscription.test.cpp, cpp/tests/pxEvent.test.cpp, cpp/tests/pxEventsAcrossModules.test.cpp, cpp/tests/pxEventsOtherModule.cpp
 Runtime scenarios: none
 ```
 
