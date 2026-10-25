@@ -5,3 +5,6 @@ out/
 bin/
 obj/
 CMakeUserPresets.json
+
+# Unversioned working documents
+/.local/
