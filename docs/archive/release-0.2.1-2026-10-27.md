@@ -104,3 +104,14 @@ PXL-TODO-003 is complete: the existing Publish workflow succeeded, the intended
 tag/release exists, and the public NuGet package was downloaded and verified at
 the intended revision. No task breakdown was needed. The scope and gates above
 preserve the promoted entry; this record preserves the publication evidence.
+
+## Reconciliation: public indexing confirmed, 2026-10-27
+
+After the snapshot above, the NuGet v3 flat-container index included 0.2.1.
+Its direct package download returned HTTP 200 with SHA-256
+`8f346c2a52074c30635bb391cdaacfdd9cff7de8345eae38ece335d9664407f8`,
+matching the signed package already verified through v2. The public
+[NuGet gallery page](https://www.nuget.org/packages/PixieLib/0.2.1) also returned
+HTTP 200. The indexing and gallery observations above are therefore resolved.
+This appended reconciliation is carried with this record's update (parent
+`675e7a10a223d4ee417b638767f72c2cfcb0ce47`); the original snapshot is preserved.
