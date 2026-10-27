@@ -20,7 +20,7 @@
 
 **Indexing:** include
 
-**Last promotion decision:** 2026-10-13
+**Last promotion decision:** 2026-10-27
 
 ## Purpose and admission rule
 
@@ -39,7 +39,17 @@ entry may keep an explicit gate after promotion.
 
 ## Current promoted work
 
-None as of 2026-10-13.
+### PXL-TODO-003: Publish 0.2.1
+
+- **Status:** promoted by owner decision on 2026-10-27.
+- **Scope:** publish the already merged native events fix from `448ce89`;
+  raise the package version to 0.2.1 and update the README FetchContent tag.
+  No managed API change, dependency upgrade, or consumer integration.
+- **Gates:** verify all VAW routes and release authorities, confirm the version
+  and tag are unused, and require green CI on the preparation revision on main.
+- **Completion:** run the existing Publish workflow on main, verify its success,
+  the public NuGet package and GitHub tag/release at the intended revision,
+  and archive the outcome with exact commits and evidence links.
 
 `PXL-TODO-002` (keep the events' Forward links sound across modules) completed
 on 2026-10-13. Its entry and verification are preserved in the
