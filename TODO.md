@@ -20,7 +20,7 @@
 
 **Indexing:** include
 
-**Last promotion decision:** 2026-10-27
+**Last promotion decision:** 2026-10-28
 
 ## Purpose and admission rule
 
@@ -39,7 +39,11 @@ entry may keep an explicit gate after promotion.
 
 ## Current promoted work
 
-None as of 2026-10-27.
+None as of 2026-10-28.
+
+`PXL-TODO-004` (validate MSVC /MD compatibility) completed on 2026-10-28.
+Its bounded scope, commands, results, and limitations are preserved in the
+[archive record](docs/archive/msvc-md-validation-2026-10-28.md).
 
 `PXL-TODO-003` (publish 0.2.1) completed on 2026-10-27. Its scope, gates,
 and publication verification are preserved in the
