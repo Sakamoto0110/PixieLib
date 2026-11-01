@@ -120,11 +120,42 @@ matrix checks print the text they got and the bits of each number.
 
 ## Releases
 
-A new version starts by raising the `Version` of
-`dotnet/PixieLib/PixieLib.csproj`. The owner publishes through
+A new version starts by raising `version.json` (four components,
+`MAJOR.MINOR.PATCH.REVISION`); `dotnet/PixieLib/PixieLib.csproj` derives the
+package `Version` from it as the public projection (the first three). The owner publishes through
 `.github/workflows/publish.yml` (Actions, Publish, Run workflow) on `main`: it
 runs CI, packs, publishes to nuget.org through trusted publishing, and creates
 the tag `v<Version>` and its release. A version that exists on nuget.org cannot
 be replaced, only unlisted. Before the run, the `GIT_TAG` of the README's
 `FetchContent` example moves to the tag the run will create, because the README
 goes into the package.
+
+## Void Agent Workplace
+
+On the owner's machine, this repository lives inside a Void Agent Workplace
+checkout, in its Pixie family of managed projects (`projects/Pixie/`, beside
+PixieEngine and PixieInspector), and is bound to the VAW profile `pixielib`, revision 3:
+the local branch `codex/pixie-workplace`, commit `8ce42fe`, VAW 0.3.0.0. It has
+the capabilities of PixieEngine's profile: workflow records with planned-pause
+checkpoints that another agent can verify and resume, scoped premises, repository
+state, multi-agent validation and documentation records, package validation, and
+product versioning. Campaigns stay frozen in VAW. The three Pixie profiles (`pixieengine`, `pixieinspector`, `pixielib`) share one revision number and are revised together, even when only one of them changes. Two skills of the profile,
+`pixielib-documentation` and `pixielib-release`, route an agent to this guide and the
+[documentation policy](governance/documentation-policy.md); the repository's
+documents remain the authority. VAW records live in `.local/vaw/` and never
+replace `TODO.md`, `TASKLIST.md`, the archive, or the code. Nothing in this
+repository depends on VAW, and a binding grants no authority.
+
+The binding is in the explicit registry `.local\bindings\pixie.json` of the VAW
+checkout, passed as an absolute path. From the repository root, in PowerShell 7
+(the checkout is three directories up):
+
+```powershell
+$bindings = (Resolve-Path ..\..\..\.local\bindings\pixie.json).Path  # VAW needs it absolute
+..\..\..\scripts\resolve-project-binding.ps1 -RepositoryPath . -BindingsPath $bindings `
+    -CompatibilityScope Routes -RouteId primitives,documentation
+..\..\..\vaw.ps1 skills list -Agent claude -RepositoryPath . -BindingsPath $bindings
+```
+
+Select the routes the task touches. Never delete ignored files in the VAW
+checkout (`git clean -x` and the like): `projects/` is ignored there.

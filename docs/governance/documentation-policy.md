@@ -42,7 +42,8 @@ to its owner; they must not maintain a competing mutable copy.
 |---|---|
 | Implemented behavior | Current source code |
 | C++ targets, options, compile definitions, and the pinned GLM | `cpp/CMakeLists.txt` and `cpp/tests/CMakeLists.txt` |
-| C# targets, references, package references, the package metadata, and its version | Each project file (`*.csproj`) under `dotnet/` |
+| Product version (four components) | Root `version.json`; the package `Version` is derived from it |
+| C# targets, references, package references, and the package metadata | Each project file (`*.csproj`) under `dotnet/` |
 | C# solution membership | `dotnet/PixieLib.slnx` |
 | Continuous integration and publication | `.github/workflows/ci.yml` and `.github/workflows/publish.yml` |
 | Dependencies (toolchain, libraries, packages), versions, status, and candidates | Root `DEPENDENCIES.md` |
@@ -62,6 +63,7 @@ to its owner; they must not maintain a competing mutable copy.
 | Chronology, completed work, superseded state, and dated rationale | `docs/archive/` |
 | Documentation structure and vocabulary | `docs/schemas/documentation-schema.json` |
 | Open questions and answers before promotion | `.local/` (unversioned; never authority) |
+| VAW coordination records: workflow state, checkpoints, premises, validation | `.local/vaw/` (unversioned; never authority) |
 
 Generated output is never authority and is never versioned: `bin/`, `obj/`, and
 the CMake build directories.

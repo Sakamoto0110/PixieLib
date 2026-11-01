@@ -10,9 +10,13 @@
   </PropertyGroup>
 
   <!-- The package (7.1 to 7.3): .github/workflows/publish.yml, started by hand on GitHub, publishes it
-       to nuget.org and tags the commit with v and the Version. A new release raises the Version here. -->
+       to nuget.org and tags the commit with v and the Version. The version has one owner, the
+       repository's version.json (MAJOR.MINOR.PATCH.REVISION): Version is its public projection; a new
+       release raises version.json. -->
   <PropertyGroup>
-    <Version>0.2.1</Version>
+    <PixieVersionJson>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../../version.json'))</PixieVersionJson>
+    <Version>$([System.Text.RegularExpressions.Regex]::Replace($(PixieVersionJson), '(?s).*"version"\s*:\s*"([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+".*', '$1'))</Version>
+    <FileVersion>$([System.Text.RegularExpressions.Regex]::Replace($(PixieVersionJson), '(?s).*"version"\s*:\s*"([0-9.]+)".*', '$1'))</FileVersion>
     <PackageId>PixieLib</PackageId>
     <Authors>Rafael Sakamoto</Authors>
     <Copyright>Copyright (c) 2026 Rafael Sakamoto</Copyright>
