@@ -120,8 +120,9 @@ matrix checks print the text they got and the bits of each number.
 
 ## Releases
 
-A new version starts by raising the `Version` of
-`dotnet/PixieLib/PixieLib.csproj`. The owner publishes through
+A new version starts by raising `version.json` (four components,
+`MAJOR.MINOR.PATCH.REVISION`); `dotnet/PixieLib/PixieLib.csproj` derives the
+package `Version` from it as the public projection (the first three). The owner publishes through
 `.github/workflows/publish.yml` (Actions, Publish, Run workflow) on `main`: it
 runs CI, packs, publishes to nuget.org through trusted publishing, and creates
 the tag `v<Version>` and its release. A version that exists on nuget.org cannot
