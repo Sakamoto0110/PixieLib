@@ -139,7 +139,7 @@ the local branch `codex/pixie-workplace`, commit `8ce42fe`, VAW 0.3.0.0. It has
 the capabilities of PixieEngine's profile: workflow records with planned-pause
 checkpoints that another agent can verify and resume, scoped premises, repository
 state, multi-agent validation and documentation records, package validation, and
-product versioning. Campaigns stay frozen in VAW. Two skills of the profile,
+product versioning. Campaigns stay frozen in VAW. The three Pixie profiles (`pixieengine`, `pixieinspector`, `pixielib`) share one revision number and are revised together, even when only one of them changes. Two skills of the profile,
 `pixielib-documentation` and `pixielib-release`, route an agent to this guide and the
 [documentation policy](governance/documentation-policy.md); the repository's
 documents remain the authority. VAW records live in `.local/vaw/` and never
