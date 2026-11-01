@@ -63,6 +63,7 @@ to its owner; they must not maintain a competing mutable copy.
 | Chronology, completed work, superseded state, and dated rationale | `docs/archive/` |
 | Documentation structure and vocabulary | `docs/schemas/documentation-schema.json` |
 | Open questions and answers before promotion | `.local/` (unversioned; never authority) |
+| VAW coordination records: workflow state, checkpoints, premises, validation | `.local/vaw/` (unversioned; never authority) |
 
 Generated output is never authority and is never versioned: `bin/`, `obj/`, and
 the CMake build directories.
