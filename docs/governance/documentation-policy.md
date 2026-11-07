@@ -80,35 +80,23 @@ that concern it and does not copy them. Source comments cite it as
 
 ## Scheduling: `TODO.md` and `TASKLIST.md`
 
-`TODO.md` is the only scheduler. An entry enters it only through an explicit
-owner decision with its scope, gates, and completion criteria formalized. A
-change to the scope of a promoted entry also needs an owner decision and is
-recorded in the entry with its date.
+The workspace adopts ROADMAP -> TODO -> optional TASKLIST. ROADMAP owns the
+big picture, rationale, phases and acceptance criteria. TODO records accepted
+work needed to achieve those outcomes. TASKLIST decomposes only large items;
+children reference their parent and do not expand its scope. Owner instructions
+can authorize work; record the accepted scope without creating another queue.
 
-When an entry completes, it moves to `docs/archive/` as a snapshot, together
-with its `TASKLIST.md` section if it has one, its verification, and the commits
-that delivered it; `TODO.md` keeps a one-line pointer to the archive record.
+Completion preserves the roadmap block and its outcome in one document under
+`docs/history/`, linking evidence and incorporating only important nested details.
+Record original work IDs and the last planning commit. Remove completed entries
+from active TODO/TASKLIST; do not archive copies of all three lists. A completed
+child does not close its active roadmap parent. Keep permanent rules and freezes
+in their governing document. Legacy direct-owner work without a roadmap block
+states that limitation instead of inventing one.
 
-`TASKLIST.md` is a child scheduler of `TODO.md`. It exists so that an entry
-whose scope is large, or that decomposes into many small tasks, does not
-pollute `TODO.md`. Its rules:
-
-- Every section belongs to exactly one `TODO.md` entry, named in its `Parent`
-  field, and that entry links back to the section in its `Breakdown` field.
-  A task without an existing parent is invalid.
-- Tasks decompose the parent's accepted scope; they never extend it. Work
-  outside that scope is promoted to `TODO.md` first.
-- The parent completes only when each of its tasks is `done` or `dropped`, and
-  every `dropped` task states why.
-- When the parent completes, its section moves to `docs/archive/` with the
-  parent's record and leaves `TASKLIST.md`.
-- Task IDs are global and stable (`PXL-TASK-001`); they are not renumbered
-  when a parent changes, completes, or is archived.
-
-`ROADMAP.md` states direction but does not authorize implementation. A
-proposal, finding, issue, archive record, or direct owner decision becomes work
-only through formal promotion to `TODO.md`.
-
+Use the history index to discover closures. Existing archive records remain
+unchanged at their historical baselines. Evidence records distinguish requirements,
+actual execution and limitations; a structural check cannot accept a product gate.
 ## Dependencies
 
 `DEPENDENCIES.md` lists every dependency: toolchain, libraries, and packages.

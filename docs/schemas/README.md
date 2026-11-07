@@ -65,4 +65,13 @@ vocabulary, the archive with its router, `TODO.md` with its child
 `TASKLIST.md`, the root `DEPENDENCIES.md`, `.local/`, and module surfaces
 created on demand.
 
-No verifier checks this schema yet; see the policy's enforcement section.
+See the policy enforcement section for the current structural checks.
+
+## Workspace contract adoption — 2026-11-06
+
+The table above records the historical derivation. Current planning uses ROADMAP
+for rationale, phases and acceptance criteria; TODO for accepted work; optional
+TASKLIST for decomposition. New closures preserve roadmap intent and outcome,
+link evidence and important nested decisions, and record the Git planning
+baseline. Earlier archive records remain unchanged; completed TODO/task lists
+are not copied into new closures. The project policy owns this adoption.
