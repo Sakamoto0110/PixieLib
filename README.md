@@ -91,15 +91,16 @@ in pairs, so there the last bit of a few `vec4` and `mat4` operations can differ
 
 ## Documentation
 
-- [ROADMAP.md](https://github.com/Sakamoto0110/PixieLib/blob/main/ROADMAP.md): what PixieLib is and
-  is not, who uses it, and where it is going.
-- [TODO.md](https://github.com/Sakamoto0110/PixieLib/blob/main/TODO.md): promoted work.
-  [TASKLIST.md](https://github.com/Sakamoto0110/PixieLib/blob/main/TASKLIST.md): its task breakdowns.
+- [ROADMAP.md](https://github.com/Sakamoto0110/PixieLib/blob/main/ROADMAP.md): product direction,
+  rationale, phase outcomes, acceptance criteria and guardrails.
+- [TODO.md](https://github.com/Sakamoto0110/PixieLib/blob/main/TODO.md): active work and dependencies.
+  [TASKLIST.md](https://github.com/Sakamoto0110/PixieLib/blob/main/TASKLIST.md): optional decomposition.
 - [DEPENDENCIES.md](https://github.com/Sakamoto0110/PixieLib/blob/main/DEPENDENCIES.md): every
   dependency and its status.
 - [docs/](https://github.com/Sakamoto0110/PixieLib/blob/main/docs/README.md): the documentation
-  index, the module references, the development guide, the proposals, and the archive, where the
-  decisions behind the library are kept with their reasons.
+  index routes layout/API contracts, C++/C# development, proposals and recorded evidence.
+- [History](https://github.com/Sakamoto0110/PixieLib/blob/main/docs/history/README.md): completed
+  outcomes, publication records and qualification limits, linked to their original evidence.
 
 ## License
 

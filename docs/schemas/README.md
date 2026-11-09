@@ -37,9 +37,10 @@ Workplace extracted. PixieEngine is the nearest relative for the C++ side and
 PixieInspector for the C# side; both carry the owner's latest decisions about
 the model.
 
-Like theirs, this is a documentation-only derivation: the repository is not
-bound to a Void Agent Workplace profile, and nothing here depends on its tooling
-or on its validation freeze.
+At the derivation baseline this was documentation-only, without a VAW binding.
+The current workspace binding routes shared governance and external project
+profiles; PixieLib source, layout/API contracts and evidence remain independently
+owned. See [current development guidance](../development.md#void-agent-workplace).
 
 | Area | PixieEngine | PixieInspector | PixieLib | Reason |
 |---|---|---|---|---|
@@ -60,10 +61,10 @@ or on its validation freeze.
 | Imported records | Archived the same way | Body in its language, English header | The same as PixieInspector | The pre-policy documents are in Portuguese and cited from source |
 | Stable IDs | `PIXIE-` | `PXI-` | `PXL-` | Owner decision, 2026-10-12 |
 
-Everything else follows PixieEngine and PixieInspector unchanged: the metadata
-vocabulary, the archive with its router, `TODO.md` with its child
-`TASKLIST.md`, the root `DEPENDENCIES.md`, `.local/`, and module surfaces
-created on demand.
+The remaining derivation reused the metadata vocabulary, archive/router shape,
+root `DEPENDENCIES.md`, `.local/` and on-demand module surfaces. The current
+planning and closure model is described below and owned by the local policy;
+changes in another repository do not automatically change this contract.
 
 See the policy enforcement section for the current structural checks.
 
