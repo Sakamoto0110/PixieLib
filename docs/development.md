@@ -31,7 +31,8 @@ release rules.
 ## Working agreements
 
 - Change the design only after the owner confirms it. When the owner asks for
-  a change, apply it, verify it, and push it.
+  a change, apply it and verify the affected scope. Commit and push only when
+  authorized; documentation work does not imply either action.
 - Simplify, but keep one concept per file; do not merge files to lower the
   count.
 - Redesign one thing at a time, and fix the cause rather than a symptom.
@@ -46,8 +47,9 @@ release rules.
   difference.
 - Keep one assembly: the C# package has no dependency, and a new one needs a
   stated reason.
-- Before calling a change done, check that the tests catch the error: undo the
-  change, or break a copy on purpose, and watch the new tests fail.
+- For a source fix that adds a regression test, check that it catches the
+  original error using an isolated baseline or deliberately broken copy.
+  Documentation-only work follows the structural review below.
 
 ## C++
 
@@ -72,7 +74,9 @@ that are worth running before a push:
 - `-DPIXIE_MATH=OFF`: the primitives and the events build and pass without
   GLM.
 
-MSVC runs only in CI.
+CI includes MSVC. The [local MSVC runtime record](archive/msvc-md-validation-2026-10-28.md)
+also preserves a bounded Windows run with `/MD` in Release and Debug; it is not
+evidence for `/MDd` or for another consumer's packaging.
 
 ## C#
 
@@ -83,9 +87,11 @@ dotnet build dotnet/PixieLib.slnx -c Release
 dotnet run --project dotnet/PixieLib.Tests -c Release -f net10.0 --no-build
 ```
 
-A change is not done until the solution builds with 0 warnings and 0 errors and
-the tests print `all checks passed`. The `net481` target is compiled here but
-runs only on Windows, in CI. Without the SDK, the official script installs it
+For managed source/build changes, the affected solution build must have
+0 warnings and 0 errors, and relevant tests must print `all checks passed`.
+Documentation-only changes do not require replaying these procedures.
+The `net481` target is compiled by the SDK; CI executes it on Windows.
+Without the SDK, the official script installs it
 into the user profile:
 
 ```bash
@@ -113,10 +119,28 @@ cases and what was compared in the documentation commit.
 `.github/workflows/ci.yml` runs on every push to `main` and on pull requests:
 the C++ on g++ with the address and undefined-behavior sanitizers, on clang++,
 and on MSVC; the C# on .NET 10 on Linux and Windows, where it also runs on the
-.NET Framework (`net481`), and packs. After a push, check the run: a red `main`
-comes before anything else, and what only MSVC or the .NET Framework shows
-appears only there. When a check fails only on the .NET Framework, the text and
+.NET Framework (`net481`), and packs. After an authorized push, check the run:
+the matrix records compiler and framework differences. When a check fails
+only on the .NET Framework, the text and
 matrix checks print the text they got and the bits of each number.
+
+## Documentation changes
+
+Use the [documentation index](README.md) to find the fact's owner. The roadmap
+holds rationale, outcomes and criteria; TODO holds active work; TASKLIST adds
+decomposition only when needed. [History](history/README.md) routes completed
+outcomes and their original evidence. Templates follow the same ownership model.
+
+For documentation-only work, review links/anchors, metadata, work references
+and the diff. Preserve historical bodies, source-comment paths and acceptance
+limits. The layout and module contracts are separate from the migration of
+planning documents.
+
+The workspace's generic PowerShell checker validates the Git-owned Markdown
+inventory with `-RepositoryPath` and explicit `-AdditionalPath` entries for new
+files. Its `-ConfigPath` selects the local metadata schema and required docs;
+it does not build or run PixieLib. See the
+[enforcement scope](governance/documentation-policy.md#enforcement).
 
 ## Releases
 
@@ -132,30 +156,25 @@ goes into the package.
 
 ## Void Agent Workplace
 
-On the owner's machine, this repository lives inside a Void Agent Workplace
-checkout, in its Pixie family of managed projects (`projects/Pixie/`, beside
-PixieEngine and PixieInspector), and is bound to the VAW profile `pixielib`, revision 3:
-the local branch `codex/pixie-workplace`, commit `8ce42fe`, VAW 0.3.0.0. It has
-the capabilities of PixieEngine's profile: workflow records with planned-pause
-checkpoints that another agent can verify and resume, scoped premises, repository
-state, multi-agent validation and documentation records, package validation, and
-product versioning. Campaigns stay frozen in VAW. The three Pixie profiles (`pixieengine`, `pixieinspector`, `pixielib`) share one revision number and are revised together, even when only one of them changes. Two skills of the profile,
-`pixielib-documentation` and `pixielib-release`, route an agent to this guide and the
-[documentation policy](governance/documentation-policy.md); the repository's
-documents remain the authority. VAW records live in `.local/vaw/` and never
-replace `TODO.md`, `TASKLIST.md`, the archive, or the code. Nothing in this
-repository depends on VAW, and a binding grants no authority.
+The workspace owns project profiles outside the VAW source repository. The
+active Pixie family contains Engine, Editor, Inspector and Lib at profile
+revision 4; product code and local project contracts remain independently owned.
+The Editor's `vaw-local` remote is a local binding identity, not publication.
 
-The binding is in the explicit registry `.local\bindings\pixie.json` of the VAW
-checkout, passed as an absolute path. From the repository root, in PowerShell 7
-(the checkout is three directories up):
+Use the activated workspace launcher from the project root in PowerShell 7:
 
 ```powershell
-$bindings = (Resolve-Path ..\..\..\.local\bindings\pixie.json).Path  # VAW needs it absolute
-..\..\..\scripts\resolve-project-binding.ps1 -RepositoryPath . -BindingsPath $bindings `
-    -CompatibilityScope Routes -RouteId primitives,documentation
-..\..\..\vaw.ps1 skills list -Agent claude -RepositoryPath . -BindingsPath $bindings
+& ../../.governance/vaw.ps1 -Action resolve-project-binding -Arguments @{ RepositoryPath = (Get-Location).Path }
+& ../../.governance/vaw.ps1 -Action resolve-workplace-binding -Arguments @{ WorkplacePath = (Resolve-Path ..).Path }
 ```
 
-Select the routes the task touches. Never delete ignored files in the VAW
-checkout (`git clean -x` and the like): `projects/` is ignored there.
+The launcher selects external profiles, the explicit registry, and the installed
+package set. Require `bound` for the project and `workplace_bound` for the family.
+Its activation receipt records the platform location, exact pins, packages and
+shared-policy hash. The shared policy is materialized from the workspace's
+versioned configuration; runtime copies and coordination records are local.
+
+Do not use an old VAW checkout's default profile directory after rebind. A
+binding grants no publication authority. Standalone project build and validation
+still work without VAW. Never run `git clean -x` on the enclosing VAW checkout:
+its ignored `projects/` contains independent repositories and unpushed work.

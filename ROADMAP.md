@@ -8,7 +8,7 @@
 
 **Lifecycle:** current
 
-**Subject:** what PixieLib is and is not, who uses it, direction, guardrails, and freezes
+**Subject:** product direction, rationale, phase outcomes, acceptance criteria, guardrails and freezes
 
 **Surface:** roadmap
 
@@ -25,8 +25,11 @@
 ## Purpose
 
 This document owns what PixieLib is, what it is not, where it is heading, and
-which boundaries must be preserved. It does not authorize implementation;
-[`TODO.md`](TODO.md) is the only scheduler. Unpromoted ideas live in
+which boundaries must be preserved. Accepted phases belong here with their
+rationale, intended outcomes and acceptance criteria. [`TODO.md`](TODO.md)
+records active work, dependencies and gates; [`TASKLIST.md`](TASKLIST.md)
+decomposes large entries without expanding their scope. Direction alone does
+not authorize implementation. Unpromoted ideas live in
 [`docs/proposals/`](docs/proposals/README.md), and the rationale behind the
 decisions below is in the [archive](docs/archive/README.md): the numbered
 questions and the sections the source cites are in
@@ -69,7 +72,7 @@ questions and the sections the source cites are in
 ## Who uses it
 
 - **PixieEngine**, in C++: 2D first, then 3D, on OpenGL.
-- **PixieEngine's C# editor**, which talks to the engine through P/Invoke, and
+- The independent **C# PixieEditor**, which talks to the engine through P/Invoke, and
   **PixieInspector**, its inspector; that is why the layout is a contract.
 - **NekoLib**, on the .NET Framework too; that is why the `net481` target
   exists.
@@ -86,6 +89,18 @@ questions and the sections the source cites are in
 3. **The terminal module (`vt`)**, C++ only: the concept of `pxvt.h` from
    pxCryptLib (see [PXL-ARCHIVE-004](docs/archive/history-2026-10-02.md)).
    Not started.
+
+## Delivery phases
+
+No promoted product phase is open in the recorded queue at the documentation
+migration baseline, 2026-11-06. The [history index](docs/history/README.md)
+routes completed work and its evidence limits; these are not active roadmap
+blocks. The directions and proposals above do not schedule implementation.
+
+When a phase is accepted, record its rationale, outcome, scope and criteria
+here, then link its executable work in TODO. The [phase template](docs/templates/ROADMAP-ITEM.md)
+keeps those responsibilities separate. Do not invent a roadmap block retroactively
+for legacy work that had only a TODO or owner instruction.
 
 ## Active guardrails
 

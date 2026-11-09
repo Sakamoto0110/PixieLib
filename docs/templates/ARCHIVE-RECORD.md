@@ -20,10 +20,14 @@
 
 **Indexing:** exclude
 
-Create one file per archived event under `docs/archive/`, named
-`<subject>-YYYY-MM-DD.md`, and add one row for it to the router in
-`docs/archive/README.md`, with a one-line summary. Write each metadata field as its own paragraph, as in
-other documents.
+This template documents the legacy archive shape. Existing records keep their
+paths, bodies, IDs and baselines. New roadmap completions use the
+[closure template](CLOSURE-RECORD.md) under `docs/history/`; do not copy TODO and
+TASKLIST snapshots into new archive records.
+
+When maintaining a legacy record or an explicitly scoped provenance import,
+use `<subject>-YYYY-MM-DD.md` and its archive router entry. Write each metadata
+field as its own paragraph, as in other documents.
 
 ```text
 # <Record title>

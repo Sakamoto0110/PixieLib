@@ -293,7 +293,7 @@
         "done",
         "dropped"
       ],
-      "rule": "Tasks decompose the accepted scope of an existing TODO entry and never extend it. A completed parent's section moves to docs/archive/."
+      "rule": "Tasks decompose the accepted scope of an existing TODO entry and never extend it. Completed tasks leave active planning; roadmap closure links evidence and preserves important decisions."
     }
   },
   "records": {
