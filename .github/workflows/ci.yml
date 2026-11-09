@@ -21,9 +21,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Keep the validated toolchain for the bitwise floating-point checks.
           - name: g++, ASan and UBSan
-            os: ubuntu-latest
-            cxx: g++
+            os: ubuntu-24.04
+            cxx: g++-13
             flags: -fsanitize=address,undefined -fno-sanitize-recover=all
           - name: clang++
             os: ubuntu-latest
