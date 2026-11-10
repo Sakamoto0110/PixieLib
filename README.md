@@ -91,6 +91,10 @@ in pairs, so there the last bit of a few `vec4` and `mat4` operations can differ
 
 ## Documentation
 
+- [Filesystem map](FILESYSTEM.md): local ownership, storage and focused reading routes.
+- [Pixie workspace](../../.governance/workplaces/void-workplace/README.md): shared coordination
+  when this checkout belongs to the workspace. Its [policy](../../.governance/workplaces/void-workplace/docs/governance/documentation-policy.md)
+  governs applicable shared constraints; PixieLib retains its technical contracts and local procedures.
 - [ROADMAP.md](https://github.com/Sakamoto0110/PixieLib/blob/main/ROADMAP.md): product direction,
   rationale, phase outcomes, acceptance criteria and guardrails.
 - [TODO.md](https://github.com/Sakamoto0110/PixieLib/blob/main/TODO.md): active work and dependencies.
@@ -101,6 +105,10 @@ in pairs, so there the last bit of a few `vec4` and `mat4` operations can differ
   index routes layout/API contracts, C++/C# development, proposals and recorded evidence.
 - [History](https://github.com/Sakamoto0110/PixieLib/blob/main/docs/history/README.md): completed
   outcomes, publication records and qualification limits, linked to their original evidence.
+
+Local documentation and source builds remain usable in a standalone checkout.
+Unavailable workspace routes are disclosed as not validated; their absence does not waive
+applicable requirements or create new PixieLib work.
 
 ## License
 

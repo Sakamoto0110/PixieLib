@@ -37,6 +37,19 @@ evidence. Machine-local bindings route configuration and are not durable authori
 
 ## Authority
 
+The [Pixie workspace policy](../../../../.governance/workplaces/void-workplace/docs/governance/documentation-policy.md)
+is the adopted parent for shared constraints and cross-project coordination.
+Its applicable rules take precedence within that scope. PixieLib retains its
+source, public API, layout and numeric contracts, build wiring, product acceptance
+and local work. A peer contract governs the dependency it defines; consuming it
+does not give that peer parent authority over unrelated PixieLib decisions.
+The [filesystem map](../../FILESYSTEM.md) provides the short reading route.
+
+An unavailable parent is unresolved context, not a waiver. The existing
+[direct-main commit rules](#commits) and [owner release procedure](#releases)
+remain local specializations. Workspace documentation adoption does not authorize
+new PixieLib product work, publication or a change to those procedures.
+
 Every fact has exactly one owner. Other documents may summarize a fact and link
 to its owner; they must not maintain a competing mutable copy.
 
@@ -55,7 +68,7 @@ to its owner; they must not maintain a competing mutable copy.
 | Module routing and identity | `docs/modules/<boundary>/MANIFEST.md` |
 | Overall picture, rationale, phase outcomes, acceptance criteria, guardrails and freezes | Root `ROADMAP.md` |
 | Accepted work, status, ordering, dependencies and execution gates | Root `TODO.md` |
-| Decomposition of a promoted `TODO.md` entry into tasks | Root `TASKLIST.md` |
+| Optional decomposition of a large promoted `TODO.md` entry into tasks | Root `TASKLIST.md`, when needed |
 | Unpromoted ideas | One record per file under `docs/proposals/` |
 | How to build, check, and release a change | `docs/development.md`, under the commit rules below |
 | Confirmed defects | Module `ISSUES.md` |
@@ -119,11 +132,13 @@ and the status.
 
 ## Unversioned working documentation: `.local/`
 
-`.local/` holds working documents that are deliberately not versioned and meant
-for quick use, such as `.local/decisions/open-questions.md`. Everything in it is
-safe to delete at any time. Questions are numbered so the owner can answer by
-number. After an answer, an item is either promoted, expanded into `TODO.md`,
-recorded in `ROADMAP.md`, turned into a proposal, or discarded.
+`.local/` holds working notes, execution state, retained evidence and recovery
+material that are deliberately not versioned. Ignored does not mean disposable:
+preserve evidence, logs and recovery material until explicit cleanup authorization
+establishes their disposition. Questions, such as those in
+`.local/decisions/open-questions.md`, are numbered so the owner can answer by number.
+After an answer, an item is either promoted, expanded into `TODO.md`, recorded in
+`ROADMAP.md`, turned into a proposal, or discarded under the authorized scope.
 
 `.local/` is never authority, and versioned documents never link into it,
 because a clone does not contain it. An answer that shapes code, structure, or
@@ -281,9 +296,10 @@ Document IDs and record IDs are stable and never renumbered or reused.
 Versioned and `.local/` documentation is written in English, except the body of
 an imported record. Code and code comments are in English. Documents must be
 understandable without a private prompt, a conversation, an external
-workspace, or knowledge of which person or tool wrote them. External
+workspace, or knowledge of which person or tool wrote them. Unadopted external
 procedures, including agent tooling, may add emphasis but do not own a format,
-path, authority rule, or acceptance criterion here.
+path, authority rule, or acceptance criterion here. Adopted parent governance
+and explicitly consumed peer contracts retain only their scoped authority.
 
 ## Conflict handling
 
@@ -296,11 +312,12 @@ path, authority rule, or acceptance criterion here.
 
 ## Enforcement
 
-The workspace provides the generic PowerShell `scripts/checkdocs.ps1` checker.
-PixieLib has no repository-local copy. When available, pass this repository
-through `-RepositoryPath`; pass a configuration that selects this project's
-metadata schema when validating metadata vocabulary. `-AdditionalPath` includes
-new documents without scanning unrelated ignored state.
+The generic PowerShell documentation checker accepts this repository through
+`-RepositoryPath` and a configuration selecting its metadata schema. Use the
+supplied project entry point when present. `-AdditionalPath` includes new documents
+without scanning unrelated ignored state. Scoped checks declare parent and peer
+roots explicitly; missing optional scopes are reported as unavailable and not
+validated. Full workspace qualification requires all participating scopes.
 
 The checker validates declared structure, links/anchors, identifiers, metadata
 and work references. It does not establish native/managed runtime, numeric
