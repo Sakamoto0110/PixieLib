@@ -25,11 +25,19 @@ Choose a route by the question you need to answer. The
 owner of each fact. Contracts define requirements; records describe what was
 verified at a specific baseline.
 
+The [filesystem map](../FILESYSTEM.md) is the short local entry. The
+[workspace entry](../../../.governance/workplaces/void-workplace/README.md) routes
+shared coordination, and its [policy](../../../.governance/workplaces/void-workplace/docs/governance/documentation-policy.md)
+governs applicable shared constraints. PixieLib keeps the technical owners below;
+peer consumption does not imply parent authority. Unavailable workspace routes
+are explicitly not validated in a standalone checkout.
+
 ## At the root
 
 | Document | Responsibility |
 |---|---|
 | [README](../README.md) | C++/C# package entry points and usage examples |
+| [Filesystem map](../FILESYSTEM.md) | Local storage, technical owners, parent workspace and retained evidence |
 | [Roadmap](../ROADMAP.md) | Product direction, rationale, phase outcomes, criteria and guardrails |
 | [TODO](../TODO.md) | Accepted active work, status, dependencies and gates |
 | [TASKLIST](../TASKLIST.md) | Optional decomposition of large TODO entries |
